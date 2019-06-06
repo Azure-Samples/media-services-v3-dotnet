@@ -2,13 +2,26 @@
 
 (short, 1-3 sentenced, description of the project)
 
-## Features
+## Examples
 
-This project framework provides the following features:
+This project framework provides the following Examples:
 
-* Feature 1
-* Feature 2
-* ...
+* VideoEncoding
+  * EncodingWithMESPredefinedPreset
+  * EncodingWithMESCustomPreset
+* VideoAnalytics
+  * VideoAndAudioAnalyzer
+* Packager
+  * VODDynamicPackaging
+  * VODDynamicPackagingWithFilters
+* LiveIngest
+  * LiveEventWithDVR
+  * LiveEventTranscription
+* ContentProtection
+  * BasicAESClearKey
+  * BasicWidevine
+  * BasicPlayReady
+  * OfflinePlayReadyAndWidevine
 
 ## Getting Started
 
