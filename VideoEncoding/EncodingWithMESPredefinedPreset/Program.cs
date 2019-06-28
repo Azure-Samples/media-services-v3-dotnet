@@ -31,7 +31,7 @@ namespace EncodingWithMESPredefinedPreset
 
             try
             {
-                await RunAsync(config);
+                await RunEncodingWithMESPredefinedPreset(config);
             }
             catch (Exception exception)
             {
@@ -52,18 +52,15 @@ namespace EncodingWithMESPredefinedPreset
 
             Console.WriteLine("Press Enter to continue.");
             Console.ReadLine();
-
         }
 
         /// <summary>
         /// Run the sample async.
         /// </summary>
         /// <param name="config">This param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <RunAsync>
-        private static async Task RunAsync(ConfigWrapper config)
+        /// <returns>A task.</returns>
+        private static async Task RunEncodingWithMESPredefinedPreset(ConfigWrapper config)
         {
-
             IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
             // Set the polling interval for long running operations to 2 seconds.
             // The default value is 30 seconds for the .NET client SDK
@@ -71,9 +68,9 @@ namespace EncodingWithMESPredefinedPreset
 
             try
             {
-        
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform adaptiveEncodeTransform = EnsureTransformExists(client, config.ResourceGroup, config.AccountName, transformName, preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
+                Transform adaptiveEncodeTransform = EnsureTransformExists(client, config.ResourceGroup, config.AccountName,
+                    transformName, preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
 
                 // Creating a unique suffix so that we don't have name collisions if you run the sample
                 // multiple times without cleaning up.
@@ -154,7 +151,6 @@ namespace EncodingWithMESPredefinedPreset
                 string message = ex.Body.Error.Message;
 
                 Console.WriteLine("ERROR:API call failed with error code: {0} and message: {1}", code, message);
-
             }          
         }
 
@@ -162,9 +158,8 @@ namespace EncodingWithMESPredefinedPreset
         /// Create the ServiceClientCredentials object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The parm is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <GetCredentialsAsync>
+        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
+        /// <returns>A task.</returns>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
             // Use ApplicationTokenProvider.LoginSilentWithCertificateAsync or UserTokenProvider.LoginSilentAsync to get a token using service principal with certificate
@@ -175,15 +170,13 @@ namespace EncodingWithMESPredefinedPreset
             ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
             return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
         }
-        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The parm is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <CreateMediaServicesClient>
+        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
+        /// <returns>A task.</returns>
         private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
         {
             var credentials = await GetCredentialsAsync(config);
@@ -193,10 +186,18 @@ namespace EncodingWithMESPredefinedPreset
                 SubscriptionId = config.SubscriptionId,
             };
         }
-        // </CreateMediaServicesClient>
 
-
-          private static Transform EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, Preset preset)
+        /// <summary>
+        /// If the specified transform exists, get that transform. If the it does not exist, creates a new transform
+        /// with the specified output. In this case, the output is set to encode a video using the passed in preset.
+        /// </summary>
+        /// <param name="client">The Media Services client.</param>
+        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
+        /// <param name="accountName">The Media Services account name.</param>
+        /// <param name="transformName">The name of the transform.</param>
+        /// <param name="preset">The preset.</param>
+        /// <returns>The transform found or created.</returns>
+        private static Transform EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, Preset preset)
         {
             Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
@@ -212,8 +213,15 @@ namespace EncodingWithMESPredefinedPreset
 
             return transform;
         }
-     
 
+        /// <summary>
+        /// Create an asset.
+        /// </summary>
+        /// <param name="client">The Media Services client.</param>
+        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
+        /// <param name="accountName">The Media Services account name.</param>
+        /// <param name="assetName">The name of the asset to be created. It is known to be unique.</param>
+        /// <returns>The asset created.</returns>
         private static Asset CreateOutputAsset(IAzureMediaServicesClient client, string resourceGroupName, string accountName,  string assetName)
         {
             Asset input = new Asset();
@@ -311,7 +319,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="accountName">The Media Services account name.</param>
         /// <param name="assetName">The asset name.</param>
         /// <param name="resultsFolder">The output folder name for downloaded files.</param>
-        /// <returns></returns>
+        /// <returns>A task.</returns>
         private async static Task DownloadResults(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName, string resultsFolder)
         {
             ListContainerSasInput parameters = new ListContainerSasInput();
@@ -345,7 +353,6 @@ namespace EncodingWithMESPredefinedPreset
             }
 
             Console.WriteLine("Download complete.");
-            
         }
 
         /// <summary>
@@ -357,8 +364,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="assetName">The name of the output asset.</param>
         /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
-        /// <returns></returns>
-        // <CreateStreamingLocator>
+        /// <returns>A task.</returns>
         private static async Task<StreamingLocator> CreateStreamingLocatorAsync(
             IAzureMediaServicesClient client,
             string resourceGroup,
@@ -378,19 +384,16 @@ namespace EncodingWithMESPredefinedPreset
 
             return locator;
         }
-        // </CreateStreamingLocator>
 
         /// <summary>
-        /// Checks if the "default" streaming endpoint is in the running state,
-        /// if not, starts it.
-        /// Then, builds the streaming URLs.
+        /// Checks if the streaming endpoint is in the running state,
+        /// if not, starts it. Then, builds the streaming URLs.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
-        /// <returns></returns>
-        // <GetStreamingURLs>
+        /// <returns>A task.</returns>
         private static async Task<IList<string>> GetStreamingUrlsAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -425,7 +428,6 @@ namespace EncodingWithMESPredefinedPreset
 
             return streamingUrls;
         }
-        // </GetStreamingURLs>
 
         /// <summary>
         /// Delete the job and asset and streaming locator that were created.
@@ -437,7 +439,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="jobName">The job name.</param>
         /// <param name="assetName">The job name.</param>
         /// <param name="streamingLocatorName">The streaming locator name. </param>
-        /// <returns></returns>
+        /// <returns>A task.</returns>
         private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
             string transformName, string jobName, string assetName, string streamingLocatorName)
         {
