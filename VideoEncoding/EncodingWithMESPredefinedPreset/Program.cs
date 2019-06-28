@@ -262,7 +262,7 @@ namespace EncodingWithMESPredefinedPreset
         }
 
         /// <summary>
-        /// 
+        /// Wait for the job to fonish.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>

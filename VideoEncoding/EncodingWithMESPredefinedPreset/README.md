@@ -26,9 +26,9 @@ This sample demonstrates how to create an encoding Transform that uses a built-i
 
     #!/bin/bash
 
-    resourceGroup=build2018
-    amsAccountName=build2018
-    amsSPName=build2018AADapplication
+    resourceGroup=<your resource group>
+    amsAccountName=<your ams account name>
+    amsSPName=<your AAD application>
 
     # Create a service principal with password and configure its access to an Azure Media Services account.
     az ams account sp create \
