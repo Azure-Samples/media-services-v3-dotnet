@@ -66,6 +66,6 @@ To run the demo, follow these steps:
 
 (Any additional resources or related projects)
 
-- Link to supporting information
-- Link to similar sample
+- Azure Media Services documentation: https://docs.microsoft.com/en-us/azure/media-services/
+- Azure Media Services pricing: https://azure.microsoft.com/en-in/pricing/details/media-services/
 - ...
