@@ -7,7 +7,7 @@ products:
 description: "This sample demonstrates how to create an encoding Transform that uses a built-in preset for adaptive bitrate encoding."
 ---
 
-# EncodingWithMESPredefinedPreset
+# Encoding With MES Predefined Preset
 
 This sample demonstrates how to create an encoding Transform that uses a built-in preset for adaptive bitrate encoding and ingests a file directly from an HTTPs source URL, publish output asset for streaming, and download results for verification.
 
