@@ -1,9 +1,10 @@
 ---
 topic: sample
 languages:
-  - c#
+  - csharp
 products:
   - azure-media-services
+description: "This sample demonstrates how to create an encoding Transform that uses a built-in preset for adaptive bitrate encoding."
 ---
 
 # EncodingWithMESPredefinedPreset
