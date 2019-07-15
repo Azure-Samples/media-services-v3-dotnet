@@ -20,7 +20,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.WindowsAzure.Storage.Blob;
-using VideoAndAudioAnalyzer;
 
 namespace BasicAESClearKey
 {
@@ -70,7 +69,6 @@ namespace BasicAESClearKey
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
-        // <RunAsync>
         private static async Task RunAsync(ConfigWrapper config)
         {
             IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
@@ -116,13 +114,16 @@ namespace BasicAESClearKey
                 await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
                     EventProcessorOptions.DefaultOptions);
 
-                // Create 2 tasks, a job task and a timer task.
+                // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                 IList<Task> tasks = new List<Task>();
-                var jobTask = WaitForJobToCompleteTask(jobWaitingEvent);  // The AutoResetEvent will be set when a final state is received by EventProcessor.
-                tasks.Add(jobTask);   // Add a task to wait for the job to finish.
 
+                // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
+                Task jobTask = Task.Run(() => jobWaitingEvent.WaitOne());
+                tasks.Add(jobTask);
+
+                // 30 minutes timeout.
                 var tokenSource = new CancellationTokenSource();
-                var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);   // 30 minutes timeout.
+                var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
                 tasks.Add(timeout);
 
                 // Wait for tasks.
@@ -135,7 +136,7 @@ namespace BasicAESClearKey
                 }
                 else
                 {
-                    // Timeout happened, Something might be wrong with job events. Fall-back on polling instead.
+                    // Timeout happened, Something might go wrong with job events. Fall-back on polling instead.
                     jobWaitingEvent.Set();
                     throw new Exception("Timeout happened.");
                 }
@@ -185,7 +186,6 @@ namespace BasicAESClearKey
                 Console.WriteLine();
                 Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&aes=true&aestoken=Bearer%3D{token}");
                 Console.WriteLine();
-               
             }
 
             Console.WriteLine("When finished press enter to cleanup.");
@@ -195,7 +195,6 @@ namespace BasicAESClearKey
             Console.WriteLine("Cleaning up...");
             await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, ContentKeyPolicyName);
         }
-        // </RunAsync>
 
         /// <summary>
         /// Create the ServiceClientCredentials object based on the credentials
@@ -210,7 +209,6 @@ namespace BasicAESClearKey
             ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
             return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
         }
-        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -218,7 +216,6 @@ namespace BasicAESClearKey
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
-        // <CreateMediaServicesClient>
         private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
         {
             var credentials = await GetCredentialsAsync(config);
@@ -228,7 +225,6 @@ namespace BasicAESClearKey
                 SubscriptionId = config.SubscriptionId,
             };
         }
-        // </CreateMediaServicesClient>
 
         /// <summary>
         /// Create the content key policy that configures how the content key is delivered to end clients 
@@ -239,7 +235,6 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="contentKeyPolicyName">The name of the content key policy resource.</param>
         /// <returns></returns>
-        // <GetOrCreateContentKeyPolicy>
         private static async Task<ContentKeyPolicy> GetOrCreateContentKeyPolicyAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -270,12 +265,10 @@ namespace BasicAESClearKey
                 // Normally you would use a long lived key so you would just check for the policies existence with Get instead of
                 // ensuring to create or update it each time.
                 policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(resourceGroupName, accountName, contentKeyPolicyName, options);
-
             }
 
             return policy;
         }
-        // </GetOrCreateContentKeyPolicy>
 
         /// <summary>
         /// If the specified transform exists, get that transform.
@@ -287,7 +280,6 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
         /// <returns></returns>
-        // <EnsureTransformExists>
         private static async Task<Transform> GetOrCreateTransformAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -321,8 +313,6 @@ namespace BasicAESClearKey
 
             return transform;
         }
-        // </EnsureTransformExists>
-
 
         /// <summary>
         /// Creates an output asset. The output from the encoding Job must be written to an Asset.
@@ -332,7 +322,6 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="assetName">The output asset name.</param>
         /// <returns></returns>
-        // <CreateOutputAsset>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
             // Check if an Asset already exists
@@ -354,7 +343,6 @@ namespace BasicAESClearKey
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
         }
-        // </CreateOutputAsset>
 
         /// <summary>
         /// Submits a request to Media Services to apply the specified Transform to a given input video.
@@ -366,7 +354,6 @@ namespace BasicAESClearKey
         /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
         /// <param name="jobName">The (unique) name of the job.</param>
         /// <returns></returns>
-        // <SubmitJob>
         private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
             string resourceGroup,
             string accountName,
@@ -402,8 +389,6 @@ namespace BasicAESClearKey
 
             return job;
         }
-        // </SubmitJob>
-
 
         /// <summary>
         /// Polls Media Services for the status of the Job.
@@ -414,7 +399,6 @@ namespace BasicAESClearKey
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job you submitted.</param>
         /// <returns></returns>
-        // <WaitForJobToFinish>
         private static async Task<Job> WaitForJobToFinishAsync(IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
@@ -451,7 +435,6 @@ namespace BasicAESClearKey
 
             return job;
         }
-        // </WaitForJobToFinish>
 
         /// <summary>
         /// Creates a StreamingLocator for the specified asset and with the specified streaming policy name.
@@ -463,7 +446,6 @@ namespace BasicAESClearKey
         /// <param name="assetName">The name of the output asset.</param>
         /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
         /// <returns></returns>
-        // <CreateStreamingLocator>
         private static async Task<StreamingLocator> CreateStreamingLocatorAsync(
             IAzureMediaServicesClient client,
             string resourceGroup,
@@ -485,7 +467,6 @@ namespace BasicAESClearKey
 
             return locator;
         }
-        // </CreateStreamingLocator>
 
         /// <summary>
         /// Create a token that will be used to protect your stream.
@@ -524,7 +505,6 @@ namespace BasicAESClearKey
 
             return handler.WriteToken(token);
         }
-        // </GetToken>
 
         /// <summary>
         /// Checks if the "default" streaming endpoint is in the running state,
@@ -536,7 +516,6 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <returns></returns>
-        // <GetMPEGStreamingUrl>
         private static async Task<string> GetDASHStreamingUrlAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -571,16 +550,12 @@ namespace BasicAESClearKey
                 if (path.StreamingProtocol == StreamingPolicyStreamingProtocol.Dash)
                 {
                     uriBuilder.Path = path.Paths[0];
-
                     dashPath = uriBuilder.ToString();
-
                 }
             }
 
             return dashPath;
         }
-        // </GetMPEGStreamingUrl>
-
 
         /// <summary>
         ///  Downloads the results from the specified output asset, so you can see what you got.
@@ -590,7 +565,6 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="assetName">The output asset.</param>
         /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
-        // <DownloadResults>
         private static async Task DownloadOutputAssetAsync(
             IAzureMediaServicesClient client,
             string resourceGroup,
@@ -633,7 +607,6 @@ namespace BasicAESClearKey
                     if (blob != null)
                     {
                         string path = Path.Combine(directory, blob.Name);
-
                         downloadTasks.Add(blob.DownloadToFileAsync(path, FileMode.Create));
                     }
                 }
@@ -646,8 +619,6 @@ namespace BasicAESClearKey
 
             Console.WriteLine("Download complete.");
         }
-        // </DownloadResults>
-
 
         /// <summary>
         /// Deletes the jobs and assets that were created.
@@ -658,7 +629,6 @@ namespace BasicAESClearKey
         /// <param name="resourceGroupName"></param>
         /// <param name="accountName"></param>
         /// <param name="transformName"></param>
-        // <CleanUp>
         private static async Task CleanUpAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -680,20 +650,6 @@ namespace BasicAESClearKey
             }
 
             client.ContentKeyPolicies.Delete(resourceGroupName, accountName, contentKeyPolicyName);
-
         }
-        // </CleanUp>
-
-        /// <summary>
-        /// Wait for job to finish.
-        /// </summary>
-        /// <param name="eventComplete">The synchronization event to wait on.</param>
-        /// <returns></returns>
-        // WaitForJobToCompleteTask
-        private static async Task WaitForJobToCompleteTask(AutoResetEvent eventComplete)
-        {
-            await Task.Run(() => eventComplete.WaitOne());
-        }
-        // WaitForJobToCompleteTask
     }
 }
