@@ -692,7 +692,7 @@ namespace BasicAESClearKey
         // WaitForJobToCompleteTask
         private static async Task WaitForJobToCompleteTask(AutoResetEvent eventComplete)
         {
-            eventComplete.WaitOne();
+            await Task.Run(() => eventComplete.WaitOne());
         }
         // WaitForJobToCompleteTask
     }
