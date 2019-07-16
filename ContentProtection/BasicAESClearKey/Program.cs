@@ -88,7 +88,29 @@ namespace BasicAESClearKey
             Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
 
             // Output from the encoding Job must be written to an Asset, so let's create one
-            Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
+            Asset outputAsset;
+            try
+            {
+                outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
+            }
+            catch (ArgumentException ae)
+            {
+                // Name collision! In order to get the sample to work, let's have the user either call Get or change the name of their asset.
+                Console.WriteLine($"The asset named '{outputAssetName}' already exists, press 'Y' to use it as job output or any other keys to create a new asset.");
+                Console.Out.Flush();
+                char ch = Console.ReadKey().KeyChar;
+                Console.WriteLine();
+                if (ch == 'Y' || ch == 'y')
+                {
+                    outputAsset = await client.Assets.GetAsync(config.ResourceGroup, config.AccountName, outputAssetName);
+                }
+                else
+                {
+                    outputAssetName += $"-{Guid.NewGuid().ToString("N")}";
+                    outputAsset = await client.Assets.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, outputAssetName, new Asset());
+                }
+            }
+
 
             Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAsset.Name, jobName);
 
@@ -103,6 +125,7 @@ namespace BasicAESClearKey
                     config.StorageAccountName, config.StorageAccountKey);
 
                 // Create a new host to process events from an Event Hub.
+                Console.WriteLine("Creating a new host to process events from an Event Hub...");
                 eventProcessorHost = new EventProcessorHost(config.EventHubName,
                     PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
                     StorageConnectionString, config.StorageContainerName);
@@ -151,7 +174,11 @@ namespace BasicAESClearKey
             {
                 if (eventProcessorHost != null)
                 {
-                    eventProcessorHost.UnregisterEventProcessorAsync(); // Disposes of the Event Processor Host. No need to await.
+                    Console.WriteLine("Job final state received, unregistering event processor...");
+
+                    // Disposes of the Event Processor Host.
+                    await eventProcessorHost.UnregisterEventProcessorAsync();
+                    Console.WriteLine();
                 }
             }
 
@@ -193,7 +220,8 @@ namespace BasicAESClearKey
             Console.ReadLine();
 
             Console.WriteLine("Cleaning up...");
-            await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, ContentKeyPolicyName);
+            await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAssetName,
+                jobName, ContentKeyPolicyName);
         }
 
         /// <summary>
@@ -331,14 +359,7 @@ namespace BasicAESClearKey
 
             if (outputAsset != null)
             {
-                // Name collision! In order to get the sample to work, let's just go ahead and create a unique asset name
-                // Note that the returned Asset can have a different name than the one specified as an input parameter.
-                // You may want to update this part to throw an Exception instead, and handle name collisions differently.
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
-                outputAssetName += uniqueness;
-                
-                Console.WriteLine("Warning – found an existing Asset with name = " + assetName);
-                Console.WriteLine("Creating an Asset with this name instead: " + outputAssetName);                
+                throw new ArgumentException($"The asset named {assetName} already exists.");
             }
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
@@ -625,31 +646,27 @@ namespace BasicAESClearKey
         /// Generally, you should clean up everything except objects 
         /// that you are planning to reuse (typically, you will reuse Transforms, and you will persist StreamingLocators).
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="resourceGroupName"></param>
-        /// <param name="accountName"></param>
-        /// <param name="transformName"></param>
+        /// <param name="client">The Media Services client.</param>
+        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
+        /// <param name="accountName"> The Media Services account name.</param>
+        /// <param name="transformName">The transform name.</param>
+        /// <param name="assetName">The output asset name</param>
+        /// <param name="jobName">The job name.</param>
+        /// <param name="contentKeyPolicyName">The content key policy name.</param>
         private static async Task CleanUpAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
             string transformName,
+            string assetName,
+            string jobName,
             string contentKeyPolicyName)
         {
+            await client.Assets.DeleteAsync(resourceGroupName, accountName, assetName);
 
-            var jobs = await client.Jobs.ListAsync(resourceGroupName, accountName, transformName);
-            foreach (var job in jobs)
-            {
-                await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, job.Name);
-            }
+            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
-            var assets = await client.Assets.ListAsync(resourceGroupName, accountName);
-            foreach (var asset in assets)
-            {
-                await client.Assets.DeleteAsync(resourceGroupName, accountName, asset.Name);
-            }
-
-            client.ContentKeyPolicies.Delete(resourceGroupName, accountName, contentKeyPolicyName);
+            await client.ContentKeyPolicies.DeleteAsync(resourceGroupName, accountName, contentKeyPolicyName);
         }
     }
 }
