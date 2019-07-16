@@ -71,7 +71,17 @@ namespace BasicAESClearKey
         /// <returns></returns>
         private static async Task RunAsync(ConfigWrapper config)
         {
-            IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
+            IAzureMediaServicesClient client;
+            try
+            {
+                client = await CreateMediaServicesClientAsync(config);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                Console.Error.WriteLine($"{e.Message}");
+                return;
+            }
 
             // Set the polling interval for long running operations to 2 seconds.
             // The default value is 30 seconds for the .NET client SDK
@@ -88,29 +98,7 @@ namespace BasicAESClearKey
             Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
 
             // Output from the encoding Job must be written to an Asset, so let's create one
-            Asset outputAsset;
-            try
-            {
-                outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
-            }
-            catch (ArgumentException ae)
-            {
-                // Name collision! In order to get the sample to work, let's have the user either call Get or change the name of their asset.
-                Console.WriteLine($"The asset named '{outputAssetName}' already exists, press 'Y' to use it as job output or any other keys to create a new asset.");
-                Console.Out.Flush();
-                char ch = Console.ReadKey().KeyChar;
-                Console.WriteLine();
-                if (ch == 'Y' || ch == 'y')
-                {
-                    outputAsset = await client.Assets.GetAsync(config.ResourceGroup, config.AccountName, outputAssetName);
-                }
-                else
-                {
-                    outputAssetName += $"-{Guid.NewGuid().ToString("N")}";
-                    outputAsset = await client.Assets.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, outputAssetName, new Asset());
-                }
-            }
-
+            Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
             Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAsset.Name, jobName);
 
@@ -118,7 +106,7 @@ namespace BasicAESClearKey
             try
             {
                 // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
-                // We will fall-back on polling Job status instead.
+                // we will fall-back on polling Job status instead.
 
                 // Please refer README for Event Hub and storage settings.
                 string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
@@ -130,7 +118,7 @@ namespace BasicAESClearKey
                     PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
                     StorageConnectionString, config.StorageContainerName);
 
-                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received..
+                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                 AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
 
                 // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
@@ -354,15 +342,19 @@ namespace BasicAESClearKey
         {
             // Check if an Asset already exists
             Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-            Asset asset = new Asset();
-            string outputAssetName = assetName;
 
             if (outputAsset != null)
             {
-                throw new ArgumentException($"The asset named {assetName} already exists.");
+                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+                // an existing asset, use an unique name.
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+            }
+            else
+            {
+                outputAsset = new Asset();
             }
 
-            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
+            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
         /// <summary>
@@ -397,17 +389,30 @@ namespace BasicAESClearKey
             // If you already have a job with the desired name, use the Jobs.Get method
             // to get the existing job. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
-            Job job = await client.Jobs.CreateAsync(
-                resourceGroup,
-                accountName,
-                transformName,
-                jobName,
-                new Job
+            Job job;
+            try
+            {
+                job = await client.Jobs.CreateAsync(
+                    resourceGroup,
+                    accountName,
+                    transformName,
+                    jobName,
+                    new Job
+                    {
+                        Input = jobInput,
+                        Outputs = jobOutputs,
+                    });
+            }
+            catch (Exception exception)
+            {
+                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
+                if (apiException != null)
                 {
-                    Input = jobInput,
-                    Outputs = jobOutputs,
-                });
-
+                    Console.Error.WriteLine(
+                        $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
+                }
+                throw exception;
+            }
             return job;
         }
 
