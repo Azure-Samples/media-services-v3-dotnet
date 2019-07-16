@@ -44,11 +44,6 @@ namespace VideoAndAudioAnalyzer
             }
             catch (Exception exception)
             {
-                if (exception.Source.Contains("ActiveDirectory"))
-                {
-                     Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
-                }
-
                 Console.Error.WriteLine($"{exception.Message}");
 
                 ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
@@ -70,7 +65,17 @@ namespace VideoAndAudioAnalyzer
         /// <returns></returns>
         private static async Task RunAsync(ConfigWrapper config)
         {
-            IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
+            IAzureMediaServicesClient client;
+            try
+            {
+                client = await CreateMediaServicesClientAsync(config);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                Console.Error.WriteLine($"{e.Message}");
+                return;
+            }
 
             // Set the polling interval for long running operations to 2 seconds.
             // The default value is 30 seconds for the .NET client SDK
@@ -87,6 +92,7 @@ namespace VideoAndAudioAnalyzer
             Preset preset = new VideoAnalyzerPreset("en-US", InsightsType.AllInsights);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
+            // Once it is created, we won't delete it.
             Transform videoAnalyzerTransform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, preset);
 
             // Create a new input Asset and upload the specified local video file into it.
@@ -101,31 +107,35 @@ namespace VideoAndAudioAnalyzer
             try
             {
                 // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
-                // We will fall-back on polling Job status instead.
+                // we will fall-back on polling Job status instead.
 
                 // Please refer README for Event Hub and storage settings.
                 string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                     config.StorageAccountName, config.StorageAccountKey);
 
                 // Create a new host to process events from an Event Hub.
+                Console.WriteLine("Creating a new host to process events from an Event Hub...");
                 eventProcessorHost = new EventProcessorHost(config.EventHubName,
                     PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
                     StorageConnectionString, config.StorageContainerName);
 
-                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received..
+                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                 AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
 
                 // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                 await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
                     EventProcessorOptions.DefaultOptions);
 
-                // Create 2 tasks, a job task and a timer task.
+                // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                 IList<Task> tasks = new List<Task>();
-                var jobTask = WaitForJobToCompleteTask(jobWaitingEvent);  // The AutoResetEvent will be set when a final state is received by EventProcessor.
-                tasks.Add(jobTask);   // Add a task to wait for the job to finish.
 
+                // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
+                Task jobTask = Task.Run(() => jobWaitingEvent.WaitOne());
+                tasks.Add(jobTask);
+
+                // 30 minutes timeout.
                 var tokenSource = new CancellationTokenSource();
-                var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);   // 30 minutes timeout.
+                var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
                 tasks.Add(timeout);
 
                 // Wait for tasks.
@@ -153,7 +163,11 @@ namespace VideoAndAudioAnalyzer
             {
                 if (eventProcessorHost != null)
                 {
-                    eventProcessorHost.UnregisterEventProcessorAsync(); // Disposes of the Event Processor Host. No need to await.
+                    Console.WriteLine("Job final state received, unregistering event processor...");
+
+                    // Disposes of the Event Processor Host.
+                    await eventProcessorHost.UnregisterEventProcessorAsync();
+                    Console.WriteLine();
                 }
             }
             
@@ -166,7 +180,7 @@ namespace VideoAndAudioAnalyzer
                 await DownloadOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, OutputFolderName);
             }
 
-            await CleanUpAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, inputAssetName, outputAssetName);
+            await CleanUpAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, inputAssetName, outputAssetName, jobName);
         }
 
         /// <summary>
@@ -258,11 +272,21 @@ namespace VideoAndAudioAnalyzer
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
+            Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
 
-            // Call Media Services API to create an Asset.
-            // This method creates a container in storage for the Asset.
-            // The files (blobs) associated with the asset will be stored in this container.
-            Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+            if (asset == null)
+            {
+                // Call Media Services API to create an Asset.
+                // This method creates a container in storage for the Asset.
+                // The files (blobs) associated with the asset will be stored in this container.
+                asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+            }
+            else
+            {
+                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+                // an existing asset, use an unique name.
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+            }
 
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.
@@ -300,22 +324,19 @@ namespace VideoAndAudioAnalyzer
         {
             // Check if an Asset already exists
             Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-            Asset asset = new Asset();
-            string outputAssetName = assetName;
 
             if (outputAsset != null)
             {
-                // Name collision! In order to get the sample to work, let's just go ahead and create a unique asset name
-                // Note that the returned Asset can have a different name than the one specified as an input parameter.
-                // You may want to update this part to throw an Exception instead, and handle name collisions differently.
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
-                outputAssetName += uniqueness;
-                
-                Console.WriteLine("Warning – found an existing Asset with name = " + assetName);
-                Console.WriteLine("Creating an Asset with this name instead: " + outputAssetName);
+                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+                // an existing asset, use an unique name.
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+            }
+            else
+            {
+                outputAsset = new Asset();
             }
 
-            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
+            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
         /// <summary>
@@ -349,16 +370,30 @@ namespace VideoAndAudioAnalyzer
             // If you already have a job with the desired name, use the Jobs.Get method
             // to get the existing job. In Media Services v3, Get methods on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
-            Job job = await client.Jobs.CreateAsync(
-                resourceGroupName,
-                accountName,
-                transformName,
-                jobName,
-                new Job
+            Job job;
+            try
+            {
+               job = await client.Jobs.CreateAsync(
+                        resourceGroupName,
+                        accountName,
+                        transformName,
+                        jobName,
+                        new Job
+                        {
+                            Input = jobInput,
+                            Outputs = jobOutputs,
+                        });
+            }
+            catch (Exception exception)
+            {
+                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
+                if (apiException != null)
                 {
-                    Input = jobInput,
-                    Outputs = jobOutputs,
-                });
+                    Console.Error.WriteLine(
+                        $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
+                }
+                throw exception;
+            }
 
             return job;
         }
@@ -484,34 +519,22 @@ namespace VideoAndAudioAnalyzer
         /// <param name="transformName">The transform name.</param>
         /// <param name="inputAssetName">The input asset name.</param>
         /// <param name="outputAssetName">The output asset name.</param>
+        /// <param name="jobName">The job name.</param>
         private static async Task CleanUpAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
             string transformName,
             string inputAssetName,
-            string outputAssetName)
+            string outputAssetName,
+            string jobName)
         {
             Console.WriteLine("Cleaning up...");
             Console.WriteLine();
-            var jobs = await client.Jobs.ListAsync(resourceGroupName, accountName, transformName);
-            foreach (var job in jobs)
-            {
-                await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, job.Name);
-            }
+            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
             await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
             await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
-        }
-
-        /// <summary>
-        /// Wait for job to finish.
-        /// </summary>
-        /// <param name="eventComplete">The synchronization event to wait on.</param>
-        /// <returns></returns>
-        private static async Task WaitForJobToCompleteTask(AutoResetEvent eventComplete)
-        {
-            await Task.Run(() => eventComplete.WaitOne());
         }
     }
 }

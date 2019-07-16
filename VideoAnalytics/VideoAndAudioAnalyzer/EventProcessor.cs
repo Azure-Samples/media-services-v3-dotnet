@@ -118,7 +118,7 @@ namespace VideoAndAudioAnalyzer
                             }
 
                             Console.WriteLine($"Job output state changed for JobId: {eventJobName} PreviousState: {jobEventData.PreviousState} " +
-                                $"State: {jobEventData.Output.State} Progress: {jobEventData.Output.Progress}");
+                                $"State: {jobEventData.Output.State} Progress: {jobEventData.Output.Progress}%");
                         }
                         break;
 
@@ -133,7 +133,7 @@ namespace VideoAndAudioAnalyzer
                                 break;
                             }
 
-                            Console.WriteLine($"Job output progress changed for JobId: {eventJobName} Progress: {jobEventData.Progress}");
+                            Console.WriteLine($"Job output progress changed for JobId: {eventJobName} Progress: {jobEventData.Progress}%");
                         }
                         break;
 
