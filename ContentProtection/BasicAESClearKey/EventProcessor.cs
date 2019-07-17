@@ -202,26 +202,26 @@ namespace BasicAESClearKey
     /// </summary>
     class MediaServicesEventProcessorFactory : IEventProcessorFactory
     {
-        private readonly AutoResetEvent jobWaitingEven;
+        private readonly AutoResetEvent jobWaitingEvent;
         private readonly string jobName;
         private readonly string liveEventName;
         public MediaServicesEventProcessorFactory(string jobName, AutoResetEvent jobWaitingEvent)
         {
             this.jobName = jobName;
-            this.jobWaitingEven = jobWaitingEvent;
+            this.jobWaitingEvent = jobWaitingEvent;
             this.liveEventName = null;
         }
 
         public MediaServicesEventProcessorFactory(string liveEventName)
         {
             this.jobName = null;
-            this.jobWaitingEven = null;
+            this.jobWaitingEvent = null;
             this.liveEventName = liveEventName;
         }
 
         IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
         {
-            return new MediaServicesEventProcessor(jobName, jobWaitingEven, liveEventName);
+            return new MediaServicesEventProcessor(jobName, jobWaitingEvent, liveEventName);
         }
     }
 }
