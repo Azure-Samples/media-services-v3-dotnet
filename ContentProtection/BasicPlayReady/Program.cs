@@ -63,7 +63,6 @@ namespace BasicPlayReady
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
-        // <RunAsync>
         private static async Task RunAsync(ConfigWrapper config)
         {
             IAzureMediaServicesClient client;
@@ -105,18 +104,19 @@ namespace BasicPlayReady
             try
             {
                 // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
-                // We will fall-back on polling Job status instead.
+                // we will fall-back on polling Job status instead.
 
                 // Please refer README for Event Hub and storage settings.
                 string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                     config.StorageAccountName, config.StorageAccountKey);
 
                 // Create a new host to process events from an Event Hub.
+                Console.WriteLine("Creating a new host to process events from an Event Hub...");
                 eventProcessorHost = new EventProcessorHost(config.EventHubName,
                     PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
                     StorageConnectionString, config.StorageContainerName);
 
-                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received..
+                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                 AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
 
                 // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
@@ -152,15 +152,22 @@ namespace BasicPlayReady
             }
             catch (Exception e)
             {
+                Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
+
                 // Polling is not a recommended best practice for production applications because of the latency it introduces.
                 // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+                Console.WriteLine("Polling job status...");
                 job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName);
             }
             finally
             {
                 if (eventProcessorHost != null)
                 {
-                    eventProcessorHost.UnregisterEventProcessorAsync(); // Disposes of the Event Processor Host. No need to await.
+                    Console.WriteLine("Job final state received, unregistering event processor...");
+
+                    // Disposes of the Event Processor Host.
+                    await eventProcessorHost.UnregisterEventProcessorAsync();
+                    Console.WriteLine();
                 }
             }
 
@@ -206,7 +213,6 @@ namespace BasicPlayReady
             Console.WriteLine("Cleaning up...");
             await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, ContentKeyPolicyName);
         }
-        // </RunAsync>
 
         /// <summary>
         /// Create the ServiceClientCredentials object based on the credentials
@@ -214,18 +220,12 @@ namespace BasicPlayReady
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
-        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentWithCertificateAsync or UserTokenProvider.LoginSilentAsync to get a token using service principal with certificate
-            //// ClientAssertionCertificate
-            //// ApplicationTokenProvider.LoginSilentWithCertificateAsync
-
             // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
             ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
             return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
         }
-        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -233,7 +233,6 @@ namespace BasicPlayReady
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
-        // <CreateMediaServicesClient>
         private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
         {
             var credentials = await GetCredentialsAsync(config);
@@ -243,7 +242,6 @@ namespace BasicPlayReady
                 SubscriptionId = config.SubscriptionId,
             };
         }
-        // </CreateMediaServicesClient>
 
         /// <summary>
         /// Create the content key policy that configures how the content key is delivered to end clients 
@@ -254,7 +252,6 @@ namespace BasicPlayReady
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="contentKeyPolicyName">The name of the content key policy resource.</param>
         /// <returns></returns>
-        // <GetOrCreateContentKeyPolicy>
         private static async Task<ContentKeyPolicy> GetOrCreateContentKeyPolicyAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -306,7 +303,6 @@ namespace BasicPlayReady
             }
             return policy;
         }
-        // </GetOrCreateContentKeyPolicy>
 
         /// <summary>
         /// If the specified transform exists, get that transform.
@@ -318,7 +314,6 @@ namespace BasicPlayReady
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
         /// <returns></returns>
-        // <EnsureTransformExists>
         private static async Task<Transform> GetOrCreateTransformAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -352,7 +347,6 @@ namespace BasicPlayReady
 
             return transform;
         }
-        // </EnsureTransformExists>
 
 
         /// <summary>
@@ -363,7 +357,6 @@ namespace BasicPlayReady
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="assetName">The output asset name.</param>
         /// <returns></returns>
-        // <CreateOutputAsset>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
             // Check if an Asset already exists
@@ -385,7 +378,6 @@ namespace BasicPlayReady
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
         }
-        // </CreateOutputAsset>
 
         /// <summary>
         /// Submits a request to Media Services to apply the specified Transform to a given input video.
@@ -397,7 +389,6 @@ namespace BasicPlayReady
         /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
         /// <param name="jobName">The (unique) name of the job.</param>
         /// <returns></returns>
-        // <SubmitJob>
         private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
             string resourceGroup,
             string accountName,
@@ -433,7 +424,6 @@ namespace BasicPlayReady
 
             return job;
         }
-        // </SubmitJob>
 
 
         /// <summary>
@@ -445,7 +435,6 @@ namespace BasicPlayReady
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job you submitted.</param>
         /// <returns></returns>
-        // <WaitForJobToFinish>
         private static async Task<Job> WaitForJobToFinishAsync(IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
@@ -482,13 +471,11 @@ namespace BasicPlayReady
 
             return job;
         }
-        // </WaitForJobToFinish>
 
         /// <summary>
         /// Configures PlayReady license template.
         /// </summary>
         /// <returns></returns>
-        //<ConfigurePlayReadyLicenseTemplate>
         private static ContentKeyPolicyPlayReadyConfiguration ConfigurePlayReadyLicenseTemplate()
         {
             ContentKeyPolicyPlayReadyLicense objContentKeyPolicyPlayReadyLicense;
@@ -515,43 +502,6 @@ namespace BasicPlayReady
 
             return objContentKeyPolicyPlayReadyConfiguration;
         }
-        // </ConfigurePlayReadyLicenseTemplate>
-
-        /// <summary>
-        /// Configures FairPlay policy options.
-        /// </summary>
-        /// <returns></returns>
-        // <ConfigureFairPlayPolicyOptions>
-        private static ContentKeyPolicyFairPlayConfiguration ConfigureFairPlayPolicyOptions()
-        {
-
-            string askHex = "";
-            string FairPlayPfxPassword = "";
-
-            var appCert = new X509Certificate2("FairPlayPfxPath", FairPlayPfxPassword, X509KeyStorageFlags.Exportable);
-
-            byte[] askBytes = Enumerable
-                .Range(0, askHex.Length)
-                .Where(x => x % 2 == 0)
-                .Select(x => Convert.ToByte(askHex.Substring(x, 2), 16))
-                .ToArray();
-
-            ContentKeyPolicyFairPlayConfiguration fairPlayConfiguration =
-            new ContentKeyPolicyFairPlayConfiguration
-            {
-                Ask = askBytes,
-                FairPlayPfx =
-                        Convert.ToBase64String(appCert.Export(X509ContentType.Pfx, FairPlayPfxPassword)),
-                FairPlayPfxPassword = FairPlayPfxPassword,
-                RentalAndLeaseKeyType =
-                        ContentKeyPolicyFairPlayRentalAndLeaseKeyType
-                        .PersistentUnlimited,
-                RentalDuration = 2249
-            };
-
-            return fairPlayConfiguration;
-        }
-        // </ConfigureFairPlayPolicyOptions>
 
         /// <summary>
         /// Creates a StreamingLocator for the specified asset and with the specified streaming policy name.
@@ -569,7 +519,6 @@ namespace BasicPlayReady
         /// <param name="assetName">The name of the output asset.</param>
         /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
         /// <returns></returns>
-        // <CreateStreamingLocator>
         private static async Task<StreamingLocator> CreateStreamingLocatorAsync(
             IAzureMediaServicesClient client,
             string resourceGroup,
@@ -610,7 +559,6 @@ namespace BasicPlayReady
 
             return locator;
         }
-        // </CreateStreamingLocator>
 
         /// <summary>
         /// Create a token that will be used to protect your stream.
@@ -621,7 +569,6 @@ namespace BasicPlayReady
         /// <param name="keyIdentifier">The content key ID.</param>
         /// <param name="tokenVerificationKey">Contains the key that the token was signed with. </param>
         /// <returns></returns>
-        // <GetToken>
         private static string GetTokenAsync(string issuer, string audience, string keyIdentifier, byte[] tokenVerificationKey)
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
@@ -649,7 +596,6 @@ namespace BasicPlayReady
 
             return handler.WriteToken(token);
         }
-        // </GetToken>
 
         /// <summary>
         /// Checks if the "default" streaming endpoint is in the running state,
@@ -661,7 +607,6 @@ namespace BasicPlayReady
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <returns></returns>
-        // <GetMPEGStreamingUrl>
         private static async Task<string> GetDASHStreamingUrlAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -703,7 +648,6 @@ namespace BasicPlayReady
 
             return dashPath;
         }
-        // </GetMPEGStreamingUrl>
 
         /// <summary>
         /// Deletes the jobs and assets that were created.
@@ -714,7 +658,6 @@ namespace BasicPlayReady
         /// <param name="resourceGroupName"></param>
         /// <param name="accountName"></param>
         /// <param name="transformName"></param>
-        // <CleanUp>
         private static async Task CleanUpAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -744,6 +687,5 @@ namespace BasicPlayReady
             client.ContentKeyPolicies.Delete(resourceGroupName, accountName, contentKeyPolicyName);
 
         }
-        // </CleanUp>
     }
 }
