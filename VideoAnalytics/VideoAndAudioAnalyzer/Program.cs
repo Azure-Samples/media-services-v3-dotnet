@@ -155,8 +155,11 @@ namespace VideoAndAudioAnalyzer
             }
             catch (Exception e)
             {
+                Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
+
                 // Polling is not a recommended best practice for production applications because of the latency it introduces.
                 // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+                Console.WriteLine("Polling job status...");
                 job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, jobName);
             }
             finally

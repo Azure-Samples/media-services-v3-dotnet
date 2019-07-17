@@ -23,11 +23,13 @@ namespace VideoAndAudioAnalyzer
     {
         private readonly AutoResetEvent jobWaitingEvent;
         private readonly string jobName;
+        private readonly string liveEventName;
 
-        public MediaServicesEventProcessor(string jobName, AutoResetEvent jobWaitingEvent)
+        public MediaServicesEventProcessor(string jobName, AutoResetEvent jobWaitingEvent, string liveEventName)
         {
             this.jobName = jobName;
             this.jobWaitingEvent = jobWaitingEvent;
+            this.liveEventName = liveEventName;
         }
 
         public Task CloseAsync(PartitionContext context, CloseReason reason)
@@ -69,6 +71,12 @@ namespace VideoAndAudioAnalyzer
             foreach (JObject jObj in jArr)
             {
                 string eventType = (string)jObj.GetValue("eventType");
+                string subject = (string)jObj.GetValue("subject");
+                string eventName = Regex.Replace(subject, @"^.*/", "");
+                if (eventName != jobName && eventName != liveEventName)
+                {
+                    return;
+                }
 
                 switch (eventType)
                 {
@@ -82,20 +90,17 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.JobErrored":
                         {
                             MediaJobStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobStateChangeEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string eventJobName = Regex.Replace(subject, @"^transforms.*/", "");
-                            if (eventJobName != jobName)
-                            {
-                                break;
-                            }
 
-                            Console.WriteLine($"Job state changed for JobId: {eventJobName} PreviousState: {jobEventData.PreviousState} State: {jobEventData.State}");
+                            Console.WriteLine($"Job state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} State: {jobEventData.State}");
                             
                             // For final states, send a message to notify that the job has finished.
                             if (eventType == "Microsoft.Media.JobFinished" || eventType == "Microsoft.Media.JobCanceled" || eventType == "Microsoft.Media.JobErrored")
                             {
                                 // Job finished, send a message.
-                                jobWaitingEvent.Set();
+                                if (jobWaitingEvent != null)
+                                {
+                                    jobWaitingEvent.Set();
+                                }
                             }
                         }
                         break;
@@ -110,14 +115,8 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.JobOutputErrored":
                         {
                             MediaJobOutputStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputStateChangeEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string eventJobName = Regex.Replace(subject, @"^transforms.*/", "");
-                            if (eventJobName != jobName)
-                            {
-                                break;
-                            }
-
-                            Console.WriteLine($"Job output state changed for JobId: {eventJobName} PreviousState: {jobEventData.PreviousState} " +
+     
+                            Console.WriteLine($"Job output state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} " +
                                 $"State: {jobEventData.Output.State} Progress: {jobEventData.Output.Progress}%");
                         }
                         break;
@@ -126,14 +125,8 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.JobOutputProgress":
                         {
                             MediaJobOutputProgressEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputProgressEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string eventJobName = Regex.Replace(subject, @"^transforms.*/", "");
-                            if (eventJobName != jobName)
-                            {
-                                break;
-                            }
-
-                            Console.WriteLine($"Job output progress changed for JobId: {eventJobName} Progress: {jobEventData.Progress}%");
+ 
+                            Console.WriteLine($"Job output progress changed for JobId: {eventName} Progress: {jobEventData.Progress}%");
                         }
                         break;
 
@@ -164,9 +157,7 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.LiveEventIncomingDataChunkDropped":
                         {
                             MediaLiveEventIncomingDataChunkDroppedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventIncomingDataChunkDroppedEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string liveEventId = Regex.Replace(subject, @"^transforms.*/", "");
-                            Console.WriteLine($"LiveEvent data chunk dropped. LiveEventId: {liveEventId} ResultCode: {liveEventData.ResultCode}");
+                            Console.WriteLine($"LiveEvent data chunk dropped. LiveEventId: {eventName} ResultCode: {liveEventData.ResultCode}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIncomingStreamReceived":
@@ -179,17 +170,13 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.LiveEventIncomingStreamsOutOfSync":
                         {
                             //MediaLiveEventIncomingStreamsOutOfSyncEventData eventData = jObj.GetValue("data").ToObject<MediaLiveEventIncomingStreamsOutOfSyncEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string liveEventId = Regex.Replace(subject, @"^transforms.*/", "");
-                            Console.WriteLine($"LiveEvent incoming audio and video streams are out of sync. LiveEventId: {liveEventId}");
+                            Console.WriteLine($"LiveEvent incoming audio and video streams are out of sync. LiveEventId: {eventName}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIncomingVideoStreamsOutOfSync":
                         {
                             //MediaLiveEventIncomingVideoStreamsOutOfSyncEventData eventData =jObj.GetValue("data").ToObject<MediaLiveEventIncomingVideoStreamsOutOfSyncEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string liveEventId = Regex.Replace(subject, @"^transforms.*/", "");
-                            Console.WriteLine($"LeveEvent incoming video streams are out of sync. LiveEventId: {liveEventId}");
+                            Console.WriteLine($"LeveEvent incoming video streams are out of sync. LiveEventId: {eventName}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIngestHeartbeat":
@@ -201,9 +188,7 @@ namespace VideoAndAudioAnalyzer
                     case "Microsoft.Media.LiveEventTrackDiscontinuityDetected":
                         {
                             MediaLiveEventTrackDiscontinuityDetectedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventTrackDiscontinuityDetectedEventData>();
-                            string subject = (string)jObj.GetValue("subject");
-                            string liveEventId = Regex.Replace(subject, @"^transforms.*/", "");
-                            Console.WriteLine($"LiveEvent discontinuity in the incoming track detected. LiveEventId: {liveEventId} TrackType: {liveEventData.TrackType} " +
+                            Console.WriteLine($"LiveEvent discontinuity in the incoming track detected. LiveEventId: {eventName} TrackType: {liveEventData.TrackType} " +
                                 $"Discontinuity gap: {liveEventData.DiscontinuityGap}");
                         }
                         break;
@@ -219,15 +204,24 @@ namespace VideoAndAudioAnalyzer
     {
         private readonly AutoResetEvent jobWaitingEven;
         private readonly string jobName;
+        private readonly string liveEventName;
         public MediaServicesEventProcessorFactory(string jobName, AutoResetEvent jobWaitingEvent)
         {
             this.jobName = jobName;
             this.jobWaitingEven = jobWaitingEvent;
+            this.liveEventName = null;
+        }
+
+        public MediaServicesEventProcessorFactory(string liveEventName)
+        {
+            this.jobName = null;
+            this.jobWaitingEven = null;
+            this.liveEventName = liveEventName;
         }
 
         IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
         {
-            return new MediaServicesEventProcessor(jobName, jobWaitingEven);
+            return new MediaServicesEventProcessor(jobName, jobWaitingEven, liveEventName);
         }
     }
 }
