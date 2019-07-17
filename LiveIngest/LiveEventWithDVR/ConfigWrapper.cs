@@ -70,5 +70,30 @@ namespace LiveSample
         {
             get { return _config["Region"]; }
         }
+
+        public string EventHubConnectionString
+        {
+            get { return _config["EventHubConnectionString"]; }
+        }
+
+        public string EventHubName
+        {
+            get { return _config["EventHubName"]; }
+        }
+
+        public string StorageContainerName
+        {
+            get { return _config["StorageContainerName"]; }
+        }
+
+        public string StorageAccountName
+        {
+            get { return _config["StorageAccountName"]; }
+        }
+
+        public string StorageAccountKey
+        {
+            get { return _config["StorageAccountKey"]; }
+        }
     }
 }

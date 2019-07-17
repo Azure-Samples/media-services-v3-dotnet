@@ -16,6 +16,8 @@ using Microsoft.Rest.Azure.Authentication;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Collections;
+using Microsoft.Azure.EventHubs.Processor;
+using Microsoft.Azure.EventHubs;
 
 namespace LiveSample
 {
@@ -35,11 +37,6 @@ namespace LiveSample
             }
             catch (Exception exception)
             {
-                if (exception.Source.Contains("ActiveDirectory"))
-                {
-                     Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
-                }
-
                 Console.Error.WriteLine($"{exception.Message}");
 
                 ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
@@ -62,8 +59,17 @@ namespace LiveSample
         /// <returns></returns>
         private static async Task RunAsync(ConfigWrapper config)
         {
-
-            IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
+            IAzureMediaServicesClient client;
+            try
+            {
+                client = await CreateMediaServicesClientAsync(config);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                Console.Error.WriteLine($"{e.Message}");
+                return;
+            }
 
             // Creating a unique suffix so that we don't have name collisions if you run the sample
             // multiple times without cleaning up.
@@ -75,6 +81,7 @@ namespace LiveSample
             string archiveStreamingLocatorName = "fullLocator-" + uniqueness;
             string drvAssetFilterName = "filter-" + uniqueness;
             string streamingEndpointName = "se";  // Change this to your Endpoint name.
+            EventProcessorHost eventProcessorHost = null;
 
             try
             {
@@ -148,6 +155,29 @@ namespace LiveSample
                     }
                 );
 
+                // Start monitoring LiveEvent events.
+                try
+                {
+                    // Please refer README for Event Hub and storage settings.
+                    Console.WriteLine("Trying to start monitoring LiveEvent events...");
+                    string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                        config.StorageAccountName, config.StorageAccountKey);
+
+                    // Create a new host to process events from an Event Hub.
+                    Console.WriteLine("Creating a new host to process events from an Event Hub...");
+                    eventProcessorHost = new EventProcessorHost(config.EventHubName,
+                        PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
+                        StorageConnectionString, config.StorageContainerName);
+
+                    // Registers the Event Processor Host and starts receiving messages.
+                    await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(liveEventName),
+                        EventProcessorOptions.DefaultOptions);
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine("Failed to connect to Event Hub, please refer README for Event Hub and storage settings. Skipping event monitoring...");
+                }
+
                 Console.WriteLine($"Creating the LiveEvent, be patient this can take time...");
 
                 // When autostart is set to true, the Live Event will be started after creation. 
@@ -180,8 +210,12 @@ namespace LiveSample
 
                 Console.WriteLine("Start the live stream now, sending the input to the ingest url and verify that it is arriving with the preview url.");
                 Console.WriteLine("IMPORTANT TIP!: Make ABSOLUTLEY CERTAIN that the video is flowing to the Preview URL before continuing!");
-                Console.WriteLine("Press enter to continue...");
+                Console.WriteLine("******************************");
+                Console.WriteLine("* Press ENTER to continue... *");
+                Console.WriteLine("******************************");
+                Console.WriteLine();
                 Console.Out.Flush();
+
                 var ignoredInput = Console.ReadLine();
 
                 // Create an Asset for the LiveOutput to use
@@ -248,8 +282,13 @@ namespace LiveSample
                 #region PrintUrls
                 if (await PrintPaths(client, config.ResourceGroup, config.AccountName, drvStreamingLocatorName, streamingEndpoint))
                 {
+                    Console.WriteLine("If you see an error in Azure Media Player, wait a few moments and try again.");
                     Console.WriteLine("Continue experimenting with the stream until you are ready to finish.");
-                    Console.WriteLine("Press ENTER to stop the LiveOutput...");
+                    Console.WriteLine();
+                    Console.WriteLine("***********************************************");
+                    Console.WriteLine("* Press ENTER anytime to stop the LiveEvent.  *");
+                    Console.WriteLine("***********************************************");
+                    Console.WriteLine();
                     Console.Out.Flush();
                     ignoredInput = Console.ReadLine();
 
@@ -267,10 +306,6 @@ namespace LiveSample
                     Console.WriteLine("To playback the archive, Use the following urls:");
                     await PrintPaths(client, config.ResourceGroup, config.AccountName, archiveStreamingLocatorName, streamingEndpoint);
                 }
-                else
-                {
-                    await CleanupLiveEventAndOutputAsync(client, config.ResourceGroup, config.AccountName, liveEventName);
-                }
                 #endregion
             }
             catch (ApiErrorException e)
@@ -287,6 +322,12 @@ namespace LiveSample
                 await CleanupLiveEventAndOutputAsync(client, config.ResourceGroup, config.AccountName, liveEventName);
 
                 await CleanupLocatorandAssetAsync(client, config.ResourceGroup, config.AccountName, drvStreamingLocatorName, assetName);
+
+                // Stop event monitoring.
+                if (eventProcessorHost != null)
+                {
+                    await eventProcessorHost.UnregisterEventProcessorAsync();
+                }
             }
         }
 
