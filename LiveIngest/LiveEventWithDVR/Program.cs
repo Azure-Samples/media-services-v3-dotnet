@@ -49,7 +49,6 @@ namespace LiveSample
 
             Console.WriteLine("Press Enter to continue.");
             Console.ReadLine();
-
         }
 
           /// <summary>
@@ -82,6 +81,7 @@ namespace LiveSample
             string drvAssetFilterName = "filter-" + uniqueness;
             string streamingEndpointName = "se";  // Change this to your Endpoint name.
             EventProcessorHost eventProcessorHost = null;
+            bool stopEndpoint = false;
 
             try
             {
@@ -89,7 +89,6 @@ namespace LiveSample
                 // LiveEvent and StreamingEndpoint
                 MediaService mediaService = await client.Mediaservices.GetAsync(config.ResourceGroup, config.AccountName);
 
-                #region CreateLiveEvent
                 Console.WriteLine($"Creating a live event named {liveEventName}");
                 Console.WriteLine();
 
@@ -112,7 +111,6 @@ namespace LiveSample
                                 allAllowIPRange
                             }
                         )
-
                 };
 
                 // Create the LiveEvent Preview IP access control
@@ -185,19 +183,15 @@ namespace LiveSample
                 // You must explicitly call Stop on the Live Event resource to halt further billing.
                 // The following operation can sometimes take awhile. Be patient.
                 liveEvent = await client.LiveEvents.CreateAsync(config.ResourceGroup, config.AccountName, liveEventName, liveEvent, autoStart: true);
-                #endregion
 
                 // Get the input endpoint to configure the on premise encoder with
-                #region GetIngestUrl
                 string ingestUrl = liveEvent.Input.Endpoints.First().Url;
                 Console.WriteLine($"The ingest url to configure the on premise encoder with is:");
                 Console.WriteLine($"\t{ingestUrl}");
                 Console.WriteLine();
-                #endregion
 
                 // Use the previewEndpoint to preview and verify
                 // that the input from the encoder is actually being received
-                #region GetPreviewURLs
                 string previewEndpoint = liveEvent.Preview.Endpoints.First().Url;
                 Console.WriteLine($"The preview url is:");
                 Console.WriteLine($"\t{previewEndpoint}");
@@ -206,7 +200,6 @@ namespace LiveSample
                 Console.WriteLine($"Open the live preview in your browser and use the Azure Media Player to monitor the preview playback:");
                 Console.WriteLine($"\thttps://ampdemo.azureedge.net/?url={previewEndpoint}&heuristicprofile=lowlatency");
                 Console.WriteLine();
-                #endregion
 
                 Console.WriteLine("Start the live stream now, sending the input to the ingest url and verify that it is arriving with the preview url.");
                 Console.WriteLine("IMPORTANT TIP!: Make ABSOLUTLEY CERTAIN that the video is flowing to the Preview URL before continuing!");
@@ -219,13 +212,10 @@ namespace LiveSample
                 var ignoredInput = Console.ReadLine();
 
                 // Create an Asset for the LiveOutput to use
-                #region CreateAsset
                 Console.WriteLine($"Creating an asset named {assetName}");
                 Console.WriteLine();
                 Asset asset = await client.Assets.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, assetName, new Asset());
-                #endregion
 
-                #region CreateAssetFilter
                 AssetFilter drvAssetFilter = new AssetFilter(
                     presentationTimeRange: new PresentationTimeRange(
                         forceEndTimestamp:false,
@@ -237,10 +227,8 @@ namespace LiveSample
 
                 drvAssetFilter = await client.AssetFilters.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName,
                     assetName, drvAssetFilterName, drvAssetFilter);
-                #endregion
 
                 // Create the LiveOutput
-                #region CreateLiveOutput
                 string manifestName = "output";
                 Console.WriteLine($"Creating a live output named {liveOutputName}");
                 Console.WriteLine();
@@ -249,10 +237,8 @@ namespace LiveSample
                 // is continuously discarded from storage and is non-recoverable. For a full event archive, set to the maximum, 25 hours.
                 LiveOutput liveOutput = new LiveOutput(assetName: asset.Name, manifestName: manifestName, archiveWindowLength: TimeSpan.FromHours(25));
                 liveOutput = await client.LiveOutputs.CreateAsync(config.ResourceGroup, config.AccountName, liveEventName, liveOutputName, liveOutput);
-                #endregion
 
                 // Create the StreamingLocator
-                #region CreateStreamingLocator
                 Console.WriteLine($"Creating a streaming locator named {drvStreamingLocatorName}");
                 Console.WriteLine();
 
@@ -276,10 +262,11 @@ namespace LiveSample
                 {
                     Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
                     await client.StreamingEndpoints.StartAsync (config.ResourceGroup, config.AccountName, streamingEndpointName);
-                }
-                #endregion
 
-                #region PrintUrls
+                    // Since we started the endpoint, we should stop it in cleanup.
+                    stopEndpoint = true;
+                }
+
                 if (await PrintPaths(client, config.ResourceGroup, config.AccountName, drvStreamingLocatorName, streamingEndpoint))
                 {
                     Console.WriteLine("If you see an error in Azure Media Player, wait a few moments and try again.");
@@ -306,7 +293,6 @@ namespace LiveSample
                     Console.WriteLine("To playback the archive, Use the following urls:");
                     await PrintPaths(client, config.ResourceGroup, config.AccountName, archiveStreamingLocatorName, streamingEndpoint);
                 }
-                #endregion
             }
             catch (ApiErrorException e)
             {
@@ -327,6 +313,18 @@ namespace LiveSample
                 if (eventProcessorHost != null)
                 {
                     await eventProcessorHost.UnregisterEventProcessorAsync();
+                }
+
+                if (stopEndpoint)
+                {
+                    // Because we started the endpoint, we stop it.
+                    await client.StreamingEndpoints.StopAsync(config.ResourceGroup, config.AccountName, streamingEndpointName);
+                }
+                else
+                {
+                    // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+                    // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+                    Console.WriteLine($"The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
                 }
             }
         }

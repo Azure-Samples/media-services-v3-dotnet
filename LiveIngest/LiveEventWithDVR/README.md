@@ -8,7 +8,7 @@ products:
 
 # Live event with DVR
 
-This sample demonstrates  how to create and use LiveEvents and LiveOutputs in the v3 Media Services API. It performs the following tasks:
+This sample demonstrates how to create and use LiveEvents and LiveOutputs in the v3 Media Services API. It performs the following tasks:
 1. Create a pass-through LiveEvent.
 1. Start monitoring the LiveEvent using Event Grid and Event Hub.
 1. Create an Asset and an AssetFilter with 5 minutes sliding window and 30 seconds seek back time.
@@ -31,7 +31,7 @@ This sample demonstrates  how to create and use LiveEvents and LiveOutputs in th
 - WindowsAzure.Storage -Version 9.3.3
 
 * A camera connected to your computer.
-* A media encoder. For a recommended encoder, please visit https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders.
+* A media encoder. For a recommended encoder, please visit [Recommended encoders](https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders).
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 
 ## Build and run
@@ -73,3 +73,13 @@ This sample demonstrates  how to create and use LiveEvents and LiveOutputs in th
   EventHubConnectionString: The Event Hub connection string. search your namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key.\
   EventHubName: The Event Hub name.  &lt;your namespace&gt; -&gt; Event Hubs.
 
+  ## Key concepts
+
+* [Dynamic packaging](https://docs.microsoft.com/azure/media-services/latest/dynamic-packaging-overview)
+* [Streaming Policies](https://docs.microsoft.com/azure/media-services/latest/streaming-policy-concept)
+
+## Next steps
+
+- [Live Event states and billing](https://docs.microsoft.com/en-us/azure/media-services/latest/live-event-states-billing)
+- [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
+- [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
