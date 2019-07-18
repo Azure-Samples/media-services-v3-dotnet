@@ -8,7 +8,7 @@ products:
 
 # Video and audio analyzer
 
-This sample demonstrates how to analyze video and audio in a file. It show how to perform the following tasks:
+This sample demonstrates how to analyze video and audio in a file. It shows how to perform the following tasks:
 1. Create a transform that uses a video analyzer preset
 1. Upload a video file to an input asset
 1. Submit an analyzer job
