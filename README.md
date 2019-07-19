@@ -1,6 +1,16 @@
-# Project Name
+---
+page_type: sample
+languages:
+  - csharp
+products:
+  - azure
+  - azure-media-services
+description: "The samples in this repo show how to encode, package, protect, analyze your videos with Azure Media Services v3 using .NET SDK."  
+---
 
-(short, 1-3 sentenced, description of the project)
+# Azure Media Services v3 samples using .NET
+
+The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using .NET SDK. The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.  
 
 ## Examples
 
