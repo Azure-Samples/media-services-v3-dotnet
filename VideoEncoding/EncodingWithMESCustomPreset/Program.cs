@@ -48,7 +48,6 @@ namespace EncodingWithMESCustomPreset
 
             Console.WriteLine("Press Enter to continue.");
             Console.ReadLine();
-
         }
 
         /// <summary>
@@ -80,9 +79,8 @@ namespace EncodingWithMESCustomPreset
 
             try
             {
-        
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform transform = await EnsureTransformExistsAsync(client, config.ResourceGroup, config.AccountName, transformName);
+                Transform transform = await CreateCustomTransform(client, config.ResourceGroup, config.AccountName, transformName);
 
                 // Creating a unique suffix so that we don't have name collisions if you run the sample
                 // multiple times without cleaning up.
@@ -146,7 +144,6 @@ namespace EncodingWithMESCustomPreset
                 string message = ex.Body.Error.Message;
 
                 Console.WriteLine("ERROR:API call failed with error code: {0} and message: {1}", code, message);
-
             }          
         }
 
@@ -189,7 +186,7 @@ namespace EncodingWithMESCustomPreset
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The transform name.</param>
         /// <returns></returns>
-        private static async Task<Transform> EnsureTransformExistsAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
+        private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
             // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
             // also uses the same recipe or Preset for processing content.
