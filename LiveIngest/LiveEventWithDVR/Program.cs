@@ -171,7 +171,7 @@ namespace LiveSample
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(liveEventName),
                         EventProcessorOptions.DefaultOptions);
                 }
-                catch (Exception exception)
+                catch (Exception)
                 {
                     Console.WriteLine("Failed to connect to Event Hub, please refer README for Event Hub and storage settings. Skipping event monitoring...");
                 }
