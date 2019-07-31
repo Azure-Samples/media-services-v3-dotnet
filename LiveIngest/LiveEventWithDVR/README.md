@@ -40,8 +40,7 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 
 * Build and run the sample in Visual Studio.
 
-* Optional, do the following steps if you want to use Event Grid for job monitoring
-  Please note, there are costs for using Event Hub. For more details, refer https://azure.microsoft.com/en-in/pricing/details/event-hubs/ and https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing.
+* Optional, do the following steps if you want to use Event Grid for job monitoring. Please note, there are costs for using Event Hub. For more details, refer https://azure.microsoft.com/en-in/pricing/details/event-hubs/ and https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing.
 
 - Enable Event Grid resource provider
 
