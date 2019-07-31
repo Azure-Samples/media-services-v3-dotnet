@@ -52,16 +52,16 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 
 - Create an Event Hub
 
-  `namespace=&lt;unique-namespace-name&gt;`\
-  `hubname=&lt;event-hub-name&gt;`\
-  `az eventhubs namespace create --name $namespace --resource-group &lt;resource-group&gt;`\
-  `az eventhubs eventhub create --name $hubname --namespace-name $namespace --resource-group &lt;resource-group&gt;`
+  `namespace=<unique-namespace-name>`\
+  `hubname=<event-hub-name>`\
+  `az eventhubs namespace create --name $namespace --resource-group <resource-group>`\
+  `az eventhubs eventhub create --name $hubname --namespace-name $namespace --resource-group <resource-group>`
 
 - Subscribe to Media Services events
 
-  `hubid=$(az eventhubs eventhub show --name $hubname --namespace-name $namespace --resource-group &lt;resource-group&gt; --query id --output tsv)`\
-  `amsResourceId=$(az ams account show --name &lt;ams-account&gt; --resource-group &lt;resource-group&gt; --query id --output tsv)`\
-  `az eventgrid event-subscription create --resource-id $amsResourceId --name &lt;event-subscription-name&gt; --endpoint-type eventhub --endpoint $hubid`
+  `hubid=$(az eventhubs eventhub show --name $hubname --namespace-name $namespace --resource-group <resource-group> --query id --output tsv)`\
+  `amsResourceId=$(az ams account show --name <ams-account> --resource-group <resource-group> --query id --output tsv)`\
+  `az eventgrid event-subscription create --resource-id $amsResourceId --name <event-subscription-name> --endpoint-type eventhub --endpoint $hubid`
 
 - Create a storage account and container for Event Processor Host if you don't have one
   https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host
@@ -69,8 +69,8 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 - Update appsettings.json with your Event Hub and Storage information
   StorageAccountName: The name of your storage account.\
   StorageAccountKey: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.\
-  StorageContainerName: The name of your container. Click Blobs in your storage account, find you container and copy the name.\
-  EventHubConnectionString: The Event Hub connection string. search your namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key.\
+  StorageContainerName: The name of your container. Click Blobs in your storage account, find your container and copy the name.\
+  EventHubConnectionString: The Event Hub connection string. Search for the namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key.\
   EventHubName: The Event Hub name.  &lt;your namespace&gt; -&gt; Event Hubs.
 
   ## Key concepts
