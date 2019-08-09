@@ -9,10 +9,10 @@ products:
 # Dynamic packaging VOD content into HLS/DASH and streaming
 
 This sample demonstrates how to dynamically package VOD content into HLS/DASH for streaming. It performs the following tasks:
-1. Create an encoding Transform that uses a built-in preset for adaptive bitrate encoding.
-1. Ingest a file.
-1. Submit a job.
-1. Publish output asset for HLS and DASH streaming.
+1. Creates an encoding Transform that uses a built-in preset for adaptive bitrate encoding.
+1. Ingests a file.
+1. Submits a job.
+1. Publishes output asset for HLS and DASH streaming.
 
 ## Prerequisites
 

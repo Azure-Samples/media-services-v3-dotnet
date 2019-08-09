@@ -25,7 +25,6 @@ namespace StreamHLSAndDASH
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
-        private const string OutputFolderName = @"Output";
 
         public static async Task Main(string[] args)
         {
@@ -104,8 +103,6 @@ namespace StreamHLSAndDASH
             if (job.State == JobState.Finished)
             {
                 Console.WriteLine("Job finished.");
-                if (!Directory.Exists(OutputFolderName))
-                    Directory.CreateDirectory(OutputFolderName);
 
                 StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
 
