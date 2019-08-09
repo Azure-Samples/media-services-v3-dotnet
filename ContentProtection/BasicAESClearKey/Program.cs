@@ -436,7 +436,7 @@ namespace BasicAESClearKey
         {
             const int SleepIntervalMs = 60 * 1000;
 
-            Job job = null;
+            Job job;
 
             do
             {

@@ -93,7 +93,7 @@ namespace EncodingWithMESCustomPreset
                 // Create a new input Asset and upload the specified local video file into it.
                 Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
 
-                // Out from the Job must be written to an Asset, so let's create one
+                // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
                 Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, transformName, jobName, inputAsset.Name, outputAsset.Name);
@@ -363,7 +363,7 @@ namespace EncodingWithMESCustomPreset
 
 
         /// <summary>
-        /// 
+        /// Polls Media Services for the status of the Job.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
@@ -447,7 +447,7 @@ namespace EncodingWithMESCustomPreset
             {
                 // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
                 // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
             }
 
             // Use Media Services API to get back a response that contains

@@ -157,7 +157,7 @@ namespace LiveSample
                 try
                 {
                     // Please refer README for Event Hub and storage settings.
-                    Console.WriteLine("Trying to start monitoring LiveEvent events...");
+                    Console.WriteLine("Starting monitoring LiveEvent events...");
                     string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                         config.StorageAccountName, config.StorageAccountKey);
 

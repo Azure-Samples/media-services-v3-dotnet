@@ -9,10 +9,10 @@ products:
 # Video and audio analyzer
 
 This sample demonstrates how to analyze video and audio in a file. It shows how to perform the following tasks:
-1. Create a transform that uses a video analyzer preset
-1. Upload a video file to an input asset
-1. Submit an analyzer job
-1. Download the output asset for verification.
+1. Creates a transform that uses a video analyzer preset
+1. Uploads a video file to an input asset
+1. Submits an analyzer job
+1. Downloads the output asset for verification.
 
 > [!TIP]
 > The `Program.cs` file has extensive comments.
@@ -55,7 +55,7 @@ This sample demonstrates how to analyze video and audio in a file. It shows how 
 
 * Optional, do the following steps if you want to use Event Grid for job monitoring. Please note, there are costs for using Event Hub. For more details, refer https://azure.microsoft.com/en-in/pricing/details/event-hubs/ and https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing.
 
--  Enable Event Grid resource provider
+- Enable Event Grid resource provider
 
   `az provider register --namespace Microsoft.EventGrid`
 

@@ -262,7 +262,7 @@ namespace EncodingWithMESPredefinedPreset
         }
 
         /// <summary>
-        /// Wait for the job to fonish.
+        /// Wait for the job to finish.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
@@ -437,7 +437,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The transform name.</param>
         /// <param name="jobName">The job name.</param>
-        /// <param name="assetName">The job name.</param>
+        /// <param name="assetName">The asset name.</param>
         /// <param name="streamingLocatorName">The streaming locator name. </param>
         /// <returns>A task.</returns>
         private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,

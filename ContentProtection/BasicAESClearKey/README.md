@@ -10,11 +10,11 @@ products:
 
 This sample demonstrates how to dynamically encrypt your content with AES-128. It shows how to perform the following tasks:
 
-1. Create a transform with built-in AdaptiveStreaming preset
-1. Submit a job
-1. Create a ContentKeyPolicy using a secret key
-1. Associate the ContentKeyPolicy with StreamingLocator
-1. Get a token and print a url for playback
+1. Creates a transform with built-in AdaptiveStreaming preset
+1. Submits a job
+1. Creates a ContentKeyPolicy using a secret key
+1. Associates the ContentKeyPolicy with StreamingLocator
+1. Gets a token and print a url for playback
 
 When a stream is requested by a player, Media Services uses the specified key to dynamically encrypt your content with AES-128 and Azure Media Player uses the token to decrypt.
 
