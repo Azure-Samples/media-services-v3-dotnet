@@ -17,7 +17,7 @@ This sample demonstrates how to filter content using asset and account filters. 
 1. Creates an Account filter.
 1. Publishes output asset for streaming.
 1. Gets Dash streaming url(s) with filters.
-1. Associates filters to s new streaming locator.
+1. Associates filters to a new streaming locator.
 1. Gets Dash streaming url(s) for the new locator.
 
 ## Prerequisites
