@@ -18,9 +18,10 @@ namespace EncodingWithMESCustomPreset
 {
     public class Program
     {
-        const String outputFolder = @"Output";
-        const String transformName = "Custom_TwoLayerMp4_Png";
+        private const string OutputFolder = @"Output";
+        private const string CustomTransform = "Custom_TwoLayerMp4_Png";
         private const string InputMP4FileName = @"ignite.mp4";
+        private const string DefaultStreamingEndpointName = "se";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
@@ -38,8 +39,7 @@ namespace EncodingWithMESCustomPreset
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -77,18 +77,19 @@ namespace EncodingWithMESCustomPreset
             // The default value is 30 seconds for the .NET client SDK
             client.LongRunningOperationRetryTimeout = 2;
 
+            // Creating a unique suffix so that we don't have name collisions if you run the sample
+            // multiple times without cleaning up.
+            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
+            string jobName = "job-" + uniqueness;
+            string locatorName = "locator-" + uniqueness;
+            string inputAssetName = "input-" + uniqueness;
+            string outputAssetName = "output-" + uniqueness;
+            bool stopEndpoint = false;
+
             try
             {
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform transform = await CreateCustomTransform(client, config.ResourceGroup, config.AccountName, transformName);
-
-                // Creating a unique suffix so that we don't have name collisions if you run the sample
-                // multiple times without cleaning up.
-                string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-                string jobName = "job-" + uniqueness;
-                string locatorName = "locator-" + uniqueness;
-                string inputAssetName = "input-" + uniqueness;
-                string outputAssetName = "output-" + uniqueness;
+                Transform transform = await CreateCustomTransform(client, config.ResourceGroup, config.AccountName, CustomTransform);
 
                 // Create a new input Asset and upload the specified local video file into it.
                 Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
@@ -96,28 +97,43 @@ namespace EncodingWithMESCustomPreset
                 // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, transformName, jobName, inputAsset.Name, outputAsset.Name);
+                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAsset.Name, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
                 // In this demo code, we will poll for Job status
                 // Polling is not a recommended best practice for production applications because of the latency it introduces.
                 // Overuse of this API may trigger throttling.
-                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, transformName, jobName);
+                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName);
 
                 TimeSpan elapsed = DateTime.Now - startedTime;
 
                 if (job.State == JobState.Finished)
                 {
                     Console.WriteLine("Job finished.");
-                    if (!Directory.Exists(outputFolder))
-                        Directory.CreateDirectory(outputFolder);
-                    DownloadResults(client, config.ResourceGroup, config.AccountName, outputAsset.Name, outputFolder).Wait();
+                    if (!Directory.Exists(OutputFolder))
+                        Directory.CreateDirectory(OutputFolder);
+                    DownloadResults(client, config.ResourceGroup, config.AccountName, outputAsset.Name, OutputFolder).Wait();
 
                     StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
 
+                    StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName,
+                        DefaultStreamingEndpointName);
+
+                    if (streamingEndpoint != null)
+                    {
+                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
+                        {
+                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+
+                            // Since we started the endpoint, we should stop it in cleanup.
+                            stopEndpoint = true;
+                        }
+                    }
+
                     Console.WriteLine();
                     Console.WriteLine("Streaming urls:");
-                    IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name);
+                    IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
                     foreach (var url in urls)
                     {
                         Console.WriteLine(url);
@@ -128,9 +144,6 @@ namespace EncodingWithMESCustomPreset
                     Console.WriteLine();
                     Console.Out.Flush();
                     Console.ReadLine();
-
-                    await CleanUpAsync(client, config.ResourceGroup, config.AccountName, transformName, job.Name, outputAsset.Name, inputAsset.Name, locatorName);
-                    Console.WriteLine("Done.");
                 }
                 else if (job.State == JobState.Error)
                 {
@@ -138,13 +151,21 @@ namespace EncodingWithMESCustomPreset
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch(ApiErrorException ex)
+            catch(ApiErrorException e)
             {
-                string code = ex.Body.Error.Code;
-                string message = ex.Body.Error.Message;
-
-                Console.WriteLine("ERROR:API call failed with error code: {0} and message: {1}", code, message);
-            }          
+                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
+                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Exiting, cleanup may be necessary...");
+                Console.ReadLine();
+            }
+            finally
+            {
+                Console.WriteLine("Cleaning up...");
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAssetName, outputAssetName,
+                    locatorName, stopEndpoint, DefaultStreamingEndpointName);
+            }
         }
 
         /// <summary>
@@ -349,8 +370,7 @@ namespace EncodingWithMESCustomPreset
             }
             catch (Exception exception)
             {
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -374,8 +394,7 @@ namespace EncodingWithMESCustomPreset
         private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, string jobName)
         {
             const int SleepInterval = 10 * 1000;
-
-            Job job = null;
+            Job job;
             bool exit = false;
 
             do
@@ -488,7 +507,6 @@ namespace EncodingWithMESCustomPreset
             string assetName, string outputFolderName)
         {
             // Use Media Service and Storage APIs to download the output files to a local folder
-            ListContainerSasInput parameters = new ListContainerSasInput();
             AssetContainerSas assetContainerSas = client.Assets.ListContainerSas(
                             resourceGroupName, 
                             accountName, 
@@ -560,36 +578,28 @@ namespace EncodingWithMESCustomPreset
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
+        /// <param name="streamingEndpoint">The streaming endpoint.</param>
         /// <returns></returns>
         private static async Task<IList<string>> GetStreamingUrlsAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
-            String locatorName)
+            String locatorName,
+            StreamingEndpoint streamingEndpoint)
         {
-            const string DefaultStreamingEndpointName = "se";
-
             IList<string> streamingUrls = new List<string>();
-
-            StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-
-            if (streamingEndpoint != null)
-            {
-                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
-                    await client.StreamingEndpoints.StartAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-                }
-            }
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder();
-                uriBuilder.Scheme = "https";
-                uriBuilder.Host = streamingEndpoint.HostName;
+                UriBuilder uriBuilder = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = streamingEndpoint.HostName,
 
-                uriBuilder.Path = path.Paths[0];
+                    Path = path.Paths[0]
+                };
                 streamingUrls.Add(uriBuilder.ToString());
             }
 
@@ -607,16 +617,29 @@ namespace EncodingWithMESCustomPreset
         /// <param name="inputAssetName">The input asset name.</param>
         /// <param name="outputAssetName">The output asset name.</param>
         /// <param name="streamingLocatorName">The streaming locator name. </param>
+        /// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+        /// <param name="streamingEndpointName">The endpoint name.</param>
         /// <returns>A task.</returns>
         private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
-            string transformName, string jobName, string inputAssetName, string outputAssetName, string streamingLocatorName)
+            string transformName, string jobName, string inputAssetName, string outputAssetName, string streamingLocatorName,
+            bool stopEndpoint, string streamingEndpointName)
         {
-            Console.WriteLine("Cleaning up...");
-
             await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
             await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
             await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
             await client.StreamingLocators.DeleteAsync(resourceGroupName, accountName, streamingLocatorName);
+
+            if (stopEndpoint)
+            {
+                // Because we started the endpoint, we'll stop it.
+                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
+            }
+            else
+            {
+                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+                Console.WriteLine($"The endpoint '{streamingEndpointName}' is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
+            }
         }
     }
 }
