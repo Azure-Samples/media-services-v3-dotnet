@@ -19,12 +19,14 @@ namespace AssetFilters
 {
     class Program
     {
-        const string adaptiveTransformName = "MyTransformWithAdaptiveStreamingPreset";
+        private const string adaptiveTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
+        private const string DefaultStreamingEndpointName = "se";   // Change this to your Streaming Endpoint name.
 
         public static async Task Main(string[] args)
         {
-            // Please make sure you have set configurations in appsettings.json
+            // Please make sure you have set configuration in appsettings.json.For more information, see
+            // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -73,19 +75,19 @@ namespace AssetFilters
             // The default value is 30 seconds for the .NET client SDK
             client.LongRunningOperationRetryTimeout = 2;
 
+            // Creating a unique suffix so that we don't have name collisions if you run the sample
+            // multiple times without cleaning up.
+            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
+            string jobName = "job-" + uniqueness;
+            string locatorName = "locator-" + uniqueness;
+            string outputAssetName = "output-" + uniqueness;
+            string assetFilterName = "assetFilter-" + uniqueness;
+            string accountFilterName = "accountFilter-" + uniqueness;
+            string inputAssetName = "input-" + uniqueness;
+            bool stopEndpoint = false;
+
             try
             {
-                // Creating a unique suffix so that we don't have name collisions if you run the sample
-                // multiple times without cleaning up.
-                string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-
-                string jobName = "job-" + uniqueness;
-                string locatorName = "locator-" + uniqueness;
-                string outputAssetName = "output-" + uniqueness;
-                string assetFilterName = "assetFilter-" + uniqueness;
-                string accountFilterName = "accountFilter-" + uniqueness;
-                string inputAssetName = "input-" + uniqueness;
-
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
                 Transform adaptiveEncodeTransform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName,
                     adaptiveTransformName);
@@ -96,6 +98,7 @@ namespace AssetFilters
                 // Output from the encoding Job must be written to an Asset, so let's create one.
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
+                Console.WriteLine("Creating a job...");
                 Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, jobName, inputAssetName, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
@@ -123,7 +126,23 @@ namespace AssetFilters
                             AssetName = outputAsset.Name,
                             StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
                         });
-                    IList<string> urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name);
+
+                    StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
+                        config.AccountName, DefaultStreamingEndpointName);
+
+                    if (streamingEndpoint != null)
+                    {
+                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
+                        {
+                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+
+                            // Since we started the endpoint, we should stop it in cleanup.
+                            stopEndpoint = true;
+                        }
+                    }
+
+                    IList<string> urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
 
                     Console.WriteLine("Creating an asset filter...");
                     Console.WriteLine();
@@ -177,7 +196,7 @@ namespace AssetFilters
                             Filters = filters
                         });
 
-                    urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name);
+                    urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
                     Console.WriteLine("Since we have associated filters with the new streaming locator, No need to append filters to the url(s):");
                     foreach (string url in urls)
                     {
@@ -188,11 +207,6 @@ namespace AssetFilters
                     Console.WriteLine("When finished, press ENTER to continue.");
                     Console.Out.Flush();
                     Console.ReadLine();
-
-                    await CleanUpAsync(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, job.Name,
-                        inputAsset.Name, outputAsset.Name, accountFilter.Name, locatorName);
-
-                    Console.WriteLine("Done.");
                 }
                 else if (job.State == JobState.Error)
                 {
@@ -200,13 +214,23 @@ namespace AssetFilters
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch(ApiErrorException ex)
+            catch (ApiErrorException e)
             {
-                string code = ex.Body.Error.Code;
-                string message = ex.Body.Error.Message;
+                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
+                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Exiting, cleanup may be necessary...");
+                Console.ReadLine();
+            }
+            finally
+            {
+                Console.WriteLine("Cleaning up...");
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, jobName,
+                        inputAssetName, outputAssetName, accountFilterName, locatorName, stopEndpoint, DefaultStreamingEndpointName);
 
-                Console.WriteLine("ERROR:API call failed with error code: {0} and message: {1}", code, message);
-            }          
+                Console.WriteLine("Done.");
+            }
         }
 
         /// <summary>
@@ -331,6 +355,7 @@ namespace AssetFilters
             var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
+            Console.WriteLine("Uploading a media file to the asset...");
             await blob.UploadFromFileAsync(fileToUpload);
 
             return asset;
@@ -543,23 +568,12 @@ namespace AssetFilters
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
+        /// <param name="streamingEndpoint">The streaming endpoint.</param>
         /// <returns>A task.</returns>
         private static async Task<IList<string>> GetDashStreamingUrlsAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string locatorName)
+            string accountName, string locatorName, StreamingEndpoint streamingEndpoint)
         {
-            const string DefaultStreamingEndpointName = "se";   // Change this to your Streaming Endpoint name.
-
             IList<string> streamingUrls = new List<string>();
-
-            StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-
-            if (streamingEndpoint != null)
-            {
-                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
-                    await client.StreamingEndpoints.StartAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-                }
-            }
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
@@ -592,18 +606,30 @@ namespace AssetFilters
         /// <param name="outputAssetName">The output asset name.</param>
         /// <param name="accountFilterName">The AccountFilter name.</param>
         /// <param name="streamingLocatorName">The streaming locator name. </param>
+        /// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+        /// <param name="streamingEndpointName">The endpoint name.</param>
         /// <returns>A task.</returns>
         private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
             string transformName, string jobName, string inputAssetName, string outputAssetName, string accountFilterName,
-            string streamingLocatorName)
+            string streamingLocatorName, bool stopEndpoint, string streamingEndpointName)
         {
-            Console.WriteLine("Cleaning up...");
-
             await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
             await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
             await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
             await client.AccountFilters.DeleteAsync(resourceGroupName, accountName, accountFilterName);
             await client.StreamingLocators.DeleteAsync(resourceGroupName, accountName, streamingLocatorName);
+
+            if (stopEndpoint)
+            {
+                // Because we started the endpoint, we'll stop it.
+                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
+            }
+            else
+            {
+                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+                Console.WriteLine($"The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
+            }
         }
     }
 }
