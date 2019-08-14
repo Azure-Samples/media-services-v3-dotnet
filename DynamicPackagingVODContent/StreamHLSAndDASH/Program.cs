@@ -17,17 +17,16 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace StreamHLSAndDASH
 {
-    /// <summary>
-    /// Please make sure you have set configuration in appsettings.json. For more information, see
-    /// https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
-    /// </summary>
     public class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
+        private const string DefaultStreamingEndpointName = "se";
 
         public static async Task Main(string[] args)
         {
+            // Please make sure you have set configuration in appsettings.json.For more information, see
+            // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -42,8 +41,7 @@ namespace StreamHLSAndDASH
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -84,38 +82,75 @@ namespace StreamHLSAndDASH
             string locatorName = $"locator-{uniqueness}";
             string outputAssetName = $"output-{uniqueness}";
             string inputAssetName = $"input-{uniqueness}";
+            bool stopEndpoint = false;
 
-            // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
-            Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
-
-            // Create a new input Asset and upload the specified local video file into it.
-            await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
-
-            // Output from the encoding Job must be written to an Asset, so let's create one
-            Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
-
-            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName, inputAssetName, outputAsset.Name);
-            // In this demo code, we will poll for Job status
-            // Polling is not a recommended best practice for production applications because of the latency it introduces.
-            // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
-            job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName);
-
-            if (job.State == JobState.Finished)
+            try
             {
-                Console.WriteLine("Job finished.");
+                // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
+                Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
 
-                StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
+                // Create a new input Asset and upload the specified local video file into it.
+                await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
 
-                IList<string> urls = await GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name);
-                Console.WriteLine();
-                foreach (var url in urls)
+                // Output from the encoding Job must be written to an Asset, so let's create one
+                Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
+
+                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName, inputAssetName, outputAsset.Name);
+                // In this demo code, we will poll for Job status
+                // Polling is not a recommended best practice for production applications because of the latency it introduces.
+                // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+                job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName);
+
+                if (job.State == JobState.Finished)
                 {
-                    Console.WriteLine(url);
-                }
-                Console.WriteLine();
-            }
+                    Console.WriteLine("Job finished.");
 
-            Console.WriteLine("Done. Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+                    StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
+
+                    StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+
+                    if (streamingEndpoint != null)
+                    {
+                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
+                        {
+                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+
+                            // Since we started the endpoint, we should stop it in cleanup.
+                            stopEndpoint = true;
+                        }
+
+                        IList<string> urls = await GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
+                            locator.Name, streamingEndpoint);
+                        Console.WriteLine();
+                        foreach (var url in urls)
+                        {
+                            Console.WriteLine(url);
+                        }
+                        Console.WriteLine();
+                        Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+                        Console.WriteLine("When finished press enter to cleanup.");
+                        Console.Out.Flush();
+                        Console.ReadLine();
+                    }
+                }
+            }
+            catch (ApiErrorException e)
+            {
+                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
+                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Exiting, cleanup may be necessary...");
+                Console.ReadLine();
+            }
+            finally
+            {
+                Console.WriteLine("Cleaning up...");
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName,
+                    inputAssetName, outputAssetName, stopEndpoint, DefaultStreamingEndpointName);
+                Console.WriteLine("Done.");
+            }
         }
 
         /// <summary>
@@ -168,6 +203,7 @@ namespace StreamHLSAndDASH
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
+            Console.WriteLine("Creating an input asset...");
             Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
 
             if (asset == null)
@@ -203,6 +239,7 @@ namespace StreamHLSAndDASH
             var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
+            Console.WriteLine("Uploading a media file to the input asset.");
             await blob.UploadFromFileAsync(fileToUpload);
 
             return asset;
@@ -229,6 +266,7 @@ namespace StreamHLSAndDASH
             }
             else
             {
+                Console.WriteLine("Creating an output asset...");
                 outputAsset = new Asset();
             }
 
@@ -273,6 +311,7 @@ namespace StreamHLSAndDASH
                 };
 
                 // Create the Transform with the output defined above
+                Console.WriteLine("Creating a transform...");
                 transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
             }
 
@@ -313,6 +352,7 @@ namespace StreamHLSAndDASH
             Job job;
             try
             {
+                Console.WriteLine("Creating a job...");
                 job = await client.Jobs.CreateAsync(
                     resourceGroupName,
                     accountName,
@@ -327,8 +367,7 @@ namespace StreamHLSAndDASH
             }
             catch (Exception exception)
             {
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -424,36 +463,27 @@ namespace StreamHLSAndDASH
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
+        /// <param name="streamingEndpoint">The streaming endpoint.</param>
         /// <returns></returns>
         private static async Task<IList<string>> GetHLSAndDASHStreamingUrlsAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
-            String locatorName)
+            string locatorName,
+            StreamingEndpoint streamingEndpoint)
         {
-            const string DefaultStreamingEndpointName = "se";
-
             IList<string> streamingUrls = new List<string>();
-
-            StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-
-            if (streamingEndpoint != null)
-            {
-                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
-                    await client.StreamingEndpoints.StartAsync(resourceGroupName, accountName, DefaultStreamingEndpointName);
-                }
-            }
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder();
-                uriBuilder.Scheme = "https";
-                uriBuilder.Host = streamingEndpoint.HostName;
-
-                uriBuilder.Path = path.Paths[0];
+                UriBuilder uriBuilder = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = streamingEndpoint.HostName,
+                    Path = path.Paths[0]
+                };
                 if (path.StreamingProtocol == StreamingPolicyStreamingProtocol.Hls)
                 {
                     streamingUrls.Add($"HLS url: {uriBuilder.ToString()}");
@@ -477,22 +507,23 @@ namespace StreamHLSAndDASH
         /// <param name="accountName"></param>
         /// <param name="transformName"></param>
         private static async Task CleanUpAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroupName,
-            string accountName,
-            string transformName)
+            IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName,
+            string jobName, string inputAssetName, string outputAssetName, bool stopEndpoint, string streamingEndpointName)
         {
+            await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
+            await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
+            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
-            var jobs = await client.Jobs.ListAsync(resourceGroupName, accountName, transformName);
-            foreach (var job in jobs)
+            if (stopEndpoint)
             {
-                await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, job.Name);
+                // Because we started the endpoint, we'll stop it.
+                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
             }
-
-            var assets = await client.Assets.ListAsync(resourceGroupName, accountName);
-            foreach (var asset in assets)
+            else
             {
-                await client.Assets.DeleteAsync(resourceGroupName, accountName, asset.Name);
+                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+                Console.WriteLine($"The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
             }
         }
     }
