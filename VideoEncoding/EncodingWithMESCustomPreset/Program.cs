@@ -100,9 +100,11 @@ namespace EncodingWithMESCustomPreset
                 Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAsset.Name, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
-                // In this demo code, we will poll for Job status
-                // Polling is not a recommended best practice for production applications because of the latency it introduces.
-                // Overuse of this API may trigger throttling.
+                
+                // In this demo code, we will poll for Job status. Polling is not a recommended best practice for production
+                // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
+                // should instead use Event Grid. To see how to implement the event grid, see the sample
+                // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
                 job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName);
 
                 TimeSpan elapsed = DateTime.Now - startedTime;
