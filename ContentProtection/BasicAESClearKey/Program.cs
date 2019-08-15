@@ -23,10 +23,6 @@ using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace BasicAESClearKey
 {
-    /// <summary>
-    /// Please make sure you have set configuration in appsettings.json. For more information, see
-    /// https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
-    /// </summary>
     class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
@@ -35,9 +31,12 @@ namespace BasicAESClearKey
         private static string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
         private static string ContentKeyPolicyName = "SharedContentKeyPolicyUsedByAllAssets";
+        private static string MyStreamingEndpointName = "se";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
+            // Please make sure you have set configuration in appsettings.json.For more information, see
+            // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -93,126 +92,154 @@ namespace BasicAESClearKey
             string jobName = $"job-{uniqueness}";
             string locatorName = $"locator-{uniqueness}";
             string outputAssetName = $"output-{uniqueness}";
-
-            // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
-            Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
-
-            // Output from the encoding Job must be written to an Asset, so let's create one
-            Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
-
-            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAsset.Name, jobName);
-
+            bool stopEndpoint = false;
             EventProcessorHost eventProcessorHost = null;
+
             try
             {
-                // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
-                // we will fall-back on polling Job status instead.
+                // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
+                Transform transform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName);
 
-                // Please refer README for Event Hub and storage settings.
-                string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                    config.StorageAccountName, config.StorageAccountKey);
+                // Output from the encoding Job must be written to an Asset, so let's create one
+                Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-                // Create a new host to process events from an Event Hub.
-                Console.WriteLine("Creating a new host to process events from an Event Hub...");
-                eventProcessorHost = new EventProcessorHost(config.EventHubName,
-                    PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
-                    StorageConnectionString, config.StorageContainerName);
+                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAsset.Name, jobName);
 
-                // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
-
-                // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
-                await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
-                    EventProcessorOptions.DefaultOptions);
-
-                // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
-                IList<Task> tasks = new List<Task>();
-
-                // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
-                Task jobTask = Task.Run(() => jobWaitingEvent.WaitOne());
-                tasks.Add(jobTask);
-
-                // 30 minutes timeout.
-                var tokenSource = new CancellationTokenSource();
-                var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
-                tasks.Add(timeout);
-
-                // Wait for tasks.
-                if (await Task.WhenAny(tasks) == jobTask)
+                try
                 {
-                    // Job finished. Cancel the timer.
-                    tokenSource.Cancel();
-                    // Get the latest status of the job.
-                    job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName);
+                    // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
+                    // we will fall-back on polling Job status instead.
+
+                    // Please refer README for Event Hub and storage settings.
+                    string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                        config.StorageAccountName, config.StorageAccountKey);
+
+                    // Create a new host to process events from an Event Hub.
+                    Console.WriteLine("Creating a new host to process events from an Event Hub...");
+                    eventProcessorHost = new EventProcessorHost(config.EventHubName,
+                        PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
+                        StorageConnectionString, config.StorageContainerName);
+
+                    // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
+                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+
+                    // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
+                    await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
+                        EventProcessorOptions.DefaultOptions);
+
+                    // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
+                    IList<Task> tasks = new List<Task>();
+
+                    // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
+                    Task jobTask = Task.Run(() => jobWaitingEvent.WaitOne());
+                    tasks.Add(jobTask);
+
+                    // 30 minutes timeout.
+                    var tokenSource = new CancellationTokenSource();
+                    var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
+                    tasks.Add(timeout);
+
+                    // Wait for tasks.
+                    if (await Task.WhenAny(tasks) == jobTask)
+                    {
+                        // Job finished. Cancel the timer.
+                        tokenSource.Cancel();
+                        // Get the latest status of the job.
+                        job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName);
+                    }
+                    else
+                    {
+                        // Timeout happened, Something might go wrong with job events. Fall-back on polling instead.
+                        jobWaitingEvent.Set();
+                        throw new Exception("Timeout happened.");
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    // Timeout happened, Something might go wrong with job events. Fall-back on polling instead.
-                    jobWaitingEvent.Set();
-                    throw new Exception("Timeout happened.");
+                    Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
+
+                    // Polling is not a recommended best practice for production applications because of the latency it introduces.
+                    // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+                    Console.WriteLine("Polling job status...");
+                    job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName);
                 }
+
+                if (job.State == JobState.Finished)
+                {
+                    Console.WriteLine("Job finished.");
+                    if (!Directory.Exists(OutputFolderName))
+                        Directory.CreateDirectory(OutputFolderName);
+
+                    // Generate a new random token signing key to use
+                    RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+                    rng.GetBytes(TokenSigningKey);
+
+                    //Create the content key policy that configures how the content key is delivered to end clients
+                    // via the Key Delivery component of Azure Media Services.
+                    ContentKeyPolicy policy = await GetOrCreateContentKeyPolicyAsync(client, config.ResourceGroup, config.AccountName, ContentKeyPolicyName);
+
+                    StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName, ContentKeyPolicyName);
+
+                    // We are using the ContentKeyIdentifierClaim in the ContentKeyPolicy which means that the token presented
+                    // to the Key Delivery Component must have the identifier of the content key in it.  Since we didn't specify
+                    // a content key when creating the StreamingLocator, the system created a random one for us.  In order to 
+                    // generate our test token we must get the ContentKeyId to put in the ContentKeyIdentifierClaim claim.
+                    string keyIdentifier = locator.ContentKeys.First().Id.ToString();
+
+                    string token = GetTokenAsync(Issuer, Audience, keyIdentifier, TokenSigningKey);
+
+                    StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
+                        config.AccountName, MyStreamingEndpointName);
+
+                    if (streamingEndpoint != null)
+                    {
+                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
+                        {
+                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, MyStreamingEndpointName);
+
+                            // Since we started the endpoint, we should stop it in cleanup.
+                            stopEndpoint = true;
+                        }
+                    }
+
+                    string dashPath = await GetDASHStreamingUrlAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
+
+                    Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
+                    Console.WriteLine("Note, the player is set to use the AES token and the Bearer token is specified. ");
+                    Console.WriteLine();
+                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&aes=true&aestoken=Bearer%3D{token}");
+                    Console.WriteLine();
+                }
+
+                Console.WriteLine("When finished press enter to cleanup.");
+                Console.Out.Flush();
+                Console.ReadLine();
             }
-            catch (Exception e)
+            catch (ApiErrorException e)
             {
-                Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
-
-                // Polling is not a recommended best practice for production applications because of the latency it introduces.
-                // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
-                Console.WriteLine("Polling job status...");
-                job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, jobName);
+                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
+                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
+                Console.WriteLine();
+                Console.WriteLine("Exiting, cleanup may be necessary...");
+                Console.ReadLine();
             }
             finally
             {
+                Console.WriteLine("Cleaning up...");
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAssetName,
+                    jobName, ContentKeyPolicyName, stopEndpoint, MyStreamingEndpointName);
+
                 if (eventProcessorHost != null)
                 {
-                    Console.WriteLine("Job final state received, unregistering event processor...");
+                    Console.WriteLine("Unregistering event processor...");
 
                     // Disposes of the Event Processor Host.
                     await eventProcessorHost.UnregisterEventProcessorAsync();
                     Console.WriteLine();
                 }
             }
-
-            if (job.State == JobState.Finished)
-            {
-                Console.WriteLine("Job finished.");
-                if (!Directory.Exists(OutputFolderName))
-                    Directory.CreateDirectory(OutputFolderName);
-
-                // Generate a new random token signing key to use
-                RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-                rng.GetBytes(TokenSigningKey);
-
-                //Create the content key policy that configures how the content key is delivered to end clients
-                // via the Key Delivery component of Azure Media Services.
-                ContentKeyPolicy policy = await GetOrCreateContentKeyPolicyAsync(client, config.ResourceGroup, config.AccountName, ContentKeyPolicyName);
-                
-                StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName, ContentKeyPolicyName);
-
-                // We are using the ContentKeyIdentifierClaim in the ContentKeyPolicy which means that the token presented
-                // to the Key Delivery Component must have the identifier of the content key in it.  Since we didn't specify
-                // a content key when creating the StreamingLocator, the system created a random one for us.  In order to 
-                // generate our test token we must get the ContentKeyId to put in the ContentKeyIdentifierClaim claim.
-                string keyIdentifier = locator.ContentKeys.First().Id.ToString();
-
-                string token = GetTokenAsync(Issuer, Audience, keyIdentifier, TokenSigningKey);
-
-                string dashPath = await GetDASHStreamingUrlAsync(client, config.ResourceGroup, config.AccountName, locator.Name);
-
-                Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
-                Console.WriteLine("Note, the player is set to use the AES token and the Bearer token is specified. ");
-                Console.WriteLine();
-                Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&aes=true&aestoken=Bearer%3D{token}");
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("When finished press enter to cleanup.");
-            Console.Out.Flush();
-            Console.ReadLine();
-
-            Console.WriteLine("Cleaning up...");
-            await CleanUpAsync(client, config.ResourceGroup, config.AccountName, AdaptiveStreamingTransformName, outputAssetName,
-                jobName, ContentKeyPolicyName);
         }
 
         /// <summary>
@@ -350,7 +377,7 @@ namespace BasicAESClearKey
             {
                 // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
                 // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
             }
             else
             {
@@ -388,7 +415,6 @@ namespace BasicAESClearKey
             };
 
             // In this example, we are assuming that the job name is unique.
-            //
             // If you already have a job with the desired name, use the Jobs.Get method
             // to get the existing job. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
@@ -436,7 +462,7 @@ namespace BasicAESClearKey
         {
             const int SleepIntervalMs = 60 * 1000;
 
-            Job job = null;
+            Job job;
 
             do
             {
@@ -545,26 +571,10 @@ namespace BasicAESClearKey
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <returns></returns>
-        private static async Task<string> GetDASHStreamingUrlAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroupName,
-            string accountName,
-            string locatorName)
+        private static async Task<string> GetDASHStreamingUrlAsync(IAzureMediaServicesClient client, string resourceGroupName,
+            string accountName, string locatorName, StreamingEndpoint streamingEndpoint)
         {
-            // Change this to your Endpoint name.
-            const string myStreamingEndpointName = "se";
-
             string dashPath = "";
-
-            StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(resourceGroupName, accountName, myStreamingEndpointName);
-
-            if (streamingEndpoint != null)
-            {
-                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
-                    await client.StreamingEndpoints.StartAsync(resourceGroupName, accountName, myStreamingEndpointName);
-                }
-            }
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
@@ -587,69 +597,6 @@ namespace BasicAESClearKey
         }
 
         /// <summary>
-        ///  Downloads the results from the specified output asset, so you can see what you got.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="assetName">The output asset.</param>
-        /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
-        private static async Task DownloadOutputAssetAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroup,
-            string accountName,
-            string assetName,
-            string outputFolderName)
-        {
-            const int ListBlobsSegmentMaxResult = 5;
-
-            if (!Directory.Exists(outputFolderName))
-            {
-                Directory.CreateDirectory(outputFolderName);
-            }
-
-            AssetContainerSas assetContainerSas = await client.Assets.ListContainerSasAsync(
-                resourceGroup,
-                accountName,
-                assetName,
-                permissions: AssetContainerPermission.Read,
-                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
-
-            Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
-
-            string directory = Path.Combine(outputFolderName, assetName);
-            Directory.CreateDirectory(directory);
-
-            Console.WriteLine($"Downloading output results to '{directory}'...");
-
-            BlobContinuationToken continuationToken = null;
-            IList<Task> downloadTasks = new List<Task>();
-
-            do
-            {
-                BlobResultSegment segment = await container.ListBlobsSegmentedAsync(null, true, BlobListingDetails.None, ListBlobsSegmentMaxResult, continuationToken, null, null);
-
-                foreach (IListBlobItem blobItem in segment.Results)
-                {
-                    CloudBlockBlob blob = blobItem as CloudBlockBlob;
-                    if (blob != null)
-                    {
-                        string path = Path.Combine(directory, blob.Name);
-                        downloadTasks.Add(blob.DownloadToFileAsync(path, FileMode.Create));
-                    }
-                }
-
-                continuationToken = segment.ContinuationToken;
-            }
-            while (continuationToken != null);
-
-            await Task.WhenAll(downloadTasks);
-
-            Console.WriteLine("Download complete.");
-        }
-
-        /// <summary>
         /// Deletes the jobs and assets that were created.
         /// Generally, you should clean up everything except objects 
         /// that you are planning to reuse (typically, you will reuse Transforms, and you will persist StreamingLocators).
@@ -661,6 +608,8 @@ namespace BasicAESClearKey
         /// <param name="assetName">The output asset name</param>
         /// <param name="jobName">The job name.</param>
         /// <param name="contentKeyPolicyName">The content key policy name.</param>
+        /// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+        /// <param name="streamingEndpointName">The endpoint name.</param>
         private static async Task CleanUpAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -668,13 +617,28 @@ namespace BasicAESClearKey
             string transformName,
             string assetName,
             string jobName,
-            string contentKeyPolicyName)
+            string contentKeyPolicyName,
+            bool stopEndpoint,
+            string streamingEndpointName
+            )
         {
             await client.Assets.DeleteAsync(resourceGroupName, accountName, assetName);
 
             await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
             await client.ContentKeyPolicies.DeleteAsync(resourceGroupName, accountName, contentKeyPolicyName);
+
+            if (stopEndpoint)
+            {
+                // Because we started the endpoint, we'll stop it.
+                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
+            }
+            else
+            {
+                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+                Console.WriteLine($"The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
+            }
         }
     }
 }

@@ -9,13 +9,13 @@ products:
 # Live event with DVR
 
 This sample demonstrates how to create and use LiveEvents and LiveOutputs in the v3 Media Services API. It performs the following tasks:
-1. Create a pass-through LiveEvent.
-1. Start monitoring the LiveEvent using Event Grid and Event Hub.
-1. Create an Asset and an AssetFilter with 5 minutes sliding window and 30 seconds seek back time.
-1. Create a LiveOutput with 25 hours time span.
-1. Create a StreamingLocator and associate the AssetFilter with it.
-1. Print urls for the LiveEvent.
-1. Print playback urls for the event archive after the LiveEvent stops.
+1. Creates a pass-through LiveEvent.
+1. Starts monitoring the LiveEvent using Event Grid and Event Hub.
+1. Creates an Asset and an AssetFilter with 5 minutes sliding window and 30 seconds seek back time.
+1. Creates a LiveOutput with 25 hours time span.
+1. Creates a StreamingLocator and associate the AssetFilter with it.
+1. Prints urls for the LiveEvent.
+1. Prints playback urls for the event archive after the LiveEvent stops.
 
 ## Prerequisites
 * Required Assemblies

@@ -1,10 +1,10 @@
 # Encode with a custom Transform
 This sample shows how to create a custom encoding Transform using the StandardEncoderPreset settings. It shows how to perform the following tasks:
-1. Create a custom encoding transform.
-1. Create an input asset and upload a media file into it.
-1. Submit a job and monitoring the job using polling method.
-1. Download the output asset.
-1. print urls for streaming.
+1. Creates a custom encoding transform.
+1. Creates an input asset and upload a media file into it.
+1. Submits a job and monitoring the job using polling method.
+1. Downloads the output asset.
+1. prints urls for streaming.
 
 > [!TIP]
 > The `Program.cs` file has extensive comments.

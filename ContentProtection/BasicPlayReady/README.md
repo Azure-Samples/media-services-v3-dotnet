@@ -9,11 +9,11 @@ products:
 # Dynamically encrypt your content with PlayReady DRM
 
 This sample demonstrates how to dynamically encrypt your content with PlayReady DRM. It shows how to perform the following tasks:
-1. Create a transform with built-in AdaptiveStreaming preset
-1. Submit a job
-1. Create a ContentKeyPolicy with PlayReady configuration using a secret key
-1. Associate the ContentKeyPolicy with StreamingLocator
-1. Get a token and print a url for playback
+1. Creates a transform with built-in AdaptiveStreaming preset
+1. Submits a job
+1. Creates a ContentKeyPolicy with PlayReady configuration using a secret key
+1. Associates the ContentKeyPolicy with StreamingLocator
+1. Gets a token and print a url for playback
 
 When a user requests PlayReady-protected content, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player. A PlayReady license contains the decryption key that can be used by the client player to decrypt and stream the content.
 

@@ -110,14 +110,14 @@ namespace VideoAndAudioAnalyzer
                 // we will fall-back on polling Job status instead.
 
                 // Please refer README for Event Hub and storage settings.
-                string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                     config.StorageAccountName, config.StorageAccountKey);
 
                 // Create a new host to process events from an Event Hub.
                 Console.WriteLine("Creating a new host to process events from an Event Hub...");
                 eventProcessorHost = new EventProcessorHost(config.EventHubName,
                     PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
-                    StorageConnectionString, config.StorageContainerName);
+                    storageConnectionString, config.StorageContainerName);
 
                 // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                 AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
@@ -130,7 +130,8 @@ namespace VideoAndAudioAnalyzer
                 IList<Task> tasks = new List<Task>();
 
                 // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
-                Task jobTask = Task.Run(() => jobWaitingEvent.WaitOne());
+                Task jobTask = Task.Run(() => 
+                jobWaitingEvent.WaitOne());
                 tasks.Add(jobTask);
 
                 // 30 minutes timeout.
@@ -288,7 +289,7 @@ namespace VideoAndAudioAnalyzer
             {
                 // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
                 // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
             }
 
             // Use Media Services API to get back a response that contains
