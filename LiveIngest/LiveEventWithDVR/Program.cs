@@ -19,12 +19,13 @@ using System.Collections;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.EventHubs;
 
-namespace LiveSample
+namespace LiveEventWithDVR
 {
     class Program
     {
         public static async Task Main(string[] args)
         {
+            // Please make sure you have set configuration in appsettings.json.
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -157,7 +158,7 @@ namespace LiveSample
                 try
                 {
                     // Please refer README for Event Hub and storage settings.
-                    Console.WriteLine("Trying to start monitoring LiveEvent events...");
+                    Console.WriteLine("Starting monitoring LiveEvent events...");
                     string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                         config.StorageAccountName, config.StorageAccountKey);
 
@@ -171,9 +172,10 @@ namespace LiveSample
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(liveEventName),
                         EventProcessorOptions.DefaultOptions);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Console.WriteLine("Failed to connect to Event Hub, please refer README for Event Hub and storage settings. Skipping event monitoring...");
+                    Console.WriteLine(e.Message);
                 }
 
                 Console.WriteLine($"Creating the LiveEvent, be patient this can take time...");
@@ -221,8 +223,8 @@ namespace LiveSample
                         forceEndTimestamp:false,
                         // 300 seconds sliding window
                         presentationWindowDuration: 3000000000L,
-                        // This value defines the latest live position that a client can seek back to 30 seconds, must be smaller than sliding window.
-                        liveBackoffDuration: 300000000L)
+                        // This value defines the latest live position that a client can seek back to 10 seconds, must be smaller than sliding window.
+                        liveBackoffDuration: 100000000L)
                 );
 
                 drvAssetFilter = await client.AssetFilters.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName,
@@ -279,19 +281,25 @@ namespace LiveSample
                     Console.Out.Flush();
                     ignoredInput = Console.ReadLine();
 
+                    Console.WriteLine("Cleaning up LiveEvent and output...");
                     await CleanupLiveEventAndOutputAsync(client, config.ResourceGroup, config.AccountName, liveEventName);
                     Console.WriteLine("The LiveOutput and LiveEvent are now deleted.  The event is available as an archive and can still be streamed.");
 
-                    StreamingLocator archiveLocator = await client.StreamingLocators.CreateAsync(config.ResourceGroup,
-                        config.AccountName,
-                        archiveStreamingLocatorName,
-                        new StreamingLocator
-                        {
-                            AssetName = assetName,
-                            StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
-                        });
-                    Console.WriteLine("To playback the archive, Use the following urls:");
-                    await PrintPaths(client, config.ResourceGroup, config.AccountName, archiveStreamingLocatorName, streamingEndpoint);
+                    // If we started the endpoint, we'll stop it. Otherwise, we'll keep the endpoint running and print urls
+                    // that can be played even after this sample ends.
+                    if (!stopEndpoint)
+                    {
+                        StreamingLocator archiveLocator = await client.StreamingLocators.CreateAsync(config.ResourceGroup,
+                            config.AccountName,
+                            archiveStreamingLocatorName,
+                            new StreamingLocator
+                            {
+                                AssetName = assetName,
+                                StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
+                            });
+                        Console.WriteLine("To playback the archive, Use the following urls:");
+                        await PrintPaths(client, config.ResourceGroup, config.AccountName, archiveStreamingLocatorName, streamingEndpoint);
+                    }
                 }
             }
             catch (ApiErrorException e)
@@ -307,7 +315,7 @@ namespace LiveSample
             {
                 await CleanupLiveEventAndOutputAsync(client, config.ResourceGroup, config.AccountName, liveEventName);
 
-                await CleanupLocatorandAssetAsync(client, config.ResourceGroup, config.AccountName, drvStreamingLocatorName, assetName);
+                await CleanupLocatorAsync(client, config.ResourceGroup, config.AccountName, drvStreamingLocatorName);
 
                 // Stop event monitoring.
                 if (eventProcessorHost != null)
@@ -317,7 +325,7 @@ namespace LiveSample
 
                 if (stopEndpoint)
                 {
-                    // Because we started the endpoint, we stop it.
+                    // Because we started the endpoint, we'll stop it.
                     await client.StreamingEndpoints.StopAsync(config.ResourceGroup, config.AccountName, streamingEndpointName);
                 }
                 else
@@ -372,7 +380,6 @@ namespace LiveSample
         /// <returns></returns>
         private static async Task CleanupLiveEventAndOutputAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, string liveEventName)
         {
-            Console.WriteLine("Cleaning up LiveEvent and output.");
             try
             {
                 LiveEvent liveEvent = await client.LiveEvents.GetAsync(resourceGroup, accountName, liveEventName);
@@ -381,8 +388,14 @@ namespace LiveSample
                 {
                     if (liveEvent.ResourceState == LiveEventResourceState.Running)
                     {
-                        // If the LiveEvent is running, stop it and have it remove any LiveOutputs
-                        await client.LiveEvents.StopAsync(resourceGroup, accountName, liveEventName, removeOutputsOnStop: true);
+                        // If the LiveEvent is running, remove LiveOutpts and stop it.
+                        var liveOutputs = await client.LiveOutputs.ListAsync(resourceGroup, accountName, liveEventName);
+                        foreach (var liveOutput in liveOutputs)
+                        {
+                            // Delete a LiveOutput
+                            await client.LiveOutputs.DeleteAsync(resourceGroup, accountName, liveEventName, liveOutput.Name);
+                        }
+                        await client.LiveEvents.StopAsync(resourceGroup, accountName, liveEventName);
                     }
 
                     // Delete the LiveEvent
@@ -407,7 +420,7 @@ namespace LiveSample
         /// <param name="streamingLocatorName">The streaming locator name.</param>
         /// <param name="assetName">The asset name.</param>
         /// <returns></returns>
-        private static async Task CleanupLocatorandAssetAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, string streamingLocatorName, string assetName)
+        private static async Task CleanupLocatorAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, string streamingLocatorName)
         {
             try
             {
@@ -418,7 +431,7 @@ namespace LiveSample
             {
                 Console.WriteLine("CleanupLocatorandAssetAsync -- Hit ApiErrorException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
-                Console.WriteLine($"\tCode: {e.Body.Error.Message}");
+                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
             }
         }
@@ -479,4 +492,3 @@ namespace LiveSample
         }
     }
 }
-

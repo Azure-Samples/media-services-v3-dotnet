@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 namespace EncodingWithMESCustomPreset
 {
     /// <summary>
-    /// This class reads values from local configuration file appsettings.json
+    /// This class reads values from local configuration file appsettings.json.
     /// Please change the configuration using your account information. For more information, see
     /// https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to. For security
     /// reasons, do not check in the configuration file to source control.
