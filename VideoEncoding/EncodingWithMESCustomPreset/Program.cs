@@ -153,7 +153,7 @@ namespace EncodingWithMESCustomPreset
             }
             catch(ApiErrorException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("ApiErrorException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
