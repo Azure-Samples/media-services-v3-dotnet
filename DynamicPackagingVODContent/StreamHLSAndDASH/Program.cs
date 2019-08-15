@@ -96,9 +96,11 @@ namespace StreamHLSAndDASH
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
                 Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName, inputAssetName, outputAsset.Name);
-                // In this demo code, we will poll for Job status
-                // Polling is not a recommended best practice for production applications because of the latency it introduces.
-                // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+
+                // In this demo code, we will poll for Job status. Polling is not a recommended best practice for production
+                // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
+                // should instead use Event Grid. To see how to implement the event grid, see the sample
+                // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
                 job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, transform.Name, jobName);
 
                 if (job.State == JobState.Finished)
