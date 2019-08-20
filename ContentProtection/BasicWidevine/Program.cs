@@ -150,7 +150,7 @@ namespace BasicWidevine
                         throw new Exception("Timeout happened.");
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
 
@@ -361,6 +361,7 @@ namespace BasicWidevine
                 };
 
                 // Create the Transform with the output defined above
+                Console.WriteLine("Creating a transform...");
                 transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
             }
 
@@ -395,6 +396,7 @@ namespace BasicWidevine
                 Console.WriteLine("Creating an Asset with this name instead: " + outputAssetName);
             }
 
+            Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
         }
 
@@ -430,6 +432,7 @@ namespace BasicWidevine
             // If you already have a job with the desired name, use the Jobs.Get method
             // to get the existing job. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
+            Console.WriteLine("Creating a job...");
             Job job = await client.Jobs.CreateAsync(
                 resourceGroup,
                 accountName,
@@ -462,7 +465,7 @@ namespace BasicWidevine
         {
             const int SleepIntervalMs = 60 * 1000;
 
-            Job job = null;
+            Job job;
 
             do
             {
@@ -515,7 +518,7 @@ namespace BasicWidevine
                 PolicyOverrides = new PolicyOverrides()
                 {
                     CanPlay = true,
-                    CanPersist = true,
+                    CanPersist = false,
                     CanRenew = false,
                     RentalDurationSeconds = 2592000,
                     PlaybackDurationSeconds = 10800,
@@ -648,9 +651,11 @@ namespace BasicWidevine
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder();
-                uriBuilder.Scheme = "https";
-                uriBuilder.Host = streamingEndpoint.HostName;
+                UriBuilder uriBuilder = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = streamingEndpoint.HostName
+                };
 
                 // Look for just the DASH path and generate a URL for the Azure Media Player to playback the encrypted DASH content. 
                 // Note that the JWT token is set to expire in 1 hour. 
