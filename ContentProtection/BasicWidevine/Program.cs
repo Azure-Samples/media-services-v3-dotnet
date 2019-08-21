@@ -171,8 +171,7 @@ namespace BasicWidevine
                     // to the Key Delivery Component must have the identifier of the content key in it. 
                     ContentKeyPolicy policy = await GetOrCreateContentKeyPolicyAsync(client, config.ResourceGroup, config.AccountName, ContentKeyPolicyName, TokenSigningKey);
 
-                    // Because this sample sets StreamingLocator.StreamingPolicyName to "Predefined_MultiDrmCencStreaming" policy,
-                    // two content keys get generated and set on the locator. 
+                    // Sets StreamingLocator.StreamingPolicyName to "Predefined_MultiDrmCencStreaming" policy.
                     StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName, ContentKeyPolicyName);
 
                     // In this example, we want to play the Widevine (CENC) encrypted stream. 
@@ -573,7 +572,6 @@ namespace BasicWidevine
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
             }
 
-            // If you also added FairPlay or Widevine, use "Predefined_MultiDrmStreaming
             locator = await client.StreamingLocators.CreateAsync(
                 resourceGroup,
                 accountName,
@@ -582,7 +580,6 @@ namespace BasicWidevine
                 {
                     AssetName = assetName,
                     // "Predefined_MultiDrmCencStreaming" policy supports envelope and cenc encryption
-                    // And sets two content keys on the StreamingLocator
                     StreamingPolicyName = "Predefined_MultiDrmCencStreaming",
                     DefaultContentKeyPolicyName = contentPolicyName
                 });
