@@ -6,9 +6,9 @@ products:
   - azure-media-services
 ---
 
-# Dynamically encrypt your content with PlayReady DRM
+# Offline playback with PlayReady and Widevine DRM
 
-This sample demonstrates how to dynamically encrypt your content with PlayReady and Widevine DRM. It shows how to perform the following tasks:
+This sample demonstrates how to dynamically encrypt your content with PlayReady and Widevine DRM and play the content without requesting a license from license service. It shows how to perform the following tasks:
 
 1. Creates a transform with built-in AdaptiveStreaming preset
 1. Submits a job
