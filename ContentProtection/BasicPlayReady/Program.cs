@@ -28,11 +28,11 @@ namespace BasicPlayReady
     class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
-        private static string Issuer = "myIssuer";
-        private static string Audience = "myAudience";
+        private static readonly string Issuer = "myIssuer";
+        private static readonly string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
-        private static string ContentKeyPolicyName = "DRMContentKeyPolicy";
-        private static string DefaultStreamingEndpointName = "se";  // Change this to your Endpoint name.
+        private static readonly string ContentKeyPolicyName = "DRMContentKeyPolicy";
+        private static readonly string DefaultStreamingEndpointName = "se";  // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
@@ -52,8 +52,7 @@ namespace BasicPlayReady
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -155,7 +154,7 @@ namespace BasicPlayReady
                         throw new Exception("Timeout happened.");
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
 
@@ -176,8 +175,7 @@ namespace BasicPlayReady
                     // to the Key Delivery Component must have the identifier of the content key in it. 
                     ContentKeyPolicy policy = await GetOrCreateContentKeyPolicyAsync(client, config.ResourceGroup, config.AccountName, ContentKeyPolicyName, TokenSigningKey);
 
-                    // Because this sample sets StreamingLocator.StreamingPolicyName to "Predefined_MultiDrmCencStreaming" policy,
-                    // two content keys get generated and set on the locator. 
+                    // Sets StreamingLocator.StreamingPolicyName to "Predefined_MultiDrmCencStreaming" policy. 
                     StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName, ContentKeyPolicyName);
 
                     // In this example, we want to play the PlayReady (CENC) encrypted stream. 
@@ -305,16 +303,16 @@ namespace BasicPlayReady
 
                 ContentKeyPolicyPlayReadyConfiguration playReadyConfig = ConfigurePlayReadyLicenseTemplate();
 
-                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>();
-
-                options.Add(
+                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>
+                {
                     new ContentKeyPolicyOption()
                     {
                         Configuration = playReadyConfig,
                         // If you want to set an open restriction, use
                         // Restriction = new ContentKeyPolicyOpenRestriction()
                         Restriction = restriction
-                    });
+                    }
+                };
 
                 policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(resourceGroupName, accountName, contentKeyPolicyName, options);
             }
@@ -322,11 +320,9 @@ namespace BasicPlayReady
             {
                 // Get the signing key from the existing policy.
                 var policyProperties = await client.ContentKeyPolicies.GetPolicyPropertiesWithSecretsAsync(resourceGroupName, accountName, contentKeyPolicyName);
-                var restriction = policyProperties.Options[0].Restriction as ContentKeyPolicyTokenRestriction;
-                if (restriction != null)
+                if (policyProperties.Options[0].Restriction is ContentKeyPolicyTokenRestriction restriction)
                 {
-                    var signingKey = restriction.PrimaryVerificationKey as ContentKeyPolicySymmetricTokenKey;
-                    if (signingKey != null)
+                    if (restriction.PrimaryVerificationKey is ContentKeyPolicySymmetricTokenKey signingKey)
                     {
                         TokenSigningKey = signingKey.KeyValue;
                     }
@@ -373,6 +369,7 @@ namespace BasicPlayReady
                 };
 
                 // Create the Transform with the output defined above
+                Console.WriteLine("Creating a transform...");
                 transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
             }
 
@@ -404,6 +401,7 @@ namespace BasicPlayReady
                 outputAsset = new Asset();
             }
 
+            Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -439,6 +437,7 @@ namespace BasicPlayReady
             // If you already have a job with the desired name, use the Jobs.Get method
             // to get the existing job. In Media Services v3, the Get method on entities returns null 
             // if the entity doesn't exist (a case-insensitive check on the name).
+            Console.WriteLine("Creating a job...");
             Job job = await client.Jobs.CreateAsync(
                 resourceGroup,
                 accountName,
@@ -471,7 +470,7 @@ namespace BasicPlayReady
         {
             const int SleepIntervalMs = 60 * 1000;
 
-            Job job = null;
+            Job job;
 
             do
             {
@@ -511,10 +510,9 @@ namespace BasicPlayReady
             objContentKeyPolicyPlayReadyLicense = new ContentKeyPolicyPlayReadyLicense
             {
                 AllowTestDevices = true,
-                BeginDate = new DateTime(2019, 7, 15),
                 ContentKeyLocation = new ContentKeyPolicyPlayReadyContentEncryptionKeyFromHeader(),
                 ContentType = ContentKeyPolicyPlayReadyContentType.UltraVioletStreaming,
-                LicenseType = ContentKeyPolicyPlayReadyLicenseType.Persistent,
+                LicenseType = ContentKeyPolicyPlayReadyLicenseType.NonPersistent,
                 PlayRight = new ContentKeyPolicyPlayReadyPlayRight
                 {
                     ImageConstraintForAnalogComponentVideoRestriction = true,
@@ -571,7 +569,6 @@ namespace BasicPlayReady
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
             }
 
-            // If you also added FairPlay or Widevine, use "Predefined_MultiDrmStreaming
             locator = await client.StreamingLocators.CreateAsync(
                 resourceGroup,
                 accountName,
@@ -580,7 +577,6 @@ namespace BasicPlayReady
                 {
                     AssetName = assetName,
                     // "Predefined_MultiDrmCencStreaming" policy supports envelope and cenc encryption
-                    // And sets two content keys on the StreamingLocator
                     StreamingPolicyName = "Predefined_MultiDrmCencStreaming",
                     DefaultContentKeyPolicyName = contentPolicyName
                 });
@@ -644,9 +640,11 @@ namespace BasicPlayReady
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder();
-                uriBuilder.Scheme = "https";
-                uriBuilder.Host = streamingEndpoint.HostName;
+                UriBuilder uriBuilder = new UriBuilder
+                {
+                    Scheme = "https",
+                    Host = streamingEndpoint.HostName
+                };
 
                 // Look for just the DASH path and generate a URL for the Azure Media Player to playback the encrypted DASH content. 
                 // Note that the JWT token is set to expire in 1 hour. 
