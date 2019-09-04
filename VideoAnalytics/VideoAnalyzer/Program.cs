@@ -17,7 +17,7 @@ using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace VideoAndAudioAnalyzer
+namespace VideoAnalyzer
 {
     class Program
     {
@@ -88,8 +88,8 @@ namespace VideoAndAudioAnalyzer
             string outputAssetName = $"output-{uniqueness}";
             string inputAssetName = $"input-{uniqueness}";
 
-            // Create a video analyzer preset with both video and audio insights.
-            Preset preset = new VideoAnalyzerPreset("en-US", InsightsType.AllInsights);
+            // Create a video analyzer preset with video insights.
+            Preset preset = new VideoAnalyzerPreset(null, InsightsType.VideoInsightsOnly);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.

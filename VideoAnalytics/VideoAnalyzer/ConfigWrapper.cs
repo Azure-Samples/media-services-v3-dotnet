@@ -4,7 +4,7 @@
 using System;
 using Microsoft.Extensions.Configuration;
 
-namespace VideoAndAudioAnalyzer
+namespace VideoAnalyzer
 {
     /// <summary>
     /// This class reads values from local configuration file appsettings.json
