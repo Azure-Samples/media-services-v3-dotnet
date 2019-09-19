@@ -488,8 +488,13 @@ namespace OfflineFairPlay
                 Ask = askBytes,
                 FairPlayPfx = appCertBase64,
                 FairPlayPfxPassword = fairPlayPfxPassword,
-                RentalAndLeaseKeyType = ContentKeyPolicyFairPlayRentalAndLeaseKeyType.PersistentUnlimited,
-                RentalDuration = 2249
+                RentalAndLeaseKeyType = ContentKeyPolicyFairPlayRentalAndLeaseKeyType.DualExpiry,
+                RentalDuration = 0,
+                OfflineRentalConfiguration = new ContentKeyPolicyFairPlayOfflineRentalConfiguration()
+                {
+                   StorageDurationSeconds = 300000,
+                    PlaybackDurationSeconds = 500000
+                }
             };
 
             return objContentKeyPolicyPlayReadyConfiguration;
