@@ -7,7 +7,7 @@ products:
   - azure-media-services
 description: "The samples in this repo show how to encode, package, protect, analyze your videos with Azure Media Services v3 using .NET SDK. You also learn how to perform live ingest in order to broadcast your events."  
 ---
-
+ 
 # Azure Media Services v3 samples using .NET
 
 The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using .NET SDK. The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.  
