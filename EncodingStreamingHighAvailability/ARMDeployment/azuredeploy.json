@@ -1,0 +1,602 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentRegionLocation": {
+      "type": "string",
+      "allowedValues": [
+        "westus2",
+        "westus",
+        "eastus",
+        "westeurope",
+        "eastus2",
+        "eastasia",
+        "australiasoutheast"
+      ],
+      "metadata": {
+        "description": "The name of the region where the deployment is hosted."
+      }
+    },
+    "deploymentNameBase": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "storageAccountName": "[concat(parameters('deploymentNameBase'),'storage')]",
+    "cosmosDbAccountName": "[concat(parameters('deploymentNameBase'),'db')]",
+    "appInsightsName": "[concat(parameters('deploymentNameBase'),'-AppInsights')]",
+    "keyVaultName": "[concat(parameters('deploymentNameBase'),'-KeyVault')]",
+    "hostingPlanName": "[concat(parameters('deploymentNameBase'),'-HostingPlan')]",
+    "jobSchedulerAFName": "[concat(parameters('deploymentNameBase'),'-JobScheduler')]",
+    "jobStatusAFName": "[concat(parameters('deploymentNameBase'),'-JobStatus')]",
+    "streamProvisioningAFName": "[concat(parameters('deploymentNameBase'),'-StreamProvisioning')]",
+    "jobVerificationAFName": "[concat(parameters('deploymentNameBase'),'-JobVerification')]",
+    "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
+    "identityResourceIdJobSchedulerAF": "[concat(resourceId('Microsoft.web/sites/', variables('jobSchedulerAFName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+    "identityResourceIdJobStatusAF": "[concat(resourceId('Microsoft.web/sites/', variables('jobStatusAFName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+    "identityResourceIdStreamProvisioningAF": "[concat(resourceId('Microsoft.web/sites/', variables('streamProvisioningAFName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+    "identityResourceIdJobVerificationAF": "[concat(resourceId('Microsoft.web/sites/', variables('jobVerificationAFName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2019-06-01",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "tags": {},
+      "scale": null,
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "dependsOn": []
+    },
+    {
+      "type": "microsoft.insights/components",
+      "apiVersion": "2015-05-01",
+      "name": "[variables('appInsightsName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "Flow_Type": "Redfield",
+        "Request_Source": "IbizaAIExtension"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2016-10-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "Standard"
+        },
+        "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+        "accessPolicies": [
+          {
+            "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+            "objectId": "61d47788-7040-4f46-8fa2-59047ac82bb3",
+            "permissions": {
+              "keys": [
+                "Get",
+                "List",
+                "Update",
+                "Create",
+                "Import",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore"
+              ],
+              "secrets": [
+                "Get",
+                "List",
+                "Set",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore"
+              ],
+              "certificates": [
+                "Get",
+                "List",
+                "Update",
+                "Create",
+                "Import",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore",
+                "ManageContacts",
+                "ManageIssuers",
+                "GetIssuers",
+                "ListIssuers",
+                "SetIssuers",
+                "DeleteIssuers"
+              ]
+            }
+          }
+        ],
+        "enabledForDeployment": false,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": false,
+        "enableSoftDelete": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2018-02-01",
+      "name": "[variables('hostingPlanName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "dependsOn": [],
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "size": "B1",
+        "family": "B",
+        "capacity": 1
+      },
+      "kind": "app",
+      "properties": {
+        "perSiteScaling": false,
+        "maximumElasticWorkerCount": 1,
+        "isSpot": false,
+        "reserved": false,
+        "isXenon": false,
+        "hyperV": false,
+        "targetWorkerCount": 0,
+        "targetWorkerSizeId": 0
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2018-11-01",
+      "name": "[variables('jobSchedulerAFName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('jobSchedulerAFName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+              "value": "1"
+            },
+            {
+              "name": "JobRequestsQueueConnectionString",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'StorageAccountConnectionString')).secretUriWithVersion, ')')]"
+            },
+            {
+              "name": "KeyVaultName",
+              "value": "[variables('keyVaultName')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "hostingEnvironment": "",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2018-11-01",
+      "name": "[concat(variables('jobSchedulerAFName'), '/web')]",
+      "location": "East US",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('jobSchedulerAFName'))]"
+      ],
+      "properties": {
+        "numberOfWorkers": 1,
+        "alwaysOn": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2018-11-01",
+      "name": "[variables('jobStatusAFName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('jobStatusAFName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "JobRequestsQueueConnectionString",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'StorageAccountConnectionString')).secretUriWithVersion, ')')]"
+            },
+            {
+              "name": "KeyVaultName",
+              "value": "[variables('keyVaultName')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "hostingEnvironment": "",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2018-11-01",
+      "name": "[concat(variables('jobStatusAFName'), '/web')]",
+      "location": "East US",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('jobStatusAFName'))]"
+      ],
+      "properties": {
+        "alwaysOn": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2018-11-01",
+      "name": "[variables('streamProvisioningAFName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('streamProvisioningAFName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+              "value": "1"
+            },
+            {
+              "name": "StreamProvisioningRequestsQueueConnectionString",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'StorageAccountConnectionString')).secretUriWithVersion, ')')]"
+            },
+            {
+              "name": "KeyVaultName",
+              "value": "[variables('keyVaultName')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "hostingEnvironment": "",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2018-11-01",
+      "name": "[concat(variables('streamProvisioningAFName'), '/web')]",
+      "location": "East US",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('streamProvisioningAFName'))]"
+      ],
+      "properties": {
+        "numberOfWorkers": 1,
+        "alwaysOn": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2018-11-01",
+      "name": "[variables('jobVerificationAFName')]",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "dependsOn": [
+        "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
+        "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
+      "kind": "functionapp",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('jobVerificationAFName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('microsoft.insights/components/', variables('appInsightsName')), '2015-05-01').ConnectionString]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+            },
+            {
+              "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+              "value": "1"
+            },
+            {
+              "name": "JobVerificationQueueConnectionString",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), 'StorageAccountConnectionString')).secretUriWithVersion, ')')]"
+            },
+            {
+              "name": "KeyVaultName",
+              "value": "[variables('keyVaultName')]"
+            }
+          ]
+        },
+        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+        "hostingEnvironment": "",
+        "clientAffinityEnabled": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/config",
+      "apiVersion": "2018-11-01",
+      "name": "[concat(variables('jobVerificationAFName'), '/web')]",
+      "location": "East US",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('jobVerificationAFName'))]"
+      ],
+      "properties": {
+        "numberOfWorkers": 1,
+        "alwaysOn": true
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyVaultName'), '/StorageAccountConnectionString')]",
+      "apiVersion": "2016-10-01",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "scale": null,
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'),';AccountKey=',listKeys(variables('storageAccountNameLink'),'2015-05-01-preview').key1)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyVaultName'), '/TableStorageAccountConnectionString')]",
+      "apiVersion": "2016-10-01",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "scale": null,
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2019-12-12').connectionStrings[4].connectionString]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]"
+      ]
+    },
+    {
+      "apiVersion": "2017-05-10",
+      "name": "nestedTemplate",
+      "resourceGroup": "[resourceGroup().name]",
+      "subscriptionId": "[subscription().subscriptionId]",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults/accessPolicies",
+              "name": "[concat(variables('keyVaultName'), '/add')]",
+              "apiVersion": "2018-02-14",
+              "properties": {
+                "accessPolicies": [
+                  {
+                    "tenantId": "[reference(variables('identityResourceIdJobSchedulerAF'), '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('identityResourceIdJobSchedulerAF'), '2015-08-31-PREVIEW').principalId]",
+                    "permissions": {
+                      "keys": [],
+                      "secrets": [
+                        "Get",
+                        "List"
+                      ],
+                      "certificates": []
+                    }
+                  },
+                  {
+                    "tenantId": "[reference(variables('identityResourceIdJobStatusAF'), '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('identityResourceIdJobStatusAF'), '2015-08-31-PREVIEW').principalId]",
+                    "permissions": {
+                      "keys": [],
+                      "secrets": [
+                        "Get",
+                        "List"
+                      ],
+                      "certificates": []
+                    }
+                  },
+                  {
+                    "tenantId": "[reference(variables('identityResourceIdStreamProvisioningAF'), '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('identityResourceIdStreamProvisioningAF'), '2015-08-31-PREVIEW').principalId]",
+                    "permissions": {
+                      "keys": [],
+                      "secrets": [
+                        "Get",
+                        "List"
+                      ],
+                      "certificates": []
+                    }
+                  },
+                  {
+                    "tenantId": "[reference(variables('identityResourceIdJobVerificationAF'), '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('identityResourceIdJobVerificationAF'), '2015-08-31-PREVIEW').principalId]",
+                    "permissions": {
+                      "keys": [],
+                      "secrets": [
+                        "Get",
+                        "List"
+                      ],
+                      "certificates": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2020-03-01",
+      "name": "[variables('cosmosDbAccountName')]",
+      "location": "East US",
+      "tags": {
+        "defaultExperience": "Azure Table",
+        "hidden-cosmos-mmspecial": "",
+        "CosmosAccountType": "Non-Production"
+      },
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "enableAutomaticFailover": false,
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "disableKeyBasedMetadataWriteAccess": false,
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "BoundedStaleness",
+          "maxIntervalInSeconds": 86400,
+          "maxStalenessPrefix": 1000000
+        },
+        "locations": [
+          {
+            "locationName": "East US",
+            "provisioningState": "Succeeded",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ],
+        "capabilities": [
+          {
+            "name": "EnableTable"
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
