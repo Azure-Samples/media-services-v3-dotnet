@@ -16,8 +16,8 @@ namespace job_verification_function
     public static class JobVerificationFunction
     {
         private static IConfigService? configService;
-        private static CloudTable? mediaServiceInstanceHealthTable;
-        private static CloudTable? jobStatusTable;
+        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
+        private static TableStorageService? jobStatusTableStorageService;
         private static QueueClient? streamProvisioningRequestQueue;
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         private static readonly object configLock = new object();
@@ -40,11 +40,13 @@ namespace job_verification_function
             var tableClient = tableStorageAccount.CreateCloudTableClient();
 
             // Create a table client for interacting with the table service 
-            mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
+            var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
-            jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
+            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
             await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            jobStatusTableStorageService = new TableStorageService(jobStatusTable);
 
             streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningRequestQueueName);
             await streamProvisioningRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -65,14 +67,14 @@ namespace job_verification_function
                 }
 
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
-                if (mediaServiceInstanceHealthTable == null)
+                if (mediaServiceInstanceHealthTableStorageService == null)
                 {
-                    throw new Exception("mediaServiceInstanceHealthTable is null");
+                    throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
                 }
 
-                if (jobStatusTable == null)
+                if (jobStatusTableStorageService == null)
                 {
-                    throw new Exception("jobStatusTable is null");
+                    throw new Exception("jobStatusTableStorageService is null");
                 }
 
                 if (streamProvisioningRequestQueue == null)
@@ -88,9 +90,9 @@ namespace job_verification_function
 
                 logger.LogInformation($"JobVerificationFunction::Run triggered, message={message}");
                 var jobVerificationRequestModel = JsonConvert.DeserializeObject<JobVerificationRequestModel>(message, jsonSettings);
-                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTable, logger);
+                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, logger);
                 var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, logger);
-                var jobStatusStorageService = new JobStatusStorageService(jobStatusTable, logger);
+                var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService, logger);
                 var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue, logger);
                 var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, configService, logger);
 

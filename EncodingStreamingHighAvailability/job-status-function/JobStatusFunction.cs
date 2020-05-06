@@ -16,8 +16,8 @@ namespace job_status_function
     public static class JobStatusFunction
     {
         private static IConfigService? configService;
-        private static CloudTable? mediaServiceInstanceHealthTable;
-        private static CloudTable? jobStatusTable;
+        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
+        private static TableStorageService? jobStatusTableStorageService;
         private static QueueClient? streamProvisioningRequestQueue;
         private static readonly object configLock = new object();
         private static bool configLoaded = false;
@@ -37,11 +37,13 @@ namespace job_status_function
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
             var tableClient = tableStorageAccount.CreateCloudTableClient();
 
-            mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
+            var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
-            jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
+            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
             await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            jobStatusTableStorageService = new TableStorageService(jobStatusTable);
 
             streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningRequestQueueName);
             await streamProvisioningRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -62,9 +64,9 @@ namespace job_status_function
                 }
 
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
-                if (jobStatusTable == null)
+                if (jobStatusTableStorageService == null)
                 {
-                    throw new Exception("jobStatusTable is null");
+                    throw new Exception("jobStatusTableStorageService is null");
                 }
 
                 if (streamProvisioningRequestQueue == null)
@@ -72,9 +74,9 @@ namespace job_status_function
                     throw new Exception("streamProvisioningRequestQueue is null");
                 }
 
-                if (mediaServiceInstanceHealthTable == null)
+                if (mediaServiceInstanceHealthTableStorageService == null)
                 {
-                    throw new Exception("mediaServiceInstanceHealthTable is null");
+                    throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
                 }
 
                 if (configService == null)
@@ -89,8 +91,8 @@ namespace job_status_function
                 }
 
                 logger.LogInformation($"JobStatusFunction::Run triggered: message={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                var jobStatusStorageService = new JobStatusStorageService(jobStatusTable, logger);
-                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTable, logger);
+                var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService, logger);
+                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, logger);
                 var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, logger);
                 var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue, logger);
                 var jobStatusService = new JobStatusService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, logger);

@@ -15,9 +15,8 @@ namespace media_services_high_availability_shared_test
     [TestClass]
     public class E2ETests
     {
-        private static CloudTable? jobStatusTable;
         private static QueueClient? jobRequestQueue;
-        private static CloudTable? mediaServiceInstanceHealthTable;
+        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
         private static IConfigService? configService;
         private static QueueClient? jobVerificationRequestQueue;
 
@@ -38,12 +37,9 @@ namespace media_services_high_availability_shared_test
             var tableClient = storageAccount.CreateCloudTableClient();
 
             // Create a table client for interacting with the table service 
-            jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
-            await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
-
-            // Create a table client for interacting with the table service 
-            mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
+            var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -56,9 +52,9 @@ namespace media_services_high_availability_shared_test
         public async Task TestJobRequestStorageService()
         {
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
-            if (mediaServiceInstanceHealthTable == null)
+            if (mediaServiceInstanceHealthTableStorageService == null)
             {
-                throw new Exception("mediaServiceInstanceHealthTable is not initialized");
+                throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
             }
             if (jobVerificationRequestQueue == null)
             {
@@ -75,7 +71,7 @@ namespace media_services_high_availability_shared_test
 
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTable, Mock.Of<ILogger>());
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, Mock.Of<ILogger>());
             var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService, Mock.Of<ILogger>());
