@@ -16,7 +16,7 @@ namespace job_scheduler_function
     public static class JobSchedulerFunction
     {
         private static IConfigService? configService;
-        private static CloudTable? mediaServiceInstanceHealthTable;
+        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
         private static QueueClient? jobVerificationRequestQueue;
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         private static readonly object configLock = new object();
@@ -37,8 +37,9 @@ namespace job_scheduler_function
 
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
             var tableClient = tableStorageAccount.CreateCloudTableClient();
-            mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
+            var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
             jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
             await jobVerificationRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -60,9 +61,9 @@ namespace job_scheduler_function
                 }
 
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
-                if (mediaServiceInstanceHealthTable == null)
+                if (mediaServiceInstanceHealthTableStorageService == null)
                 {
-                    throw new Exception("mediaServiceInstanceHealthTable is null");
+                    throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
                 }
 
                 if (jobVerificationRequestQueue == null)
@@ -78,7 +79,7 @@ namespace job_scheduler_function
 
                 logger.LogInformation($"JobSchedulerFunction::Run triggered, message={message}");
                 var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(message, jsonSettings);
-                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTable, logger);
+                var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, logger);
                 var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, logger);
                 var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, logger);
                 var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService, logger);
