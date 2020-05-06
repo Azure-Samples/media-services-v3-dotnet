@@ -2,7 +2,6 @@
 {
     using media_services_high_availability_shared.Helpers;
     using media_services_high_availability_shared.Models;
-    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
@@ -11,14 +10,13 @@
 
     public class MediaServiceInstanceHealthStorageService : IMediaServiceInstanceHealthStorageService
     {
-        private readonly CloudTable table;
         private readonly ILogger logger;
-        private const int takeCount = 100;
         private static DateTime minDateTimeForTableStorage = new DateTime(1900, 1, 1);
+        private readonly TableStorageService tableStorageService;
 
-        public MediaServiceInstanceHealthStorageService(CloudTable table, ILogger logger)
+        public MediaServiceInstanceHealthStorageService(TableStorageService tableStorageService, ILogger logger)
         {
-            this.table = table ?? throw new ArgumentNullException(nameof(table));
+            this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -39,18 +37,7 @@
                 MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName
             };
 
-            var mediaServiceInstanceHealthModelTableEntity = new MediaServiceInstanceHealthModelTableEntity(verifiedModel);
-            var insertOrMergeOperation = TableOperation.InsertOrMerge(mediaServiceInstanceHealthModelTableEntity);
-
-            var result = await this.table.ExecuteAsync(insertOrMergeOperation).ConfigureAwait(false);
-            var mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            if (mediaServiceInstanceHealthResult == null)
-            {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            }
+            var mediaServiceInstanceHealthResult = await this.tableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(verifiedModel)).ConfigureAwait(false);
 
             var mediaServiceInstanceHealthModelResult = mediaServiceInstanceHealthResult.GetMediaServiceInstanceHealthModel();
             this.logger.LogInformation($"MediaServiceInstanceHealthStorageService::CreateOrUpdateAsync completed: mediaServiceInstanceHealthModelResult={LogHelper.FormatObjectForLog(mediaServiceInstanceHealthModelResult)}");
@@ -60,146 +47,57 @@
 
         public async Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName)
         {
-            var retrieveOperation = TableOperation.Retrieve<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue);
-            var result = await this.table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            var model = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            if (model == null)
-            {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            }
-
+            var model = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
             return model.GetMediaServiceInstanceHealthModel();
         }
 
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync()
         {
-            var rangeQuery = new TableQuery<MediaServiceInstanceHealthModelTableEntity>
-            {
-                TakeCount = takeCount
-            };
-            return await this.QueryData(rangeQuery).ConfigureAwait(false);
+            return (await this.tableStorageService.ListAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false)).Select(i => i.GetMediaServiceInstanceHealthModel());
         }
 
         public async Task<MediaServiceInstanceHealthModel> UpdateProcessedJobStateAsync(string mediaServiceName, bool isJobCompletedSuccessfully, DateTime eventDateTime)
         {
-            var retrieveOperation = TableOperation.Retrieve<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue);
-            var result = await this.table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            var mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            // TBD not sure if this is the best way to see if operation was successful
-            if (mediaServiceInstanceHealthResult == null)
-            {
-                throw new Exception($"Media service instance is not registered: mediaServiceName={mediaServiceName}");
-            }
+            var getResult = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
 
             eventDateTime = VerifyMinValue(eventDateTime);
+            getResult.LastUpdated = eventDateTime;
 
-            mediaServiceInstanceHealthResult.LastUpdated = eventDateTime;
             if (isJobCompletedSuccessfully)
             {
-                mediaServiceInstanceHealthResult.LastSuccessfulJob = eventDateTime;
+                getResult.LastSuccessfulJob = eventDateTime;
             }
             else
             {
-                mediaServiceInstanceHealthResult.LastFailedJob = eventDateTime;
+                getResult.LastFailedJob = eventDateTime;
             }
 
-            var mergeOperation = TableOperation.Merge(mediaServiceInstanceHealthResult);
-            result = await this.table.ExecuteAsync(mergeOperation).ConfigureAwait(false);
-            mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            if (mediaServiceInstanceHealthResult == null)
-            {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            }
-
-            return mediaServiceInstanceHealthResult.GetMediaServiceInstanceHealthModel();
+            var mergeResult = await this.tableStorageService.MergeAsync(getResult).ConfigureAwait(false);
+            return mergeResult.GetMediaServiceInstanceHealthModel();
         }
 
         public async Task<MediaServiceInstanceHealthModel> UpdateSubmittedJobStateAsync(string mediaServiceName, DateTime eventDateTime)
         {
-            var retrieveOperation = TableOperation.Retrieve<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue);
-            var result = await this.table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            var mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            // TBD not sure if this is the best way to see if operation was successful
-            if (mediaServiceInstanceHealthResult == null)
-            {
-                throw new Exception($"Media service instance is not registered: mediaServiceName={mediaServiceName}");
-            }
+            var getResult = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
 
             eventDateTime = VerifyMinValue(eventDateTime);
-            mediaServiceInstanceHealthResult.LastUpdated = eventDateTime;
-            mediaServiceInstanceHealthResult.LastSubmittedJob = eventDateTime;
+            getResult.LastUpdated = eventDateTime;
+            getResult.LastSubmittedJob = eventDateTime;
 
-            var mergeOperation = TableOperation.Merge(mediaServiceInstanceHealthResult);
-            result = await this.table.ExecuteAsync(mergeOperation).ConfigureAwait(false);
-            mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            if (mediaServiceInstanceHealthResult == null)
-            {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            }
-
-            return mediaServiceInstanceHealthResult.GetMediaServiceInstanceHealthModel();
+            var mergeResult = await this.tableStorageService.MergeAsync(getResult).ConfigureAwait(false);
+            return mergeResult.GetMediaServiceInstanceHealthModel();
         }
 
         public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, bool isHealthy, DateTime eventDateTime)
         {
-            var retrieveOperation = TableOperation.Retrieve<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue);
-            var result = await this.table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
-            var mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            // TBD not sure if this is the best way to see if operation was successful
-            if (mediaServiceInstanceHealthResult == null)
-            {
-                throw new Exception($"Media service instance is not registered: mediaServiceName={mediaServiceName}");
-            }
+            var getResult = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
 
             eventDateTime = VerifyMinValue(eventDateTime);
-            mediaServiceInstanceHealthResult.LastUpdated = eventDateTime;
-            mediaServiceInstanceHealthResult.IsHealthy = isHealthy;
+            getResult.LastUpdated = eventDateTime;
+            getResult.IsHealthy = isHealthy;
 
-            var mergeOperation = TableOperation.Merge(mediaServiceInstanceHealthResult);
-            result = await this.table.ExecuteAsync(mergeOperation).ConfigureAwait(false);
-            mediaServiceInstanceHealthResult = result.Result as MediaServiceInstanceHealthModelTableEntity;
-
-            if (mediaServiceInstanceHealthResult == null)
-            {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-            }
-
-            return mediaServiceInstanceHealthResult.GetMediaServiceInstanceHealthModel();
-        }
-
-        private async Task<IEnumerable<MediaServiceInstanceHealthModel>> QueryData(TableQuery<MediaServiceInstanceHealthModelTableEntity> rangeQuery)
-        {
-            var results = new List<MediaServiceInstanceHealthModel>();
-            TableContinuationToken? token = null;
-            do
-            {
-                // Execute the query, passing in the continuation token.
-                // The first time this method is called, the continuation token is null. If there are more results, the call
-                // populates the continuation token for use in the next call.
-                var segment = await this.table.ExecuteQuerySegmentedAsync(rangeQuery, token).ConfigureAwait(false);
-
-                // Save the continuation token for the next call to ExecuteQuerySegmentedAsync
-                token = segment.ContinuationToken;
-
-                results.AddRange(segment.Results.Select(i => i.GetMediaServiceInstanceHealthModel()));
-            }
-            while (token != null);
-
-            return results;
+            var mergeResult = await this.tableStorageService.MergeAsync(getResult).ConfigureAwait(false);
+            return mergeResult.GetMediaServiceInstanceHealthModel();
         }
 
         private static DateTime VerifyMinValue(DateTime dateTime)
