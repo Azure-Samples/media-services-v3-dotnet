@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
+using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace StreamHLSAndDASH
 {
@@ -21,7 +21,7 @@ namespace StreamHLSAndDASH
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
-        private const string DefaultStreamingEndpointName = "se";
+        private const string DefaultStreamingEndpointName = "default";
 
         public static async Task Main(string[] args)
         {
