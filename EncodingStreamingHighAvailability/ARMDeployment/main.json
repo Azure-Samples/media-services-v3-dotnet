@@ -515,5 +515,15 @@
     }    
   ],
   "outputs": {
+    "functionNames": {
+      "type": "array",
+      "copy": {
+        "count": "[length(variables('AFNames'))]",
+        "input": {
+          "function": "[variables('AFNamesSuffixes')[copyIndex()]]",
+          "fullName": "[variables('AFNames')[copyIndex()]]"
+        }
+      }
+    }
   }
 }

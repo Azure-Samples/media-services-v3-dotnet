@@ -75,7 +75,7 @@
       "properties": {
         "filter": {
           "includedEventTypes": [
-            "Microsoft.Media.JobStateChange"
+            "Microsoft.Media.JobOutputStateChange"
           ]
         },
         "destination": {
