@@ -23,12 +23,13 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 - Microsoft.Azure.EventGrid -Version 3.2.0
 - Microsoft.Azure.EventHubs -Version 3.0.0
 - Microsoft.Azure.EventHubs.Processor -Version 3.0.0
-- Microsoft.Azure.Management.Media -Version 2.0.3
-- Microsoft.Extensions.Configuration -Version 2.1.1
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 2.1.1
-- Microsoft.Extensions.Configuration.Json -Version 2.1.1
+- Microsoft.Azure.Management.Media -Version 2.0.4
+- Microsoft.Extensions.Configuration -Version 3.1.3
+- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.3
+- Microsoft.Extensions.Configuration.Json -Version 3.1.3
+- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.3
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.0
-- WindowsAzure.Storage -Version 9.3.3
+- Microsoft.Azure.Storage.Blob -Version 11.1.5
 
 * A camera connected to your computer.
 * A media encoder. For a recommended encoder, please visit [Recommended encoders](https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders).
