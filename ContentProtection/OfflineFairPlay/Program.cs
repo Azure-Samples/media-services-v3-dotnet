@@ -23,7 +23,7 @@ namespace OfflineFairPlay
         private static readonly string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private static readonly string ContentKeyPolicyName = "FairPlayContentKeyPolicy";
         private static readonly string FairPlayStreamingPolicyName = "FairPlayCustomStreamingPolicyName";
-        private static readonly string DefaultStreamingEndpointName = "se";  // Change this to your Endpoint name.
+        private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
