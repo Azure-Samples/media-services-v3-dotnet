@@ -6,9 +6,7 @@ namespace media_services_high_availability_shared.Helpers
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Azure.Services.AppAuthentication;
-    using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
-    using Microsoft.Rest.Azure.Authentication;
     using System;
     using System.Threading.Tasks;
 

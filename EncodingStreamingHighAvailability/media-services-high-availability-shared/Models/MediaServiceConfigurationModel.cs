@@ -2,15 +2,13 @@
 namespace media_services_high_availability_shared.Models
 #pragma warning restore CA1707 // Identifiers should not contain underscores
 {
-    using System;
-
     public class MediaServiceConfigurationModel
     {
         public MediaServiceConfigurationModel()
         {
             this.SubscriptionId = string.Empty;
             this.ResourceGroup = string.Empty;
-            this.AccountName = string.Empty;    
+            this.AccountName = string.Empty;
         }
         public string SubscriptionId { get; set; }
 

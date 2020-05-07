@@ -62,12 +62,12 @@
                 this.TableStorageAccountConnectionString = secret.Value;
             }
 
-            if (!testContext.Properties.Contains(AMSConfigurationKeyName))
+            if (!this.testContext.Properties.Contains(this.AMSConfigurationKeyName))
             {
-                throw new Exception($"TestContext does not have {AMSConfigurationKeyName} value haha");
+                throw new Exception($"TestContext does not have {this.AMSConfigurationKeyName} value haha");
             }
 
-            var amsConfigurationString = testContext.Properties[AMSConfigurationKeyName] as string;
+            var amsConfigurationString = this.testContext.Properties[this.AMSConfigurationKeyName] as string;
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
         }
