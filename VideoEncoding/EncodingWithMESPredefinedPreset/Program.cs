@@ -11,8 +11,8 @@ using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Azure.Storage.Blob;
 
 namespace EncodingWithMESPredefinedPreset
 {
@@ -20,7 +20,7 @@ namespace EncodingWithMESPredefinedPreset
     {
         private const string OutputFolder = @"Output";
         private const string TransformName = "AdaptiveBitrate";
-        private const string DefaultStreamingEndpointName = "se";
+        private const string DefaultStreamingEndpointName = "default";
 
         public static async Task Main(string[] args)
         {
