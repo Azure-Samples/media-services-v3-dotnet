@@ -11,11 +11,11 @@ using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
+using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace AudioAnalyzer
 {
@@ -88,7 +88,7 @@ namespace AudioAnalyzer
             string inputAssetName = $"input-{uniqueness}";
 
             // Create an analyzer preset with audio insights.
-            Preset preset = new VideoAnalyzerPreset("en-US", InsightsType.AudioInsightsOnly);
+            Preset preset = new VideoAnalyzerPreset("en-US", null, InsightsType.AudioInsightsOnly);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
@@ -129,7 +129,7 @@ namespace AudioAnalyzer
                 IList<Task> tasks = new List<Task>();
 
                 // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
-                Task jobTask = Task.Run(() => 
+                Task jobTask = Task.Run(() =>
                 jobWaitingEvent.WaitOne());
                 tasks.Add(jobTask);
 
@@ -173,7 +173,7 @@ namespace AudioAnalyzer
                     Console.WriteLine();
                 }
             }
-            
+
             if (job.State == JobState.Finished)
             {
                 Console.WriteLine("Job finished.");
@@ -228,10 +228,10 @@ namespace AudioAnalyzer
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
         /// <returns></returns>
-        private static async Task<Transform> GetOrCreateTransformAsync(IAzureMediaServicesClient client, 
-            string resourceGroupName, 
-            string accountName, 
-            string transformName, 
+        private static async Task<Transform> GetOrCreateTransformAsync(IAzureMediaServicesClient client,
+            string resourceGroupName,
+            string accountName,
+            string transformName,
             Preset preset)
         {
             // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
@@ -375,16 +375,16 @@ namespace AudioAnalyzer
             Job job;
             try
             {
-               job = await client.Jobs.CreateAsync(
-                        resourceGroupName,
-                        accountName,
-                        transformName,
-                        jobName,
-                        new Job
-                        {
-                            Input = jobInput,
-                            Outputs = jobOutputs,
-                        });
+                job = await client.Jobs.CreateAsync(
+                         resourceGroupName,
+                         accountName,
+                         transformName,
+                         jobName,
+                         new Job
+                         {
+                             Input = jobInput,
+                             Outputs = jobOutputs,
+                         });
             }
             catch (Exception exception)
             {
