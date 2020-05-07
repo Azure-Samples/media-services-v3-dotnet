@@ -28,7 +28,7 @@ namespace BasicWidevine
         private static readonly string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
         private static readonly string ContentKeyPolicyName = "WidevineContentKeyPolicy";
-        private static readonly string DefaultStreamingEndpointName = "se";     // Change this to your Endpoint name.
+        private static readonly string DefaultStreamingEndpointName = "default";     // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {

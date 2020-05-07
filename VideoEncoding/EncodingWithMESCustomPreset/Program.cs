@@ -11,8 +11,8 @@ using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Azure.Storage.Blob;
 
 namespace EncodingWithMESCustomPreset
 {
@@ -21,7 +21,7 @@ namespace EncodingWithMESCustomPreset
         private const string OutputFolder = @"Output";
         private const string CustomTransform = "Custom_TwoLayerMp4_Png";
         private const string InputMP4FileName = @"ignite.mp4";
-        private const string DefaultStreamingEndpointName = "se";   // Change this to your Endpoint name.
+        private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {

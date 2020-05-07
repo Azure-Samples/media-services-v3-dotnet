@@ -7,8 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +17,6 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 
@@ -32,7 +29,7 @@ namespace BasicPlayReady
         private static readonly string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
         private static readonly string ContentKeyPolicyName = "DRMContentKeyPolicy";
-        private static readonly string DefaultStreamingEndpointName = "se";  // Change this to your Endpoint name.
+        private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
