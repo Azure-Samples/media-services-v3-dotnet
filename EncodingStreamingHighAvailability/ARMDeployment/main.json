@@ -36,6 +36,7 @@
     "appInsightsName": "[concat(parameters('deploymentNameBase'),'-AppInsights')]",
     "keyVaultName": "[concat(parameters('deploymentNameBase'),'-KeyVault')]",
     "hostingPlanName": "[concat(parameters('deploymentNameBase'),'-HostingPlan')]",
+    "frontDoorName": "[concat(parameters('deploymentNameBase'),'fd')]",
     "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
     "AFNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
     "copy": [
@@ -512,7 +513,100 @@
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
         "principalId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').principalId]"
       }
-    }    
+    },
+    {
+      "apiVersion": "2019-04-01",
+      "type": "Microsoft.Network/frontDoors",
+      "name": "[variables('frontDoorName')]",
+      "location": "Global",
+      "tags": {},
+      "properties": {
+        "routingRules": [
+          {
+            "name": "routingRule1",
+            "properties": {
+              "frontendEndpoints": [
+                {
+                  "id": "[resourceId('Microsoft.Network/frontDoors/frontendEndpoints', variables('frontDoorName'), 'frontendEndpoint1')]"
+                }
+              ],
+              "acceptedProtocols": [
+                "Http",
+                "Https"
+              ],
+              "patternsToMatch": [
+                "/*"
+              ],
+              "routeConfiguration": {
+                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
+                "forwardingProtocol": "MatchRequest",
+                "backendPool": {
+                  "id": "[resourceId('Microsoft.Network/frontDoors/backendPools', variables('frontDoorName'), 'backendPool1')]"
+                }
+              },
+              "enabledState": "Enabled"
+            }
+          }
+        ],
+        "healthProbeSettings": [
+          {
+            "name": "healthProbeSettings1",
+            "properties": {
+              "path": "/",
+              "protocol": "Https",
+              "intervalInSeconds": 120
+            }
+          }
+        ],
+        "loadBalancingSettings": [
+          {
+            "name": "loadBalancingSettings1",
+            "properties": {
+              "sampleSize": 4,
+              "successfulSamplesRequired": 2
+            }
+          }
+        ],
+        "backendPools": [
+          {
+            "name": "backendPool1",
+            "properties": {
+              "copy": [
+                {
+                  "name": "backends",
+                  "count": "[length(variables('AMSInstanceNames'))]",
+                  "input": {
+                    "address": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('AMSInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
+                    "backendHostHeader": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('AMSInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
+                    "httpPort": 80,
+                    "httpsPort": 443,
+                    "weight": 50,
+                    "priority": 1,
+                    "enabledState": "Enabled"
+                  }
+                }
+              ],
+              "loadBalancingSettings": {
+                "id": "[resourceId('Microsoft.Network/frontDoors/loadBalancingSettings', variables('frontDoorName'), 'loadBalancingSettings1')]"
+              },
+              "healthProbeSettings": {
+                "id": "[resourceId('Microsoft.Network/frontDoors/healthProbeSettings', variables('frontDoorName'), 'healthProbeSettings1')]"
+              }
+            }
+          }
+        ],
+        "frontendEndpoints": [
+          {
+            "name": "frontendEndpoint1",
+            "properties": {
+              "hostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
+              "sessionAffinityEnabledState": "Disabled"
+            }
+          }
+        ],
+        "enabledState": "Enabled"
+      }
+    }
   ],
   "outputs": {
     "functionNames": {
