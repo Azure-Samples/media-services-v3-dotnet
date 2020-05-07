@@ -1,22 +1,26 @@
-﻿namespace media_services_high_availability_shared.Services
+﻿namespace media_services_high_availability_shared_test
 {
     using media_services_high_availability_shared.Models;
+    using media_services_high_availability_shared.Services;
     using Microsoft.Azure.KeyVault;
     using Microsoft.Azure.Services.AppAuthentication;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class ConfigService : IConfigService
+    public class E2ETestConfigService : IConfigService
     {
+        private readonly TestContext testContext;
         private readonly string keyVaultName;
         private readonly string AMSConfigurationKeyName = "AMSConfiguration";
 
-        public ConfigService(string keyVaultName)
+        public E2ETestConfigService(string keyVaultName, TestContext testContext)
         {
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
+            this.testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
             this.MediaServiceInstanceHealthTableName = "MediaServiceInstanceHealth";
             this.JobStatusTableName = "JobStatus";
             this.StreamProvisioningRequestQueueName = "stream-provisioning-requests";
@@ -58,13 +62,12 @@
                 this.TableStorageAccountConnectionString = secret.Value;
             }
 
-            var amsConfigurationString = Environment.GetEnvironmentVariable(AMSConfigurationKeyName);
-            
-            if (amsConfigurationString == null)
+            if (!testContext.Properties.Contains(AMSConfigurationKeyName))
             {
-                throw new Exception($"Function confo does not have {AMSConfigurationKeyName} value");
+                throw new Exception($"TestContext does not have {AMSConfigurationKeyName} value haha");
             }
 
+            var amsConfigurationString = testContext.Properties[AMSConfigurationKeyName] as string;
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
         }
