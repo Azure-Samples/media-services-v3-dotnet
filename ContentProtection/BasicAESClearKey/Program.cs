@@ -19,7 +19,6 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace BasicAESClearKey
 {
@@ -31,7 +30,7 @@ namespace BasicAESClearKey
         private static string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
         private static string ContentKeyPolicyName = "SharedContentKeyPolicyUsedByAllAssets";
-        private static string MyStreamingEndpointName = "se";   // Change this to your Endpoint name.
+        private static string MyStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
