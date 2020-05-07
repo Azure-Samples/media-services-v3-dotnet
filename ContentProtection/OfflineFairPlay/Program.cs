@@ -489,7 +489,7 @@ namespace OfflineFairPlay
                 FairPlayPfx = appCertBase64,
                 FairPlayPfxPassword = fairPlayPfxPassword,
                 RentalAndLeaseKeyType = ContentKeyPolicyFairPlayRentalAndLeaseKeyType.DualExpiry,
-                RentalDuration = 0,
+                RentalDuration = 0, // in seconds
                 OfflineRentalConfiguration = new ContentKeyPolicyFairPlayOfflineRentalConfiguration()
                 {
                    StorageDurationSeconds = 300000,
