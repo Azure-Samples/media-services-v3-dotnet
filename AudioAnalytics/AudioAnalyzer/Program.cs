@@ -88,7 +88,7 @@ namespace AudioAnalyzer
             string inputAssetName = $"input-{uniqueness}";
 
             // Create an analyzer preset with audio insights.
-            Preset preset = new VideoAnalyzerPreset("en-US", null, InsightsType.AudioInsightsOnly);
+            Preset preset = new VideoAnalyzerPreset(audioLanguage: "en-US", insightsToExtract: InsightsType.AudioInsightsOnly);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
