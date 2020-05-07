@@ -58,11 +58,11 @@
                 this.TableStorageAccountConnectionString = secret.Value;
             }
 
-            var amsConfigurationString = Environment.GetEnvironmentVariable(AMSConfigurationKeyName);
-            
+            var amsConfigurationString = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
+
             if (amsConfigurationString == null)
             {
-                throw new Exception($"Function confo does not have {AMSConfigurationKeyName} value");
+                throw new Exception($"Function confo does not have {this.AMSConfigurationKeyName} value");
             }
 
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
