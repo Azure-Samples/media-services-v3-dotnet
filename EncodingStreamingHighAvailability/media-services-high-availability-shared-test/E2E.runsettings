@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Parameters used by tests at run time -->
+  <TestRunParameters>
+    <Parameter name="AMSConfiguration" value="[{&quot;SubscriptionId&quot;:&quot;465d1912-ea98-4b36-94d2-fabbf55fe648&quot;,&quot;ResourceGroup&quot;:&quot;ha-test&quot;,&quot;AccountName&quot;:&quot;sipetrikha2amseastus&quot;},{&quot;SubscriptionId&quot;:&quot;465d1912-ea98-4b36-94d2-fabbf55fe648&quot;,&quot;ResourceGroup&quot;:&quot;ha-test&quot;,&quot;AccountName&quot;:&quot;sipetrikha2amswestus&quot;},{&quot;SubscriptionId&quot;:&quot;465d1912-ea98-4b36-94d2-fabbf55fe648&quot;,&quot;ResourceGroup&quot;:&quot;ha-test&quot;,&quot;AccountName&quot;:&quot;sipetrikha2amswesteurope&quot;}]" />
+  </TestRunParameters>
+</RunSettings>
