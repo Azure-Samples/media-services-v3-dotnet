@@ -59,7 +59,8 @@
         "count": "[length(parameters('amsRegions'))]",
         "input": "[concat(parameters('deploymentNameBase'), parameters('amsRegions')[copyIndex('AMSInstanceStorageNames')], 'st')]"
       }
-    ]
+    ],
+    "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
   },
   "resources": [
     {
@@ -458,6 +459,45 @@
       "copy": {
         "name": "storageaccountcopy",
         "count": "[length(variables('AMSInstanceStorageNames'))]"
+      }
+    },
+    {
+      "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy1')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy1')], variables('AFNamesSuffixes')[0])))]",
+      "copy": {
+        "name": "roleassigmentcopy1",
+        "count": "[length(variables('AMSInstanceNames'))]"
+      },
+      "properties": {
+        "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+        "principalId": "[reference(variables('AFIdentities')[0], '2015-08-31-PREVIEW').principalId]"
+      }
+    },
+    {
+      "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy2')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy2')], variables('AFNamesSuffixes')[2])))]",
+      "copy": {
+        "name": "roleassigmentcopy2",
+        "count": "[length(variables('AMSInstanceNames'))]"
+      },
+      "properties": {
+        "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+        "principalId": "[reference(variables('AFIdentities')[2], '2015-08-31-PREVIEW').principalId]"
+      }
+    },
+    {
+      "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy3')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy3')], variables('AFNamesSuffixes')[3])))]",
+      "copy": {
+        "name": "roleassigmentcopy3",
+        "count": "[length(variables('AMSInstanceNames'))]"
+      },
+      "properties": {
+        "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+        "principalId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').principalId]"
       }
     }
   ],
