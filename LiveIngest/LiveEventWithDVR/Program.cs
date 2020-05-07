@@ -6,16 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using System.Collections;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.EventHubs;
 
