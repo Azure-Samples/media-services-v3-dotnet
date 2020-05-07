@@ -88,7 +88,7 @@ namespace VideoAnalyzer
             string inputAssetName = $"input-{uniqueness}";
 
             // Create a video analyzer preset with video insights.
-            Preset preset = new VideoAnalyzerPreset(null, null, InsightsType.VideoInsightsOnly);
+            Preset preset = new VideoAnalyzerPreset(insightsToExtract: InsightsType.VideoInsightsOnly);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
