@@ -36,7 +36,7 @@ namespace stream_provisioning_function
         }
 
         [FunctionName("StreamProvisioningFunction")]
-        public static async Task Run([QueueTrigger("stream-provisioning-requests", Connection = "StreamProvisioningRequestsQueueConnectionString")]string message, ILogger logger)
+        public static async Task Run([QueueTrigger("stream-provisioning-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
         {
             try
             {

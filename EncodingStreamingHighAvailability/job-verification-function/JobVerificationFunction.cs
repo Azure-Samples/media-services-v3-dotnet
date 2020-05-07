@@ -53,7 +53,7 @@ namespace job_verification_function
         }
 
         [FunctionName("JobVerificationFunction")]
-        public static async Task Run([QueueTrigger("job-verification-requests", Connection = "JobVerificationQueueConnectionString")]string message, ILogger logger)
+        public static async Task Run([QueueTrigger("job-verification-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
         {
             try
             {

@@ -47,7 +47,7 @@ namespace job_scheduler_function
 
 
         [FunctionName("JobSchedulerFunction")]
-        public static async Task Run([QueueTrigger("job-requests", Connection = "JobRequestsQueueConnectionString")]string message, ILogger logger)
+        public static async Task Run([QueueTrigger("job-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
         {
             try
             {
