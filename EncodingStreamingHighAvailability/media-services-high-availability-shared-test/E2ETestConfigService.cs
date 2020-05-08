@@ -4,7 +4,6 @@
     using media_services_high_availability_shared.Services;
     using Microsoft.Azure.KeyVault;
     using Microsoft.Azure.Services.AppAuthentication;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
@@ -13,13 +12,11 @@
 
     public class E2ETestConfigService : IConfigService
     {
-        private readonly TestContext testContext;
         private readonly string keyVaultName;
 
-        public E2ETestConfigService(string keyVaultName, TestContext testContext)
+        public E2ETestConfigService(string keyVaultName)
         {
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
-            this.testContext = testContext ?? throw new ArgumentNullException(nameof(testContext));
             this.MediaServiceInstanceHealthTableName = "MediaServiceInstanceHealth";
             this.JobStatusTableName = "JobStatus";
             this.StreamProvisioningRequestQueueName = "stream-provisioning-requests";
@@ -66,7 +63,7 @@
 
             // Copy this from azure function configuration AMSConfiguration key. 
             // Use advanced edit in configuration screen to get value with encoded quotes
-            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amswestus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amswesteurope\"}]";
+            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswesteurope\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus2\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus2\"}]";
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
         }
