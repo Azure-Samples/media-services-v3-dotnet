@@ -1,5 +1,5 @@
 ﻿param(
-    $ResourceGroupName = 'ha-test',
+    $ResourceGroupName = 'ha-test2',
     $ResourceGroupLocation = 'eastus'
 )
 
@@ -8,7 +8,27 @@ New-AzResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -F
 
 # Deploy the Azure Media Services instances.
 Write-Host 'Running main ARM template deployment...'
-$mainDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/main.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose
+Write-Host 'Often this step fails the first time it executes because the managed identity does not provision successfully. If this happens, the script will retry the deployment.'
+$ErrorActionPreference = 'Continue' # Due to the issue provisioning new managed identities, we will temporarily allow errors to continue for this section of the script
+$numberOfRetries = 1;
+while ($numberOfRetries -gt 0)
+{
+    $mainDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/main.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose
+    if ($null -ne $mainDeployment.Outputs)
+    {
+        break
+    }
+    Write-Host 'Retrying Azure Functions app resources deployment in 30 seconds.'
+    Start-Sleep -Seconds 30
+    $numberOfRetries--;
+}
+$ErrorActionPreference = 'Stop'
+
+if ($numberOfRetries -eq 0)
+{
+    throw "Failed to deploy ARM tempplate"
+}
+
 $createdFunctionNames = $mainDeployment.Outputs['functionNames'].Value
 Write-Host "Created following azure functions: $createdFunctionNames"
 $functionFolders = @{JobScheduler="job-scheduler-function"; JobStatus="job-status-function"; StreamProvisioning="stream-provisioning-function"; JobVerification="job-verification-function"}

@@ -72,7 +72,7 @@
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
 
-            this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
+            this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.FrontDoorHostNameKeyName);
 
             if (this.FrontDoorHostName == null)
             {

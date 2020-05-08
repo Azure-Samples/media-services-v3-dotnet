@@ -21,7 +21,7 @@ namespace media_services_high_availability_shared_test
                 throw new System.ArgumentNullException(nameof(testContext));
             }
 
-            configService = new E2ETestConfigService("sipetrikha2-keyvault", testContext);
+            configService = new E2ETestConfigService("sipetrikha2-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
         }
 

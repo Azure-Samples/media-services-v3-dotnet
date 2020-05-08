@@ -28,7 +28,7 @@ namespace media_services_high_availability_shared_test
                 throw new System.ArgumentNullException(nameof(testContext));
             }
 
-            configService = new E2ETestConfigService("sipetrikha2-keyvault", testContext);
+            configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
@@ -81,7 +81,7 @@ namespace media_services_high_availability_shared_test
             var target = new JobRequestStorageService(jobRequestQueue, Mock.Of<ILogger>());
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 50; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness)).ConfigureAwait(false));
             }
