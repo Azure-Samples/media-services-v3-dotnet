@@ -18,8 +18,6 @@
         private readonly IStreamProvisioningEventStorageService streamProvisioningEventStorageService;
         private readonly IConfigService configService;
         private readonly ILogger logger;
-        //TBD needs to go to config
-        private readonly string frontDoorUrl = "sipetriktest.azurefd.net";
 
         public StreamProvisioningService(IStreamProvisioningEventStorageService streamProvisioningEventStorageService, IConfigService configService, ILogger logger)
         {
@@ -81,7 +79,7 @@
             {
                 var uriBuilder = new UriBuilder();
                 uriBuilder.Scheme = "https";
-                uriBuilder.Host = this.frontDoorUrl;
+                uriBuilder.Host = this.configService.FrontDoorHostName;
                 if (paths.StreamingPaths[i].Paths.Count > 0)
                 {
                     if (paths.StreamingPaths[i].StreamingProtocol == StreamingPolicyStreamingProtocol.Dash)

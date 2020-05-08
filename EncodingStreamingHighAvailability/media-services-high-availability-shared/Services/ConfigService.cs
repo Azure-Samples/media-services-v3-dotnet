@@ -13,6 +13,7 @@
     {
         private readonly string keyVaultName;
         private readonly string AMSConfigurationKeyName = "AMSConfiguration";
+        private readonly string FrontDoorHostNameKeyName = "FrontDoorHostName";
 
         public ConfigService(string keyVaultName)
         {
@@ -26,6 +27,7 @@
             this.MediaServiceInstanceConfiguration = new Dictionary<string, MediaServiceConfigurationModel>();
             this.StorageAccountConnectionString = string.Empty;
             this.TableStorageAccountConnectionString = string.Empty;
+            this.FrontDoorHostName = string.Empty;
         }
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
@@ -43,6 +45,8 @@
         public string JobRequestQueueName { get; private set; }
 
         public string StreamProvisioningEventQueueName { get; private set; }
+
+        public string FrontDoorHostName { get; private set; }
 
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
@@ -67,6 +71,13 @@
 
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
+
+            this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
+
+            if (this.FrontDoorHostName == null)
+            {
+                throw new Exception($"Function confo does not have {this.FrontDoorHostNameKeyName} value");
+            }
         }
     }
 }
