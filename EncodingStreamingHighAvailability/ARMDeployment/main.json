@@ -259,6 +259,10 @@
             {
               "name": "AMSConfiguration",
               "value": "[string(variables('AMSConfiguration'))]"
+            },
+            {
+              "name": "FrontDoorHostName",
+              "value": "[reference(resourceId('Microsoft.Network/frontDoors', variables('frontDoorName'))).frontendEndpoints[0].properties.hostName]"
             }
           ]
         },

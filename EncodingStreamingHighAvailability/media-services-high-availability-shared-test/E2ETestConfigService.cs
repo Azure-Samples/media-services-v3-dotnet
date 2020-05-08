@@ -15,7 +15,6 @@
     {
         private readonly TestContext testContext;
         private readonly string keyVaultName;
-        private readonly string AMSConfigurationKeyName = "AMSConfiguration";
 
         public E2ETestConfigService(string keyVaultName, TestContext testContext)
         {
@@ -30,6 +29,7 @@
             this.MediaServiceInstanceConfiguration = new Dictionary<string, MediaServiceConfigurationModel>();
             this.StorageAccountConnectionString = string.Empty;
             this.TableStorageAccountConnectionString = string.Empty;
+            this.FrontDoorHostName = "contoso.com";
         }
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
@@ -48,6 +48,8 @@
 
         public string StreamProvisioningEventQueueName { get; private set; }
 
+        public string FrontDoorHostName { get; private set; }
+
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
         public async Task LoadConfigurationAsync()
@@ -62,12 +64,9 @@
                 this.TableStorageAccountConnectionString = secret.Value;
             }
 
-            if (!this.testContext.Properties.Contains(this.AMSConfigurationKeyName))
-            {
-                throw new Exception($"TestContext does not have {this.AMSConfigurationKeyName} value haha");
-            }
-
-            var amsConfigurationString = this.testContext.Properties[this.AMSConfigurationKeyName] as string;
+            // Copy this from azure function configuration AMSConfiguration key. 
+            // Use advanced edit in configuration screen to get value with encoded quotes
+            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amswestus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test\",\"AccountName\":\"sipetrikha2amswesteurope\"}]";
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
         }

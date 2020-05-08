@@ -22,6 +22,8 @@
 
         string StreamProvisioningEventQueueName { get; }
 
+        string FrontDoorHostName { get; }
+
         IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; }
 
         Task LoadConfigurationAsync();
