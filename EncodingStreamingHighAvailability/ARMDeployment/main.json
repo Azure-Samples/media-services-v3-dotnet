@@ -37,6 +37,7 @@
     "keyVaultName": "[concat(parameters('deploymentNameBase'),'-KeyVault')]",
     "hostingPlanName": "[concat(parameters('deploymentNameBase'),'-HostingPlan')]",
     "frontDoorName": "[concat(parameters('deploymentNameBase'),'fd')]",
+    "frontDoorHostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
     "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
     "AFNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
     "copy": [
@@ -262,7 +263,7 @@
             },
             {
               "name": "FrontDoorHostName",
-              "value": "[reference(resourceId('Microsoft.Network/frontDoors', variables('frontDoorName'))).frontendEndpoints[0].properties.hostName]"
+              "value": "[variables('frontDoorHostName')]"
             }
           ]
         },
@@ -333,7 +334,7 @@
       "type": "Microsoft.Resources/deployments",
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
-        "sitescopy"
+        "sitesconfigcopy"
       ],
       "properties": {
         "mode": "Incremental",
@@ -490,7 +491,10 @@
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
         "principalId": "[reference(variables('AFIdentities')[0], '2015-08-31-PREVIEW').principalId]"
-      }
+      },
+      "dependsOn": [
+        "mediaservicescopy"
+      ]
     },
     {
       "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
@@ -503,7 +507,10 @@
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
         "principalId": "[reference(variables('AFIdentities')[2], '2015-08-31-PREVIEW').principalId]"
-      }
+      },
+      "dependsOn": [
+        "mediaservicescopy"
+      ]
     },
     {
       "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
@@ -516,7 +523,10 @@
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
         "principalId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').principalId]"
-      }
+      },
+      "dependsOn": [
+        "mediaservicescopy"
+      ]
     },
     {
       "apiVersion": "2019-04-01",
@@ -524,6 +534,9 @@
       "name": "[variables('frontDoorName')]",
       "location": "Global",
       "tags": {},
+      "dependsOn": [
+        "mediaservicescopy"
+      ],
       "properties": {
         "routingRules": [
           {
@@ -603,7 +616,7 @@
           {
             "name": "frontendEndpoint1",
             "properties": {
-              "hostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
+              "hostName": "[variables('frontDoorHostName')]",
               "sessionAffinityEnabledState": "Disabled"
             }
           }
