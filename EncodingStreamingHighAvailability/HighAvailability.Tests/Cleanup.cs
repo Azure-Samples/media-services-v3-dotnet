@@ -19,7 +19,7 @@ namespace HighAvailability.Tests
                 throw new System.ArgumentNullException(nameof(testContext));
             }
 
-            configService = new E2ETestConfigService("sipetrikha2-keyvault");
+            configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
         }
 
@@ -28,9 +28,7 @@ namespace HighAvailability.Tests
         {
             if (configService == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new System.Exception("Config services is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var configuration = configService.MediaServiceInstanceConfiguration;

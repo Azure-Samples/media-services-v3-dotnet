@@ -57,9 +57,7 @@
                 }
             }
 
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
             this.logger.LogInformation($"JobSchedulerService::Initialization completed");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
         }
 
         public async Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel)
@@ -75,9 +73,7 @@
             var selectedInstance = allInstances.Where(i => i.IsHealthy).OrderBy(i => i.LastSubmittedJob).FirstOrDefault();
             if (selectedInstance == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception($"Could not find a healthy AMS instance, found total instance count={allInstances.Count()}");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             this.logger.LogInformation($"JobSchedulerService::SubmitJobAsync selected healthy instance: MediaServiceAccountName={selectedInstance.MediaServiceAccountName} jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");

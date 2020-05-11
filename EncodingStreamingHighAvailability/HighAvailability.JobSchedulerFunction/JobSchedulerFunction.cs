@@ -25,9 +25,7 @@ namespace HighAvailability.JobSchedulerFunction
             var keyVaultName = Environment.GetEnvironmentVariable("KeyVaultName");
             if (keyVaultName == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("keyVaultName is not set");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             configService = new ConfigService(keyVaultName);
@@ -58,7 +56,6 @@ namespace HighAvailability.JobSchedulerFunction
                     }
                 }
 
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 if (mediaServiceInstanceHealthTableStorageService == null)
                 {
                     throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
@@ -73,7 +70,6 @@ namespace HighAvailability.JobSchedulerFunction
                 {
                     throw new Exception("configService is null");
                 }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
                 logger.LogInformation($"JobSchedulerFunction::Run triggered, message={message}");
                 var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(message, jsonSettings);
