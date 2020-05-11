@@ -1,4 +1,4 @@
-namespace HighAvailabikity.StreamProvisioningFunction
+namespace HighAvailabikity.StreamProvisioning
 {
     using Azure.Storage.Queues;
     using HighAvailability.Models;
@@ -9,7 +9,7 @@ namespace HighAvailabikity.StreamProvisioningFunction
     using System;
     using System.Threading.Tasks;
 
-    public static class AzureFunction
+    public static class StreamProvisioningFunction
     {
         private static IConfigService? configService;
         private static QueueClient? streamProvisioningEventQueue;

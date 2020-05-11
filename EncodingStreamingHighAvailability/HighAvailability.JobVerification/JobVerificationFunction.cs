@@ -1,22 +1,23 @@
-namespace HighAvailability.JobStatusFunction
+namespace HighAvailability.JobVerification
 {
     using Azure.Storage.Queues;
     using HighAvailability.Helpers;
+    using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;
-    using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.EventGrid;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
     using System;
     using System.Threading.Tasks;
 
-    public static class AzureFunction
+    public static class JobVerificationFunction
     {
         private static IConfigService? configService;
         private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
         private static TableStorageService? jobStatusTableStorageService;
         private static QueueClient? streamProvisioningRequestQueue;
+        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         private static readonly object configLock = new object();
         private static bool configLoaded = false;
 
@@ -30,9 +31,11 @@ namespace HighAvailability.JobStatusFunction
 
             configService = new ConfigService(keyVaultName);
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
+
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
             var tableClient = tableStorageAccount.CreateCloudTableClient();
 
+            // Create a table client for interacting with the table service 
             var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
@@ -45,8 +48,8 @@ namespace HighAvailability.JobStatusFunction
             await streamProvisioningRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
         }
 
-        [FunctionName("JobStatusFunction")]
-        public static async void Run([EventGridTrigger]EventGridEvent eventGridEvent, ILogger logger)
+        [FunctionName("JobVerificationFunction")]
+        public static async Task Run([QueueTrigger("job-verification-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
         {
             try
             {
@@ -59,6 +62,11 @@ namespace HighAvailability.JobStatusFunction
                     }
                 }
 
+                if (mediaServiceInstanceHealthTableStorageService == null)
+                {
+                    throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
+                }
+
                 if (jobStatusTableStorageService == null)
                 {
                     throw new Exception("jobStatusTableStorageService is null");
@@ -69,43 +77,26 @@ namespace HighAvailability.JobStatusFunction
                     throw new Exception("streamProvisioningRequestQueue is null");
                 }
 
-                if (mediaServiceInstanceHealthTableStorageService == null)
-                {
-                    throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
-                }
-
                 if (configService == null)
                 {
                     throw new Exception("configService is null");
                 }
 
-                if (eventGridEvent == null)
-                {
-                    throw new ArgumentNullException(nameof(eventGridEvent));
-                }
-
-                logger.LogInformation($"JobStatusFunction::Run triggered: message={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService, logger);
+                logger.LogInformation($"JobVerificationFunction::Run triggered, message={message}");
+                var jobVerificationRequestModel = JsonConvert.DeserializeObject<JobVerificationRequestModel>(message, jsonSettings);
                 var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, logger);
                 var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, logger);
+                var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService, logger);
                 var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue, logger);
-                var jobStatusService = new JobStatusService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, logger);
-                var eventGridService = new EventGridService(logger);
+                var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, configService, logger);
 
-                var jobStatusModel = eventGridService.ParseEventData(eventGridEvent);
-                if (jobStatusModel != null)
-                {
-                    var result = await jobStatusService.ProcessJobStatusAsync(jobStatusModel).ConfigureAwait(false);
-                    logger.LogInformation($"JobStatusFunction::Run completed: result={LogHelper.FormatObjectForLog(result)}");
-                }
-                else
-                {
-                    logger.LogInformation($"JobStatusFunction::Run event data skipped: result={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                }
+                var result = await jobVerificationService.VerifyJobAsync(jobVerificationRequestModel).ConfigureAwait(false);
+
+                logger.LogInformation($"JobVerificationFunction::Run completed, result={LogHelper.FormatObjectForLog(result)}");
             }
             catch (Exception e)
             {
-                logger.LogError($"JobSchedulerFunction::Run failed: exception={e.Message} eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                logger.LogError($"JobVerificationFunction::Run failed: exception={e.Message} message={message}");
                 throw;
             }
         }
