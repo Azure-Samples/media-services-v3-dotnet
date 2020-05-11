@@ -26,9 +26,7 @@ namespace HighAvailability.JobVerificationFunction
             var keyVaultName = Environment.GetEnvironmentVariable("KeyVaultName");
             if (keyVaultName == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("keyVaultName is not set");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             configService = new ConfigService(keyVaultName);
@@ -64,7 +62,6 @@ namespace HighAvailability.JobVerificationFunction
                     }
                 }
 
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 if (mediaServiceInstanceHealthTableStorageService == null)
                 {
                     throw new Exception("mediaServiceInstanceHealthTableStorageService is null");
@@ -84,7 +81,6 @@ namespace HighAvailability.JobVerificationFunction
                 {
                     throw new Exception("configService is null");
                 }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
                 logger.LogInformation($"JobVerificationFunction::Run triggered, message={message}");
                 var jobVerificationRequestModel = JsonConvert.DeserializeObject<JobVerificationRequestModel>(message, jsonSettings);

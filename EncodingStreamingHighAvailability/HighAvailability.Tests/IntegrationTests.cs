@@ -73,9 +73,7 @@ namespace HighAvailability.Tests
         {
             if (jobStatusTableStorageService == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("jobStatusTableStorageService is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
@@ -134,9 +132,7 @@ namespace HighAvailability.Tests
         {
             if (jobRequestQueue == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("jobRequestQueue is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
@@ -170,9 +166,7 @@ namespace HighAvailability.Tests
 
             if (result == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got null from the queue");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             Assert.AreEqual(jobRequest.Id, result.Id);
@@ -192,9 +186,7 @@ namespace HighAvailability.Tests
         {
             if (mediaServiceInstanceHealthTableStorageService == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var target = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
@@ -273,7 +265,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobSchedulerService()
         {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
             if (mediaServiceInstanceHealthTableStorageService == null)
             {
                 throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
@@ -288,7 +279,6 @@ namespace HighAvailability.Tests
             {
                 throw new Exception("configService is not initialized");
             }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
@@ -307,7 +297,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestStreamProvisioningService()
         {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
             if (streamProvisioningEventQueue == null)
             {
                 throw new Exception("streamProvisioningEventQueue is not initialized");
@@ -317,7 +306,6 @@ namespace HighAvailability.Tests
             {
                 throw new Exception("configService is not initialized");
             }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
             var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue, Mock.Of<ILogger>());
             var target = new StreamProvisioningService(streamProvisioningEventStorageService, configService, Mock.Of<ILogger>());
@@ -341,9 +329,7 @@ namespace HighAvailability.Tests
         {
             if (streamProvisioningRequestQueue == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("streamProvisioningRequestQueue is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
@@ -364,9 +350,7 @@ namespace HighAvailability.Tests
 
             if (result == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got null from the queue");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             Assert.AreEqual(streamProvisioningRequest.Id, result.Id);
@@ -380,9 +364,7 @@ namespace HighAvailability.Tests
         {
             if (jobVerificationRequestQueue == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("jobVerificationRequestQueue is not initialized");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
@@ -430,9 +412,7 @@ namespace HighAvailability.Tests
 
             if (result == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got null from the queue");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             Assert.AreEqual(jobVerificationRequest.Id, result.Id);
@@ -452,7 +432,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobVerificationService()
         {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
             if (mediaServiceInstanceHealthTableStorageService == null)
             {
                 throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
@@ -472,7 +451,6 @@ namespace HighAvailability.Tests
             {
                 throw new Exception("configService is not initialized");
             }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             var jobId = $"JobId";

@@ -29,9 +29,7 @@
 
             if (tableEntityModelResult == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             return tableEntityModelResult;
@@ -45,9 +43,7 @@
 
             if (tableEntityModel == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             return tableEntityModel;
@@ -61,9 +57,7 @@
 
             if (tableEntityModelResult == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("Got error callig Table API");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             return tableEntityModelResult;

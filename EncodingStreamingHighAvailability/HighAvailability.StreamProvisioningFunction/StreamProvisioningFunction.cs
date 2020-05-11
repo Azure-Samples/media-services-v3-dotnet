@@ -21,9 +21,7 @@ namespace HighAvailabikity.StreamProvisioningFunction
             var keyVaultName = Environment.GetEnvironmentVariable("KeyVaultName");
             if (keyVaultName == null)
             {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new Exception("keyVaultName is not set");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             configService = new ConfigService(keyVaultName);
@@ -47,7 +45,6 @@ namespace HighAvailabikity.StreamProvisioningFunction
                     }
                 }
 
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 if (streamProvisioningEventQueue == null)
                 {
                     throw new Exception("streamProvisioningEventQueue is null");
@@ -57,7 +54,6 @@ namespace HighAvailabikity.StreamProvisioningFunction
                 {
                     throw new Exception("configService is null");
                 }
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
                 logger.LogInformation($"StreamProvisioningFunction::Run triggered, message={message}");
                 var streamProvisioningRequestModel = JsonConvert.DeserializeObject<StreamProvisioningRequestModel>(message);
