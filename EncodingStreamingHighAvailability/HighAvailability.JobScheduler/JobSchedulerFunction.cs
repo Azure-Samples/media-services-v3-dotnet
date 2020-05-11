@@ -75,8 +75,8 @@ namespace HighAvailability.JobScheduler
                 var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(message, jsonSettings);
                 var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, logger);
                 var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, logger);
-                var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, logger);
-                var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService, logger);
+                var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, logger);
+                var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, configService, logger);
 
                 var result = await jobSchedulerService.SubmitJobAsync(jobRequestModel).ConfigureAwait(false);
 
