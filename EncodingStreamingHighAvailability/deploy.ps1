@@ -10,7 +10,7 @@ New-AzResourceGroup -Name $ResourceGroupName -Location $ResourceGroupLocation -F
 Write-Host 'Running main ARM template deployment...'
 Write-Host 'Often this step fails the first time it executes because the managed identity does not provision successfully. If this happens, the script will retry the deployment.'
 $ErrorActionPreference = 'Continue' # Due to the issue provisioning new managed identities, we will temporarily allow errors to continue for this section of the script
-$numberOfRetries = 1;
+$numberOfRetries = 3;
 while ($numberOfRetries -gt 0)
 {
     $mainDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/main.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose
@@ -31,9 +31,9 @@ if ($numberOfRetries -eq 0)
 
 $createdFunctionNames = $mainDeployment.Outputs['functionNames'].Value
 Write-Host "Created following azure functions: $createdFunctionNames"
-$functionFolders = @{JobScheduler="job-scheduler-function"; JobStatus="job-status-function"; StreamProvisioning="stream-provisioning-function"; JobVerification="job-verification-function"}
+$functionFolders = @{JobScheduler="HighAvailability.JobSchedulerFunction"; JobStatus="HighAvailability.JobStatusFunction"; StreamProvisioning="HighAvailability.StreamProvisioningFunction"; JobVerification="HighAvailability.JobVerificationFunction"}
 
-. dotnet publish media-services-high-availability.sln
+. dotnet publish HighAvailability.sln
 
 foreach ($functionName in $createdFunctionNames)
 {
