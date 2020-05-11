@@ -1,4 +1,4 @@
-namespace HighAvailability.JobSchedulerFunction
+namespace HighAvailability.JobScheduler
 {
     using Azure.Storage.Queues;
     using HighAvailability.Helpers;
@@ -11,7 +11,7 @@ namespace HighAvailability.JobSchedulerFunction
     using System;
     using System.Threading.Tasks;
 
-    public static class AzureFunction
+    public static class JobSchedulerFunction
     {
         private static IConfigService? configService;
         private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
