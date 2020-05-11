@@ -49,4 +49,4 @@ foreach ($functionName in $createdFunctionNames)
 }
 
 Write-Host 'Running event grid setup ARM template deployment...'
-$eventGridDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/eventgridsetup.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose
+$eventGridDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/eventgridsetup.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose 
