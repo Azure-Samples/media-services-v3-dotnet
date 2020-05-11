@@ -51,7 +51,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobRequestStorageService()
         {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
             if (mediaServiceInstanceHealthTableStorageService == null)
             {
                 throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
@@ -69,8 +68,6 @@ namespace HighAvailability.Tests
                 throw new Exception("jobRequestQueue is not initialized");
             }
 
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, Mock.Of<ILogger>());
@@ -81,7 +78,7 @@ namespace HighAvailability.Tests
             var target = new JobRequestStorageService(jobRequestQueue, Mock.Of<ILogger>());
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 50; i++)
+            for (var i = 0; i < 5; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness)).ConfigureAwait(false));
             }
