@@ -3,24 +3,9 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentRegionLocation": {
-      "type": "string",
-      "allowedValues": [
-        "westus2",
-        "westus",
-        "eastus",
-        "westeurope",
-        "eastus2",
-        "eastasia",
-        "australiasoutheast"
-      ],
-      "metadata": {
-        "description": "The name of the region where the deployment is hosted."
-      }
-    },
-    "deploymentNameBase": {
       "type": "string"
     },
-    "keyVaultOwnerObjectId": {
+    "deploymentNameBase": {
       "type": "string"
     },
     "keyVaultTenantId": {
@@ -39,35 +24,35 @@
     "frontDoorName": "[concat(parameters('deploymentNameBase'),'fd')]",
     "frontDoorHostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
     "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
-    "AFNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
+    "functionNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
     "copy": [
       {
-        "name": "AFNames",
-        "count": "[length(variables('AFNamesSuffixes'))]",
-        "input": "[concat(parameters('deploymentNameBase'), '-', variables('AFNamesSuffixes')[copyIndex('AFNames')])]"
+        "name": "functionNames",
+        "count": "[length(variables('functionNamesSuffixes'))]",
+        "input": "[concat(parameters('deploymentNameBase'), '-', variables('functionNamesSuffixes')[copyIndex('functionNames')])]"
       },
       {
-        "name": "AFIdentities",
-        "count": "[length(variables('AFNamesSuffixes'))]",
-        "input": "[concat(resourceId('Microsoft.web/sites/', variables('AFNames')[copyIndex('AFIdentities')]),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
+        "name": "functionIdentities",
+        "count": "[length(variables('functionNamesSuffixes'))]",
+        "input": "[concat(resourceId('Microsoft.web/sites/', variables('functionNames')[copyIndex('functionIdentities')]),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
       },
       {
-        "name": "AMSInstanceNames",
+        "name": "amsInstanceNames",
         "count": "[length(parameters('amsRegions'))]",
-        "input": "[concat(parameters('deploymentNameBase'),'ams', parameters('amsRegions')[copyIndex('AMSInstanceNames')])]"
+        "input": "[concat(parameters('deploymentNameBase'),'ams', parameters('amsRegions')[copyIndex('amsInstanceNames')])]"
       },
       {
-        "name": "AMSInstanceStorageNames",
+        "name": "amsInstanceStorageNames",
         "count": "[length(parameters('amsRegions'))]",
-        "input": "[concat(parameters('deploymentNameBase'), parameters('amsRegions')[copyIndex('AMSInstanceStorageNames')], 'st')]"
+        "input": "[concat(parameters('deploymentNameBase'), parameters('amsRegions')[copyIndex('amsInstanceStorageNames')], 'st')]"
       },
       {
-        "name": "AMSConfiguration",
-        "count": "[length(variables('AMSInstanceNames'))]",
+        "name": "amsConfiguration",
+        "count": "[length(variables('amsInstanceNames'))]",
         "input": {
           "SubscriptionId": "[subscription().subscriptionId]",
           "ResourceGroup": "[resourceGroup().name]",
-          "AccountName": "[variables('AMSInstanceNames')[copyIndex('AMSConfiguration')]]"
+          "AccountName": "[variables('amsInstanceNames')[copyIndex('amsConfiguration')]]"
         }
       }
     ],
@@ -131,51 +116,7 @@
           "name": "Standard"
         },
         "tenantId": "[parameters('keyVaultTenantId')]",
-        "accessPolicies": [
-          {
-            "tenantId": "[parameters('keyVaultTenantId')]",
-            "objectId": "[parameters('keyVaultOwnerObjectId')]",
-            "permissions": {
-              "keys": [
-                "Get",
-                "List",
-                "Update",
-                "Create",
-                "Import",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore"
-              ],
-              "secrets": [
-                "Get",
-                "List",
-                "Set",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore"
-              ],
-              "certificates": [
-                "Get",
-                "List",
-                "Update",
-                "Create",
-                "Import",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore",
-                "ManageContacts",
-                "ManageIssuers",
-                "GetIssuers",
-                "ListIssuers",
-                "SetIssuers",
-                "DeleteIssuers"
-              ]
-            }
-          }
-        ],
+        "accessPolicies":[],
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
         "enabledForTemplateDeployment": false,
@@ -210,7 +151,7 @@
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2018-11-01",
-      "name": "[variables('AFNames')[copyIndex()]]",
+      "name": "[variables('functionNames')[copyIndex()]]",
       "location": "[parameters('deploymentRegionLocation')]",
       "dependsOn": [
         "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
@@ -222,7 +163,7 @@
         "type": "SystemAssigned"
       },
       "properties": {
-        "name": "[variables('AFNames')[copyIndex()]]",
+        "name": "[variables('functionNames')[copyIndex()]]",
         "siteConfig": {
           "appSettings": [
             {
@@ -258,8 +199,8 @@
               "value": "[variables('keyVaultName')]"
             },
             {
-              "name": "AMSConfiguration",
-              "value": "[string(variables('AMSConfiguration'))]"
+              "name": "amsConfiguration",
+              "value": "[string(variables('amsConfiguration'))]"
             },
             {
               "name": "FrontDoorHostName",
@@ -273,13 +214,13 @@
       },
       "copy": {
         "name": "sitescopy",
-        "count": "[length(variables('AFNames'))]"
+        "count": "[length(variables('functionNames'))]"
       }
     },
     {
       "type": "Microsoft.Web/sites/config",
       "apiVersion": "2018-11-01",
-      "name": "[concat(variables('AFNames')[copyIndex()], '/web')]",
+      "name": "[concat(variables('functionNames')[copyIndex()], '/web')]",
       "location": "[parameters('deploymentRegionLocation')]",
       "dependsOn": [
         "sitescopy"
@@ -290,7 +231,7 @@
       },
       "copy": {
         "name": "sitesconfigcopy",
-        "count": "[length(variables('AFNames'))]"
+        "count": "[length(variables('functionNames'))]"
       }
     },
     {
@@ -351,8 +292,8 @@
               "properties": {
                 "accessPolicies": [
                   {
-                    "tenantId": "[reference(variables('AFIdentities')[0], '2015-08-31-PREVIEW').tenantId]",
-                    "objectId": "[reference(variables('AFIdentities')[0], '2015-08-31-PREVIEW').principalId]",
+                    "tenantId": "[reference(variables('functionIdentities')[0], '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('functionIdentities')[0], '2015-08-31-PREVIEW').principalId]",
                     "permissions": {
                       "keys": [],
                       "secrets": [
@@ -363,8 +304,8 @@
                     }
                   },
                   {
-                    "tenantId": "[reference(variables('AFIdentities')[1], '2015-08-31-PREVIEW').tenantId]",
-                    "objectId": "[reference(variables('AFIdentities')[1], '2015-08-31-PREVIEW').principalId]",
+                    "tenantId": "[reference(variables('functionIdentities')[1], '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('functionIdentities')[1], '2015-08-31-PREVIEW').principalId]",
                     "permissions": {
                       "keys": [],
                       "secrets": [
@@ -375,8 +316,8 @@
                     }
                   },
                   {
-                    "tenantId": "[reference(variables('AFIdentities')[2], '2015-08-31-PREVIEW').tenantId]",
-                    "objectId": "[reference(variables('AFIdentities')[2], '2015-08-31-PREVIEW').principalId]",
+                    "tenantId": "[reference(variables('functionIdentities')[2], '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('functionIdentities')[2], '2015-08-31-PREVIEW').principalId]",
                     "permissions": {
                       "keys": [],
                       "secrets": [
@@ -387,8 +328,8 @@
                     }
                   },
                   {
-                    "tenantId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').tenantId]",
-                    "objectId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').principalId]",
+                    "tenantId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').principalId]",
                     "permissions": {
                       "keys": [],
                       "secrets": [
@@ -411,11 +352,6 @@
       "apiVersion": "2020-03-01",
       "name": "[variables('cosmosDbAccountName')]",
       "location": "[parameters('deploymentRegionLocation')]",
-      "tags": {
-        "defaultExperience": "Azure Table",
-        "hidden-cosmos-mmspecial": "",
-        "CosmosAccountType": "Non-Production"
-      },
       "kind": "GlobalDocumentDB",
       "properties": {
         "publicNetworkAccess": "Enabled",
@@ -430,14 +366,7 @@
           "maxIntervalInSeconds": 86400,
           "maxStalenessPrefix": 1000000
         },
-        "locations": [
-          {
-            "locationName": "East US",
-            "provisioningState": "Succeeded",
-            "failoverPriority": 0,
-            "isZoneRedundant": false
-          }
-        ],
+        
         "capabilities": [
           {
             "name": "EnableTable"
@@ -448,11 +377,11 @@
     {
       "type": "Microsoft.Media/mediaServices",
       "apiVersion": "2018-07-01",
-      "name": "[variables('AMSInstanceNames')[copyIndex()]]",
+      "name": "[variables('amsInstanceNames')[copyIndex()]]",
       "location": "[parameters('amsRegions')[copyIndex()]]",
       "copy": {
         "name": "mediaservicescopy",
-        "count": "[length(variables('AMSInstanceNames'))]"
+        "count": "[length(variables('amsInstanceNames'))]"
       },
       "dependsOn": [
         "storageaccountcopy"
@@ -460,7 +389,7 @@
       "properties": {
         "storageAccounts": [
           {
-            "id": "[resourceId('Microsoft.Storage/storageAccounts', variables('AMSInstanceStorageNames')[copyIndex()])]",
+            "id": "[resourceId('Microsoft.Storage/storageAccounts', variables('amsInstanceStorageNames')[copyIndex()])]",
             "type": "Primary"
           }
         ]
@@ -469,7 +398,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-04-01",
-      "name": "[variables('AMSInstanceStorageNames')[copyIndex()]]",
+      "name": "[variables('amsInstanceStorageNames')[copyIndex()]]",
       "location": "[parameters('amsRegions')[copyIndex()]]",
       "sku": {
         "name": "Standard_LRS"
@@ -477,20 +406,20 @@
       "kind": "Storage",
       "copy": {
         "name": "storageaccountcopy",
-        "count": "[length(variables('AMSInstanceStorageNames'))]"
+        "count": "[length(variables('amsInstanceStorageNames'))]"
       }
     },
     {
       "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
       "apiVersion": "2018-09-01-preview",
-      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy1')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy1')], variables('AFNamesSuffixes')[0])))]",
+      "name": "[concat(concat(variables('amsInstanceNames')[copyIndex('roleassigmentcopy1')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('amsInstanceNames')[copyIndex('roleassigmentcopy1')], variables('functionNamesSuffixes')[0])))]",
       "copy": {
         "name": "roleassigmentcopy1",
-        "count": "[length(variables('AMSInstanceNames'))]"
+        "count": "[length(variables('amsInstanceNames'))]"
       },
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
-        "principalId": "[reference(variables('AFIdentities')[0], '2015-08-31-PREVIEW').principalId]"
+        "principalId": "[reference(variables('functionIdentities')[0], '2015-08-31-PREVIEW').principalId]"
       },
       "dependsOn": [
         "mediaservicescopy"
@@ -499,14 +428,14 @@
     {
       "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
       "apiVersion": "2018-09-01-preview",
-      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy2')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy2')], variables('AFNamesSuffixes')[2])))]",
+      "name": "[concat(concat(variables('amsInstanceNames')[copyIndex('roleassigmentcopy2')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('amsInstanceNames')[copyIndex('roleassigmentcopy2')], variables('functionNamesSuffixes')[2])))]",
       "copy": {
         "name": "roleassigmentcopy2",
-        "count": "[length(variables('AMSInstanceNames'))]"
+        "count": "[length(variables('amsInstanceNames'))]"
       },
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
-        "principalId": "[reference(variables('AFIdentities')[2], '2015-08-31-PREVIEW').principalId]"
+        "principalId": "[reference(variables('functionIdentities')[2], '2015-08-31-PREVIEW').principalId]"
       },
       "dependsOn": [
         "mediaservicescopy"
@@ -515,14 +444,14 @@
     {
       "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
       "apiVersion": "2018-09-01-preview",
-      "name": "[concat(concat(variables('AMSInstanceNames')[copyIndex('roleassigmentcopy3')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('AMSInstanceNames')[copyIndex('roleassigmentcopy3')], variables('AFNamesSuffixes')[3])))]",
+      "name": "[concat(concat(variables('amsInstanceNames')[copyIndex('roleassigmentcopy3')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('amsInstanceNames')[copyIndex('roleassigmentcopy3')], variables('functionNamesSuffixes')[3])))]",
       "copy": {
         "name": "roleassigmentcopy3",
-        "count": "[length(variables('AMSInstanceNames'))]"
+        "count": "[length(variables('amsInstanceNames'))]"
       },
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
-        "principalId": "[reference(variables('AFIdentities')[3], '2015-08-31-PREVIEW').principalId]"
+        "principalId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').principalId]"
       },
       "dependsOn": [
         "mediaservicescopy"
@@ -591,10 +520,10 @@
               "copy": [
                 {
                   "name": "backends",
-                  "count": "[length(variables('AMSInstanceNames'))]",
+                  "count": "[length(variables('amsInstanceNames'))]",
                   "input": {
-                    "address": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('AMSInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
-                    "backendHostHeader": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('AMSInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
+                    "address": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('amsInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
+                    "backendHostHeader": "[reference(concat(resourceId('Microsoft.Media/mediaservices/', variables('amsInstanceNames')[copyIndex('backends')]), '/streamingEndpoints/default'), '2018-07-01').hostName]",
                     "httpPort": 80,
                     "httpsPort": 443,
                     "weight": 50,
@@ -629,10 +558,10 @@
     "functionNames": {
       "type": "array",
       "copy": {
-        "count": "[length(variables('AFNames'))]",
+        "count": "[length(variables('functionNames'))]",
         "input": {
-          "function": "[variables('AFNamesSuffixes')[copyIndex()]]",
-          "fullName": "[variables('AFNames')[copyIndex()]]"
+          "function": "[variables('functionNamesSuffixes')[copyIndex()]]",
+          "fullName": "[variables('functionNames')[copyIndex()]]"
         }
       }
     }

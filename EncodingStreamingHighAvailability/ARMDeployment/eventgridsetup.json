@@ -3,24 +3,9 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentRegionLocation": {
-      "type": "string",
-      "allowedValues": [
-        "westus2",
-        "westus",
-        "eastus",
-        "westeurope",
-        "eastus2",
-        "eastasia",
-        "australiasoutheast"
-      ],
-      "metadata": {
-        "description": "The name of the region where the deployment is hosted."
-      }
-    },
-    "deploymentNameBase": {
       "type": "string"
     },
-    "keyVaultOwnerObjectId": {
+    "deploymentNameBase": {
       "type": "string"
     },
     "keyVaultTenantId": {
@@ -31,46 +16,29 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(parameters('deploymentNameBase'),'storage')]",
-    "cosmosDbAccountName": "[concat(parameters('deploymentNameBase'),'db')]",
-    "appInsightsName": "[concat(parameters('deploymentNameBase'),'-AppInsights')]",
-    "keyVaultName": "[concat(parameters('deploymentNameBase'),'-KeyVault')]",
-    "hostingPlanName": "[concat(parameters('deploymentNameBase'),'-HostingPlan')]",
-    "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
-    "AFNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
+    "functionNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
     "copy": [
       {
-        "name": "AFNames",
-        "count": "[length(variables('AFNamesSuffixes'))]",
-        "input": "[concat(parameters('deploymentNameBase'), '-', variables('AFNamesSuffixes')[copyIndex('AFNames')])]"
+        "name": "functionNames",
+        "count": "[length(variables('functionNamesSuffixes'))]",
+        "input": "[concat(parameters('deploymentNameBase'), '-', variables('functionNamesSuffixes')[copyIndex('functionNames')])]"
       },
       {
-        "name": "AFIdentities",
-        "count": "[length(variables('AFNamesSuffixes'))]",
-        "input": "[concat(resourceId('Microsoft.web/sites/', variables('AFNames')[copyIndex('AFIdentities')]),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
-      },
-      {
-        "name": "AMSInstanceNames",
+        "name": "amsInstanceNames",
         "count": "[length(parameters('amsRegions'))]",
-        "input": "[concat(parameters('deploymentNameBase'),'ams', parameters('amsRegions')[copyIndex('AMSInstanceNames')])]"
-      },
-      {
-        "name": "AMSInstanceStorageNames",
-        "count": "[length(parameters('amsRegions'))]",
-        "input": "[concat(parameters('deploymentNameBase'), parameters('amsRegions')[copyIndex('AMSInstanceStorageNames')], 'st')]"
+        "input": "[concat(parameters('deploymentNameBase'),'ams', parameters('amsRegions')[copyIndex('amsInstanceNames')])]"
       }
     ],
-    "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-    "amsJobOutputStateUpdateFunctionUrl": "[concat('https://', variables('AFNames')[1],'.azurewebsites.net/runtime/webhooks/eventgrid?functionName=JobStatusFunction&code=')]"
+    "amsJobOutputStateUpdateFunctionUrl": "[concat('https://', variables('functionNames')[1],'.azurewebsites.net/runtime/webhooks/eventgrid?functionName=JobStatusFunction&code=')]"
   },
   "resources": [
     {
       "type": "Microsoft.Media/mediaServices/providers/eventSubscriptions",
       "apiVersion": "2018-01-01",
-      "name": "[concat(variables('AMSInstanceNames')[copyIndex('eventSubscription1')], '/Microsoft.EventGrid/', 'JobOutputStateUpdateEventSubscription')]",
+      "name": "[concat(variables('amsInstanceNames')[copyIndex('eventSubscription1')], '/Microsoft.EventGrid/', 'JobOutputStateUpdateEventSubscription')]",
       "copy": {
         "name": "eventSubscription1",
-        "count": "[length(variables('AMSInstanceNames'))]"
+        "count": "[length(variables('amsInstanceNames'))]"
       },
       "properties": {
         "filter": {
@@ -81,7 +49,7 @@
         "destination": {
           "endpointType": "WebHook",
           "properties": {
-            "endpointUrl": "[concat(variables('amsJobOutputStateUpdateFunctionUrl'), listKeys(resourceId('Microsoft.Web/sites/host/', variables('AFNames')[1], 'default'), '2016-08-01').systemkeys.eventgrid_extension)]"
+            "endpointUrl": "[concat(variables('amsJobOutputStateUpdateFunctionUrl'), listKeys(resourceId('Microsoft.Web/sites/host/', variables('functionNames')[1], 'default'), '2016-08-01').systemkeys.eventgrid_extension)]"
           }
         }
       }

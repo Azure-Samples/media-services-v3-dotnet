@@ -4,7 +4,6 @@
   "parameters": {
     "deploymentNameBase": { "value": "sipetrik" },
     "deploymentRegionLocation": { "value": "eastus" },
-    "keyVaultOwnerObjectId": { "value": "61d47788-7040-4f46-8fa2-59047ac82bb3" },
     "keyVaultTenantId": { "value": "72f988bf-86f1-41af-91ab-2d7cd011db47" },
     "amsRegions": { "value": [ "eastus", "westus", "westeurope", "eastus2", "westus2" ] }
   }
