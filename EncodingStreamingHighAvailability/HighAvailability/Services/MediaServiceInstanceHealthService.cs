@@ -11,17 +11,15 @@
     public class MediaServiceInstanceHealthService : IMediaServiceInstanceHealthService
     {
         private readonly IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService;
-        private readonly ILogger logger;
 
-        public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService, ILogger logger)
+        public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService)
         {
             this.mediaServiceInstanceHealthStorageService = mediaServiceInstanceHealthStorageService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthStorageService));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel)
+        public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
-            return await this.mediaServiceInstanceHealthStorageService.CreateOrUpdateAsync(mediaServiceInstanceHealthModel).ConfigureAwait(false);
+            return await this.mediaServiceInstanceHealthStorageService.CreateOrUpdateAsync(mediaServiceInstanceHealthModel, logger).ConfigureAwait(false);
         }
 
         public async Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName)
@@ -40,17 +38,17 @@
             return await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<string>> ListHealthyAsync()
+        public async Task<IEnumerable<string>> ListHealthyAsync(ILogger logger)
         {
             var result = (await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false)).Where(i => i.IsHealthy).Select(i => i.MediaServiceAccountName);
-            this.logger.LogInformation($"MediaServiceInstanceHealthService::ListHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
+            logger.LogInformation($"MediaServiceInstanceHealthService::ListHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
             return result;
         }
 
-        public async Task<IEnumerable<string>> ListUnHealthyAsync()
+        public async Task<IEnumerable<string>> ListUnHealthyAsync(ILogger logger)
         {
             var result = (await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false)).Where(i => !i.IsHealthy).Select(i => i.MediaServiceAccountName);
-            this.logger.LogInformation($"MediaServiceInstanceHealthService::ListUnHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
+            logger.LogInformation($"MediaServiceInstanceHealthService::ListUnHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
             return result;
         }
 

@@ -1,13 +1,14 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Models;
+    using Microsoft.Extensions.Logging;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public interface IJobStatusStorageService
     {
         // add or update new job status 
-        Task<JobStatusModel> CreateOrUpdateAsync(JobStatusModel jobStatusModel);
+        Task<JobStatusModel> CreateOrUpdateAsync(JobStatusModel jobStatusModel, ILogger logger);
 
         // Load status by Id
         Task<JobStatusModel> GetAsync(string id);   // we may not need this one
