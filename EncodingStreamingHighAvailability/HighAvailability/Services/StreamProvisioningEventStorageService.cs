@@ -12,15 +12,13 @@
     public class StreamProvisioningEventStorageService : IStreamProvisioningEventStorageService
     {
         private readonly QueueClient queue;
-        private readonly ILogger logger;
 
-        public StreamProvisioningEventStorageService(QueueClient queue, ILogger logger)
+        public StreamProvisioningEventStorageService(QueueClient queue)
         {
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<StreamProvisioningEventModel> CreateAsync(StreamProvisioningEventModel streamProvisioningEventModel)
+        public async Task<StreamProvisioningEventModel> CreateAsync(StreamProvisioningEventModel streamProvisioningEventModel, ILogger logger)
         {
             if (streamProvisioningEventModel == null)
             {
@@ -29,12 +27,12 @@
 
             var message = JsonConvert.SerializeObject(streamProvisioningEventModel);
             await this.queue.SendMessageAsync(QueueServiceHelper.EncodeToBase64(message)).ConfigureAwait(false);
-            this.logger.LogInformation($"StreamProvisioningEventStorageService::CreateAsync successfully added request to the queue: streamProvisioningEventModel={LogHelper.FormatObjectForLog(streamProvisioningEventModel)}");
+            logger.LogInformation($"StreamProvisioningEventStorageService::CreateAsync successfully added request to the queue: streamProvisioningEventModel={LogHelper.FormatObjectForLog(streamProvisioningEventModel)}");
 
             return streamProvisioningEventModel;
         }
 
-        public async Task<StreamProvisioningEventModel?> GetNextAsync()
+        public async Task<StreamProvisioningEventModel?> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);
             var message = messages.Value.FirstOrDefault();
@@ -42,7 +40,7 @@
             {
                 var decodedMessage = QueueServiceHelper.DecodeFromBase64(message.MessageText);
                 var streamProvisioningEventModel = JsonConvert.DeserializeObject<StreamProvisioningEventModel>(decodedMessage);
-                this.logger.LogInformation($"StreamProvisioningEventStorageService::GetNextAsync request successfully dequeued from the queue: streamProvisioningEventModel={LogHelper.FormatObjectForLog(streamProvisioningEventModel)}");
+                logger.LogInformation($"StreamProvisioningEventStorageService::GetNextAsync request successfully dequeued from the queue: streamProvisioningEventModel={LogHelper.FormatObjectForLog(streamProvisioningEventModel)}");
                 await this.queue.DeleteMessageAsync(message.MessageId, message.PopReceipt).ConfigureAwait(false);
                 return streamProvisioningEventModel;
             }

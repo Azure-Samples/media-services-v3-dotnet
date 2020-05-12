@@ -11,14 +11,8 @@
     public class EventGridService : IEventGridService
     {
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-        private readonly ILogger logger;
 
-        public EventGridService(ILogger logger)
-        {
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public JobStatusModel? ParseEventData(EventGridEvent eventGridEvent)
+        public JobStatusModel? ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             if (eventGridEvent == null)
             {
@@ -46,7 +40,7 @@
                 }
                 if (string.IsNullOrEmpty(jobName))
                 {
-                    this.logger.LogError($"EventGridService::ParseEventData failed to parse job name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                    logger.LogError($"EventGridService::ParseEventData failed to parse job name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
                     return null;
                 }
 
@@ -58,7 +52,7 @@
                 }
                 if (string.IsNullOrEmpty(amsAccountName))
                 {
-                    this.logger.LogError($"EventGridService::ParseEventData failed to parse MSA account name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                    logger.LogError($"EventGridService::ParseEventData failed to parse MSA account name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
                     return null;
                 }
 
@@ -71,11 +65,11 @@
                     EventTime = eventTime,
                     MediaServiceAccountName = amsAccountName
                 };
-                this.logger.LogError($"EventGridService::ParseEventData successfully parsed, jobStatusMode={LogHelper.FormatObjectForLog(jobStatusModel)}");
+                logger.LogError($"EventGridService::ParseEventData successfully parsed, jobStatusMode={LogHelper.FormatObjectForLog(jobStatusModel)}");
             }
             else
             {
-                this.logger.LogInformation($"EventGridService::ParseEventData eventType is not Microsoft.Media.JobOutputStateChange, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                logger.LogInformation($"EventGridService::ParseEventData eventType is not Microsoft.Media.JobOutputStateChange, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
             }
 
             return jobStatusModel;

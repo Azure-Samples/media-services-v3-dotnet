@@ -12,15 +12,13 @@
     public class JobStatusStorageService : IJobStatusStorageService
     {
         private readonly TableStorageService tableStorageService;
-        private readonly ILogger logger;
 
-        public JobStatusStorageService(TableStorageService tableStorageService, ILogger logger)
+        public JobStatusStorageService(TableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<JobStatusModel> CreateOrUpdateAsync(JobStatusModel jobStatusModel)
+        public async Task<JobStatusModel> CreateOrUpdateAsync(JobStatusModel jobStatusModel, ILogger logger)
         {
             if (jobStatusModel == null)
             {
@@ -30,7 +28,7 @@
             var jobStatusResult = await this.tableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatusModel)).ConfigureAwait(false);
 
             var jobStatusModelResult = jobStatusResult.GetJobStatusModel();
-            this.logger.LogInformation($"JobStatusStorageService::CreateOrUpdateAsync completed: jobStatusModelResult={LogHelper.FormatObjectForLog(jobStatusModelResult)}");
+            logger.LogInformation($"JobStatusStorageService::CreateOrUpdateAsync completed: jobStatusModelResult={LogHelper.FormatObjectForLog(jobStatusModelResult)}");
 
             return jobStatusModelResult;
         }

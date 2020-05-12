@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Models;
+    using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -10,6 +11,6 @@
     public interface IStreamProvisioningService
     {
         // Provision streaming endppoint for a given encoded asset. This operation should be idempotent, we may need to rerun this if one of the instances is not healthy. 
-        Task ProvisionStreamAsync(StreamProvisioningRequestModel streamProvisioningRequest);
+        Task ProvisionStreamAsync(StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger);
     }
 }
