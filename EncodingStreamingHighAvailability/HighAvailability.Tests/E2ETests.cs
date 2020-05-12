@@ -68,19 +68,19 @@ namespace HighAvailability.Tests
                 throw new Exception("jobRequestQueue is not initialized");
             }
 
-            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
-            var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, Mock.Of<ILogger>());
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService, Mock.Of<ILogger>());
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
+            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService);
 
-            await jobSchedulerService.Initialize().ConfigureAwait(false);
+            await jobSchedulerService.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 
-            var target = new JobRequestStorageService(jobRequestQueue, Mock.Of<ILogger>());
+            var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
             for (var i = 0; i < 5; i++)
             {
-                Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness)).ConfigureAwait(false));
+                Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }
         }
 

@@ -10,17 +10,15 @@
 
     public class MediaServiceInstanceHealthStorageService : IMediaServiceInstanceHealthStorageService
     {
-        private readonly ILogger logger;
         private static DateTime minDateTimeForTableStorage = new DateTime(1900, 1, 1);
         private readonly TableStorageService tableStorageService;
 
-        public MediaServiceInstanceHealthStorageService(TableStorageService tableStorageService, ILogger logger)
+        public MediaServiceInstanceHealthStorageService(TableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
-            this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel)
+        public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
             if (mediaServiceInstanceHealthModel == null)
             {
@@ -40,7 +38,7 @@
             var mediaServiceInstanceHealthResult = await this.tableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(verifiedModel)).ConfigureAwait(false);
 
             var mediaServiceInstanceHealthModelResult = mediaServiceInstanceHealthResult.GetMediaServiceInstanceHealthModel();
-            this.logger.LogInformation($"MediaServiceInstanceHealthStorageService::CreateOrUpdateAsync completed: mediaServiceInstanceHealthModelResult={LogHelper.FormatObjectForLog(mediaServiceInstanceHealthModelResult)}");
+            logger.LogInformation($"MediaServiceInstanceHealthStorageService::CreateOrUpdateAsync completed: mediaServiceInstanceHealthModelResult={LogHelper.FormatObjectForLog(mediaServiceInstanceHealthModelResult)}");
 
             return mediaServiceInstanceHealthModelResult;
         }

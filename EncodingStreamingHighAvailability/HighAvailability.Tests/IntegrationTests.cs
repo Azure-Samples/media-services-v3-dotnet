@@ -77,7 +77,7 @@ namespace HighAvailability.Tests
             }
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-            var target = new JobStatusStorageService(jobStatusTableStorageService, Mock.Of<ILogger>());
+            var target = new JobStatusStorageService(jobStatusTableStorageService);
             var jobName = $"JobName-{uniqueness}";
             var mediaServiceAccountName = $"Account1-{uniqueness}";
             var outputAssetName = $"AssetName-{uniqueness}";
@@ -90,7 +90,7 @@ namespace HighAvailability.Tests
                 JobState = JobState.Finished,
                 EventTime = DateTime.UtcNow,
                 JobOutputAssetName = outputAssetName
-            }).ConfigureAwait(false));
+            }, Mock.Of<ILogger>()).ConfigureAwait(false));
 
             var result = await target.ListAsync(jobName).ConfigureAwait(false);
             Assert.AreEqual(1, result.Count());
@@ -112,7 +112,7 @@ namespace HighAvailability.Tests
 
             foreach (var jobStatusModel in testData)
             {
-                await target.CreateOrUpdateAsync(jobStatusModel).ConfigureAwait(false);
+                await target.CreateOrUpdateAsync(jobStatusModel, Mock.Of<ILogger>()).ConfigureAwait(false);
             }
 
             var allStatuses = target.ListAsync(jobName);
@@ -146,7 +146,7 @@ namespace HighAvailability.Tests
                                   label: $"label {uniqueness}"
                                   );
 
-            var target = new JobRequestStorageService(jobRequestQueue, Mock.Of<ILogger>());
+            var target = new JobRequestStorageService(jobRequestQueue);
 
             var jobRequest = new JobRequestModel
             {
@@ -160,9 +160,9 @@ namespace HighAvailability.Tests
                 TransformName = transformName
             };
 
-            Assert.IsNotNull(await target.CreateAsync(jobRequest).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateAsync(jobRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
 
-            var result = await target.GetNextAsync().ConfigureAwait(false);
+            var result = await target.GetNextAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -189,7 +189,7 @@ namespace HighAvailability.Tests
                 throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
             }
 
-            var target = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
+            var target = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceAccountName1 = $"Account1";
             var mediaServiceAccountName2 = $"Account2";
 
@@ -216,8 +216,8 @@ namespace HighAvailability.Tests
             };
 
 
-            Assert.IsNotNull(await target.CreateOrUpdateAsync(model1).ConfigureAwait(false));
-            Assert.IsNotNull(await target.CreateOrUpdateAsync(model2).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateOrUpdateAsync(model1, Mock.Of<ILogger>()).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateOrUpdateAsync(model2, Mock.Of<ILogger>()).ConfigureAwait(false));
 
             var result = await target.ListAsync().ConfigureAwait(false);
 
@@ -229,7 +229,7 @@ namespace HighAvailability.Tests
 
             model1.IsHealthy = false;
             model1.LastUpdated = currentDateTime.AddMinutes(1);
-            Assert.IsNotNull(await target.CreateOrUpdateAsync(model1).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateOrUpdateAsync(model1, Mock.Of<ILogger>()).ConfigureAwait(false));
 
             resultModel1 = await target.GetAsync(mediaServiceAccountName1).ConfigureAwait(false);
             Assert.IsTrue(this.AreEqualMediaServiceInstanceHealthModels(model1, resultModel1));
@@ -280,17 +280,17 @@ namespace HighAvailability.Tests
                 throw new Exception("configService is not initialized");
             }
 
-            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
-            var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue, Mock.Of<ILogger>());
-            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService, Mock.Of<ILogger>());
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
+            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService);
 
-            await target.Initialize().ConfigureAwait(false);
+            await target.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             for (var i = 0; i < 4; i++)
             {
                 var request = GenerateJobRequestModel();
-                Assert.IsNotNull(await target.SubmitJobAsync(request).ConfigureAwait(false));
+                Assert.IsNotNull(await target.SubmitJobAsync(request, Mock.Of<ILogger>()).ConfigureAwait(false));
             }
         }
 
@@ -307,8 +307,8 @@ namespace HighAvailability.Tests
                 throw new Exception("configService is not initialized");
             }
 
-            var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue, Mock.Of<ILogger>());
-            var target = new StreamProvisioningService(streamProvisioningEventStorageService, configService, Mock.Of<ILogger>());
+            var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue);
+            var target = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
@@ -321,7 +321,7 @@ namespace HighAvailability.Tests
                 StreamingLocatorName = "sipetrik-test-locator"
             };
 
-            await target.ProvisionStreamAsync(request).ConfigureAwait(false);
+            await target.ProvisionStreamAsync(request, Mock.Of<ILogger>()).ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -334,7 +334,7 @@ namespace HighAvailability.Tests
 
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            var target = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue, Mock.Of<ILogger>());
+            var target = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
 
             var streamProvisioningRequest = new StreamProvisioningRequestModel
             {
@@ -344,9 +344,9 @@ namespace HighAvailability.Tests
                 StreamingLocatorName = $"StreamLocator-{uniqueness}"
             };
 
-            Assert.IsNotNull(await target.CreateAsync(streamProvisioningRequest).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateAsync(streamProvisioningRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
 
-            var result = await target.GetNextAsync().ConfigureAwait(false);
+            var result = await target.GetNextAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -379,7 +379,7 @@ namespace HighAvailability.Tests
                                   label: $"label {uniqueness}"
                                   );
 
-            var target = new JobVerificationRequestStorageService(jobVerificationRequestQueue, Mock.Of<ILogger>());
+            var target = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
 
             var jobRequest = new JobRequestModel
             {
@@ -401,14 +401,14 @@ namespace HighAvailability.Tests
                 MediaServiceAccountName = $"AccountName-{uniqueness}",
             };
 
-            Assert.IsNotNull(await target.CreateAsync(jobVerificationRequest, new TimeSpan(0, 0, 5)).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateAsync(jobVerificationRequest, new TimeSpan(0, 0, 5), Mock.Of<ILogger>()).ConfigureAwait(false));
 
-            var result = await target.GetNextAsync().ConfigureAwait(false);
+            var result = await target.GetNextAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
             // we should not get a message right away, visibility should be set to 5 seconds
             Assert.IsNull(result);
 
             await Task.Delay(5500).ConfigureAwait(false);
-            result = await target.GetNextAsync().ConfigureAwait(false);
+            result = await target.GetNextAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             if (result == null)
             {
@@ -464,16 +464,15 @@ namespace HighAvailability.Tests
                                   label: $"label {uniqueness}"
                                   );
 
-            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService, Mock.Of<ILogger>());
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, Mock.Of<ILogger>());
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService, Mock.Of<ILogger>());
-            var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue, Mock.Of<ILogger>());
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
                                                     jobStatusStorageService,
                                                     streamProvisioningRequestStorageService,
-                                                    configService,
-                                                    Mock.Of<ILogger>());
+                                                    configService);
 
             var jobRequest = new JobRequestModel
             {
@@ -495,7 +494,7 @@ namespace HighAvailability.Tests
                 MediaServiceAccountName = "sipetriktestmain",
             };
 
-            Assert.IsNotNull(await target.VerifyJobAsync(jobVerificationRequest).ConfigureAwait(false));
+            Assert.IsNotNull(await target.VerifyJobAsync(jobVerificationRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
         }
 
         private static JobRequestModel GenerateJobRequestModel()

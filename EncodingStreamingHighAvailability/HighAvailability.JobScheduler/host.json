@@ -9,8 +9,11 @@
     "applicationInsights": {
       "samplingExcludedTypes": "Request",
       "samplingSettings": {
-        "isEnabled": true
+        "isEnabled": false
       }
+    },
+    "logLevel": {
+      "Default": "Information"
     }
   }
 }

@@ -1,6 +1,5 @@
 namespace HighAvailabikity.StreamProvisioning
 {
-    using Azure.Storage.Queues;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.WebJobs;
@@ -9,58 +8,24 @@ namespace HighAvailabikity.StreamProvisioning
     using System;
     using System.Threading.Tasks;
 
-    public static class StreamProvisioningFunction
+    public class StreamProvisioningFunction
     {
-        private static IConfigService? configService;
-        private static QueueClient? streamProvisioningEventQueue;
-        private static readonly object configLock = new object();
-        private static bool configLoaded = false;
+        private IStreamProvisioningService streamProvisioningService { get; set; }
 
-        public static async Task Initialize()
+        public StreamProvisioningFunction(IStreamProvisioningService streamProvisioningService)
         {
-            var keyVaultName = Environment.GetEnvironmentVariable("KeyVaultName");
-            if (keyVaultName == null)
-            {
-                throw new Exception("keyVaultName is not set");
-            }
-
-            configService = new ConfigService(keyVaultName);
-            await configService.LoadConfigurationAsync().ConfigureAwait(false);
-
-            streamProvisioningEventQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningEventQueueName);
-            await streamProvisioningEventQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
+            this.streamProvisioningService = streamProvisioningService ?? throw new ArgumentNullException(nameof(streamProvisioningService));
         }
 
         [FunctionName("StreamProvisioningFunction")]
-        public static async Task Run([QueueTrigger("stream-provisioning-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
+        public async Task Run([QueueTrigger("stream-provisioning-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
         {
             try
             {
-                lock (configLock)
-                {
-                    if (!configLoaded)
-                    {
-                        Initialize().Wait();
-                        configLoaded = true;
-                    }
-                }
-
-                if (streamProvisioningEventQueue == null)
-                {
-                    throw new Exception("streamProvisioningEventQueue is null");
-                }
-
-                if (configService == null)
-                {
-                    throw new Exception("configService is null");
-                }
-
                 logger.LogInformation($"StreamProvisioningFunction::Run triggered, message={message}");
                 var streamProvisioningRequestModel = JsonConvert.DeserializeObject<StreamProvisioningRequestModel>(message);
-                var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue, logger);
-                var streamProvisioningService = new StreamProvisioningService(streamProvisioningEventStorageService, configService, logger);
 
-                await streamProvisioningService.ProvisionStreamAsync(streamProvisioningRequestModel).ConfigureAwait(false);
+                await this.streamProvisioningService.ProvisionStreamAsync(streamProvisioningRequestModel, logger).ConfigureAwait(false);
 
                 logger.LogInformation($"StreamProvisioningFunction::Run completed, message={message}");
             }

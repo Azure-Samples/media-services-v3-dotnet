@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Models;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -14,12 +15,12 @@
         Task<bool> IsHealthyAsync(string mediaServiceName);
 
         // List all healthy instances
-        Task<IEnumerable<string>> ListHealthyAsync();
+        Task<IEnumerable<string>> ListHealthyAsync(ILogger logger);
 
         // List all unhealthy instances
-        Task<IEnumerable<string>> ListUnHealthyAsync();
+        Task<IEnumerable<string>> ListUnHealthyAsync(ILogger logger);
 
-        Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel);
+        Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger);
 
         // List all the media services instances with associated health status        
         Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync();
