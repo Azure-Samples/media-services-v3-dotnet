@@ -24,11 +24,6 @@
 
         public async Task<JobStatusModel> ProcessJobStatusAsync(JobStatusModel jobStatusModel, ILogger logger)
         {
-            if (jobStatusModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobStatusModel));
-            }
-
             logger.LogInformation($"JobStatusService::ProcessJobStatusAsync started: jobStatusModel={LogHelper.FormatObjectForLog(jobStatusModel)}");
 
             if (jobStatusModel.JobState == JobState.Finished)

@@ -11,11 +11,6 @@
 
         public JobStatusModelTableEntity(JobStatusModel jobStatusModel)
         {
-            if (jobStatusModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobStatusModel));
-            }
-
             this.PartitionKey = jobStatusModel.JobName;
             this.RowKey = jobStatusModel.Id;
             this.JobStatusId = jobStatusModel.Id;

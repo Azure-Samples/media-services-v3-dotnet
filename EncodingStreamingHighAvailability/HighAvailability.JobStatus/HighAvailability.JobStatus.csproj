@@ -4,9 +4,6 @@
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
     <RootNamespace>HighAvailability.JobStatus</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Models\**" />
     <EmbeddedResource Remove="Models\**" />

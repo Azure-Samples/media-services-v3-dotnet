@@ -2,15 +2,6 @@
 {
     public class StreamProvisioningEventModel
     {
-        public StreamProvisioningEventModel()
-        {
-            this.Id = string.Empty;
-            this.AssetName = string.Empty;
-            this.MediaServiceAccountName = string.Empty;
-            this.StreamingLocatorName = string.Empty;
-            this.PrimaryUrl = string.Empty;
-        }
-
         public string Id { get; set; }
         public string AssetName { get; set; }
         public string MediaServiceAccountName { get; set; }

@@ -26,11 +26,6 @@
 
         public async Task ProvisionStreamAsync(StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
         {
-            if (streamProvisioningRequest == null)
-            {
-                throw new ArgumentNullException(nameof(streamProvisioningRequest));
-            }
-
             logger.LogInformation($"StreamProvisioningService::ProvisionStreamAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
 
             if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(streamProvisioningRequest.EncodedAssetMediaServiceAccountName))

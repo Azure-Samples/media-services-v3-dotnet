@@ -26,8 +26,8 @@ namespace HighAvailability.JobVerification
             try
             {
                 logger.LogInformation($"JobVerificationFunction::Run triggered, message={message}");
-                var jobVerificationRequestModel = JsonConvert.DeserializeObject<JobVerificationRequestModel>(message, jsonSettings);
 
+                var jobVerificationRequestModel = JsonConvert.DeserializeObject<JobVerificationRequestModel>(message, jsonSettings);
                 var result = await this.jobVerificationService.VerifyJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobVerificationFunction::Run completed, result={LogHelper.FormatObjectForLog(result)}");

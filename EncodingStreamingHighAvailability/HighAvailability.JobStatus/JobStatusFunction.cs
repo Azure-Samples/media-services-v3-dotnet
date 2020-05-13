@@ -26,13 +26,7 @@ namespace HighAvailability.JobStatus
         {
             try
             {
-                if (eventGridEvent == null)
-                {
-                    throw new ArgumentNullException(nameof(eventGridEvent));
-                }
-
                 logger.LogInformation($"JobStatusFunction::Run triggered: message={LogHelper.FormatObjectForLog(eventGridEvent)}");
-
                 var jobStatusModel = this.eventGridService.ParseEventData(eventGridEvent, logger);
                 if (jobStatusModel != null)
                 {

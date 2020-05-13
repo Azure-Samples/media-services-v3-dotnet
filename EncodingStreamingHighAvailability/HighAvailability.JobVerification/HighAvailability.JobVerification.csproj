@@ -4,9 +4,6 @@
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
     <RootNamespace>HighAvailability.JobVerification</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="3.0.10" />
