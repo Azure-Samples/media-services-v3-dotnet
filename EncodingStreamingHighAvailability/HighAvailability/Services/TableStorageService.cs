@@ -17,11 +17,6 @@
 
         public async Task<T> CreateOrUpdateAsync<T>(T tableEntityModel) where T : TableEntity, new()
         {
-            if (tableEntityModel == null)
-            {
-                throw new ArgumentNullException(nameof(tableEntityModel));
-            }
-
             var insertOrMergeOperation = TableOperation.InsertOrMerge(tableEntityModel);
 
             var result = await this.table.ExecuteAsync(insertOrMergeOperation).ConfigureAwait(false);
@@ -77,7 +72,7 @@
 
             rangeQuery.TakeCount = takeCount;
             var results = new List<T>();
-            TableContinuationToken? token = null;
+            TableContinuationToken token = null;
             do
             {
                 // Execute the query, passing in the continuation token.

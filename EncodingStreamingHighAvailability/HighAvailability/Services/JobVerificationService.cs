@@ -28,11 +28,6 @@
 
         public async Task<JobVerificationRequestModel> VerifyJobAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
         {
-            if (jobVerificationRequestModel == null)
-            {
-                throw new Exception();
-            }
-
             logger.LogInformation($"JobVerificationService::VerifyJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
             var jobStatus = await this.jobStatusStorageService.GetLatestJobStatusAsync(jobVerificationRequestModel.JobRequest.JobName).ConfigureAwait(false);

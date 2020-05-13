@@ -6,7 +6,6 @@ namespace HighAvailability.StreamProvisioning
 {
     using Azure.Storage.Queues;
     using HighAvailability.Services;
-    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection;
     using System;

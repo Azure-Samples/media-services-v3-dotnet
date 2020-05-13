@@ -11,6 +11,6 @@
         Task<JobVerificationRequestModel> CreateAsync(JobVerificationRequestModel jobVerificationRequestModel, TimeSpan verificationDelay, ILogger logger);
 
         // Get next verification request
-        Task<JobVerificationRequestModel?> GetNextAsync(ILogger logger);
+        Task<JobVerificationRequestModel> GetNextAsync(ILogger logger);
     }
 }

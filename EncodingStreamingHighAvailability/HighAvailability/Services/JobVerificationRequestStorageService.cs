@@ -21,18 +21,13 @@
 
         public async Task<JobVerificationRequestModel> CreateAsync(JobVerificationRequestModel jobVerificationRequestModel, TimeSpan verificationDelay, ILogger logger)
         {
-            if (jobVerificationRequestModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobVerificationRequestModel));
-            }
-
             var message = JsonConvert.SerializeObject(jobVerificationRequestModel, this.settings);
             await this.queue.SendMessageAsync(QueueServiceHelper.EncodeToBase64(message), verificationDelay).ConfigureAwait(false);
             logger.LogInformation($"JobVerificationRequestStorageService::CreateAsync successfully added request to the queue: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} verificationDelay={verificationDelay}");
             return jobVerificationRequestModel;
         }
 
-        public async Task<JobVerificationRequestModel?> GetNextAsync(ILogger logger)
+        public async Task<JobVerificationRequestModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);
             var message = messages.Value.FirstOrDefault();

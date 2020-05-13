@@ -20,11 +20,6 @@
 
         public async Task<JobStatusModel> CreateOrUpdateAsync(JobStatusModel jobStatusModel, ILogger logger)
         {
-            if (jobStatusModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobStatusModel));
-            }
-
             var jobStatusResult = await this.tableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatusModel)).ConfigureAwait(false);
 
             var jobStatusModelResult = jobStatusResult.GetJobStatusModel();

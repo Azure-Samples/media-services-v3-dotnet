@@ -7,6 +7,6 @@
     public interface IStreamProvisioningEventStorageService
     {
         Task<StreamProvisioningEventModel> CreateAsync(StreamProvisioningEventModel streamProvisioningEventModel, ILogger logger);
-        Task<StreamProvisioningEventModel?> GetNextAsync(ILogger logger);
+        Task<StreamProvisioningEventModel> GetNextAsync(ILogger logger);
     }
 }

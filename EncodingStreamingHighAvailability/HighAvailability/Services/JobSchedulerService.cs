@@ -59,11 +59,6 @@
 
         public async Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger)
         {
-            if (jobRequestModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobRequestModel));
-            }
-
             logger.LogInformation($"JobSchedulerService::SubmitJobAsync started: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
 
             var allInstances = await this.mediaServiceInstanceHealthService.ListAsync().ConfigureAwait(false);
