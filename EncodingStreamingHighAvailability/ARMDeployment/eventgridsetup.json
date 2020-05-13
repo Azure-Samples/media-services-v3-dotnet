@@ -11,6 +11,9 @@
     "keyVaultTenantId": {
       "type": "string"
     },
+    "keyVaultOwnerObjectId": {
+      "type": "string"
+    },
     "amsRegions": {
       "type": "array"
     }
