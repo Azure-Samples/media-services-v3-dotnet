@@ -11,9 +11,9 @@
 
     public class JobStatusStorageService : IJobStatusStorageService
     {
-        private readonly TableStorageService tableStorageService;
+        private readonly ITableStorageService tableStorageService;
 
-        public JobStatusStorageService(TableStorageService tableStorageService)
+        public JobStatusStorageService(ITableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
         }
