@@ -12,7 +12,7 @@ namespace HighAvailability.Tests
         private static IConfigService configService;
 
         [ClassInitialize]
-        public static async Task Initialize(TestContext testContext)
+        public static async Task Initialize(TestContext _)
         {
             configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
