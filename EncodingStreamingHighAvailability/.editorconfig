@@ -12,4 +12,5 @@ dotnet_diagnostic.CA1062.severity = none
 # IDE0060: Remove unused parameter
 dotnet_code_quality_unused_parameters = all:none
 
-dotnet_code_quality.ca1801.severity = all:none
+# CA1707: Identifiers should not contain underscores
+dotnet_diagnostic.CA1707.severity = none
