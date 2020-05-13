@@ -30,7 +30,7 @@ namespace HighAvailability.Tests
         private static IConfigService configService;
 
         [ClassInitialize]
-        public static async Task Initialize(TestContext testContext)
+        public static async Task Initialize(TestContext _)
         {
             configService = new ConfigService("sipetrikha2-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
