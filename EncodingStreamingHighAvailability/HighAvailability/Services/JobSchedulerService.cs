@@ -75,13 +75,6 @@
             // AzureMediaServicesClient is not thread safe, creating new one every time for now
             using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
             {
-
-                var inputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
-                    clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    jobRequestModel.InputAssetName,
-                    new Asset()).ConfigureAwait(false);
-
                 var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
                     clientConfiguration.ResourceGroup,
                     clientConfiguration.AccountName,

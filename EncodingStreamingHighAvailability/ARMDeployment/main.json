@@ -11,6 +11,9 @@
     "keyVaultTenantId": {
       "type": "string"
     },
+    "keyVaultOwnerObjectId": {
+      "type": "string"
+    },
     "amsRegions": {
       "type": "array"
     }
@@ -116,7 +119,51 @@
           "name": "Standard"
         },
         "tenantId": "[parameters('keyVaultTenantId')]",
-        "accessPolicies":[],
+        "accessPolicies": [
+          {
+            "tenantId": "[parameters('keyVaultTenantId')]",
+            "objectId": "[parameters('keyVaultOwnerObjectId')]",
+            "permissions": {
+              "keys": [
+                "Get",
+                "List",
+                "Update",
+                "Create",
+                "Import",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore"
+              ],
+              "secrets": [
+                "Get",
+                "List",
+                "Set",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore"
+              ],
+              "certificates": [
+                "Get",
+                "List",
+                "Update",
+                "Create",
+                "Import",
+                "Delete",
+                "Recover",
+                "Backup",
+                "Restore",
+                "ManageContacts",
+                "ManageIssuers",
+                "GetIssuers",
+                "ListIssuers",
+                "SetIssuers",
+                "DeleteIssuers"
+              ]
+            }
+          }
+        ],
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
         "enabledForTemplateDeployment": false,
