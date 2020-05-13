@@ -11,9 +11,9 @@
     public class MediaServiceInstanceHealthStorageService : IMediaServiceInstanceHealthStorageService
     {
         private static DateTime minDateTimeForTableStorage = new DateTime(1900, 1, 1);
-        private readonly TableStorageService tableStorageService;
+        private readonly ITableStorageService tableStorageService;
 
-        public MediaServiceInstanceHealthStorageService(TableStorageService tableStorageService)
+        public MediaServiceInstanceHealthStorageService(ITableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
         }

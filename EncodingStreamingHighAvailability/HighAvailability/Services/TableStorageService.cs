@@ -5,7 +5,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public class TableStorageService
+    public class TableStorageService : ITableStorageService
     {
         private readonly CloudTable table;
         private const int takeCount = 100;
