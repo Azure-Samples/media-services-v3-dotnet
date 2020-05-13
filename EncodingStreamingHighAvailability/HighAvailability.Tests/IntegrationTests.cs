@@ -428,7 +428,6 @@ namespace HighAvailability.Tests
 
             var jobId = "jobId-" + uniqueness;
             var jobName = "jobName-" + uniqueness;
-            var inputAssetName = "input-" + uniqueness;
             var outputAssetName = "output-" + uniqueness;
 
             var input = new JobInputHttp(
@@ -441,7 +440,6 @@ namespace HighAvailability.Tests
             {
                 Id = jobId,
                 JobName = jobName,
-                InputAssetName = inputAssetName,
                 OutputAssetName = outputAssetName,
                 TransformName = "AdaptiveBitrate",
                 JobInputs = new JobInputs

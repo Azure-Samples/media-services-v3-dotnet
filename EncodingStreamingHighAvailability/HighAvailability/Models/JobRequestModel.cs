@@ -9,6 +9,5 @@
         public string TransformName { get; set; }
         public JobInputs JobInputs { get; set; }
         public string OutputAssetName { get; set; }
-        public string InputAssetName { get; set; }
     }
 }
