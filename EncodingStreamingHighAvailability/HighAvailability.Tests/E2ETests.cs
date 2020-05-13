@@ -15,19 +15,14 @@ namespace HighAvailability.Tests
     [TestClass]
     public class E2ETests
     {
-        private static QueueClient? jobRequestQueue;
-        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
-        private static IConfigService? configService;
-        private static QueueClient? jobVerificationRequestQueue;
+        private static QueueClient jobRequestQueue;
+        private static TableStorageService mediaServiceInstanceHealthTableStorageService;
+        private static IConfigService configService;
+        private static QueueClient jobVerificationRequestQueue;
 
         [ClassInitialize]
         public static async Task Initialize(TestContext testContext)
         {
-            if (testContext is null)
-            {
-                throw new System.ArgumentNullException(nameof(testContext));
-            }
-
             configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
@@ -51,23 +46,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobRequestStorageService()
         {
-            if (mediaServiceInstanceHealthTableStorageService == null)
-            {
-                throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
-            }
-            if (jobVerificationRequestQueue == null)
-            {
-                throw new Exception("jobVerificationRequestQueue is not initialized");
-            }
-            if (configService == null)
-            {
-                throw new Exception("configService is not initialized");
-            }
-            if (jobRequestQueue == null)
-            {
-                throw new Exception("jobRequestQueue is not initialized");
-            }
-
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);

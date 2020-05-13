@@ -13,11 +13,6 @@
 
         public MediaServiceInstanceHealthModelTableEntity(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel)
         {
-            if (mediaServiceInstanceHealthModel == null)
-            {
-                throw new ArgumentNullException(nameof(mediaServiceInstanceHealthModel));
-            }
-
             this.PartitionKey = mediaServiceInstanceHealthModel.MediaServiceAccountName;
             this.RowKey = DefaultRowKeyValue;
             this.MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName;

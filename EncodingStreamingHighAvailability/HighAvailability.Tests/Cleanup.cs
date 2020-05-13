@@ -9,16 +9,11 @@ namespace HighAvailability.Tests
     [TestClass]
     public class Cleanup
     {
-        private static IConfigService? configService;
+        private static IConfigService configService;
 
         [ClassInitialize]
         public static async Task Initialize(TestContext testContext)
         {
-            if (testContext is null)
-            {
-                throw new System.ArgumentNullException(nameof(testContext));
-            }
-
             configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
         }
@@ -26,11 +21,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task CleanupAssets()
         {
-            if (configService == null)
-            {
-                throw new System.Exception("Config services is not initialized");
-            }
-
             var configuration = configService.MediaServiceInstanceConfiguration;
             foreach (var config in configuration.Values)
             {

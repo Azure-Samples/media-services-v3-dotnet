@@ -21,18 +21,13 @@
 
         public async Task<JobRequestModel> CreateAsync(JobRequestModel jobRequestModel, ILogger logger)
         {
-            if (jobRequestModel == null)
-            {
-                throw new ArgumentNullException(nameof(jobRequestModel));
-            }
-
             var message = JsonConvert.SerializeObject(jobRequestModel, this.settings);
             await this.queue.SendMessageAsync(QueueServiceHelper.EncodeToBase64(message)).ConfigureAwait(false);
             logger.LogInformation($"JobRequestStorageService::CreateAsync successfully added request to the queue: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
             return jobRequestModel;
         }
 
-        public async Task<JobRequestModel?> GetNextAsync(ILogger logger)
+        public async Task<JobRequestModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);
             var message = messages.Value.FirstOrDefault();

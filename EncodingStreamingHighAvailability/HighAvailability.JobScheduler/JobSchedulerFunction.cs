@@ -27,8 +27,8 @@ namespace HighAvailability.JobScheduler
             try
             {
                 logger.LogInformation($"JobSchedulerFunction::Run triggered, message={message}");
-                var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(message, jsonSettings);
 
+                var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(message, jsonSettings);
                 var result = await this.jobSchedulerService.SubmitJobAsync(jobRequestModel, logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobSchedulerFunction::Run completed, result={LogHelper.FormatObjectForLog(result)}");

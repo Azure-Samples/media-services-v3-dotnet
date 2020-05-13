@@ -6,6 +6,6 @@
 
     public interface IEventGridService
     {
-        JobStatusModel? ParseEventData(EventGridEvent eventGridEvent, ILogger logger);
+        JobStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger);
     }
 }

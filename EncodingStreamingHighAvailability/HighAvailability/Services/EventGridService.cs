@@ -12,13 +12,8 @@
     {
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
-        public JobStatusModel? ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
+        public JobStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
-            if (eventGridEvent == null)
-            {
-                throw new ArgumentNullException(nameof(eventGridEvent));
-            }
-
             var eventId = eventGridEvent.Id;
             var eventType = eventGridEvent.EventType;
             var amsAccountResourceId = eventGridEvent.Topic;
@@ -26,7 +21,7 @@
             var eventDataStr = eventGridEvent.Data.ToString();
             var eventTime = eventGridEvent.EventTime;
 
-            JobStatusModel? jobStatusModel = null;
+            JobStatusModel jobStatusModel = null;
 
             if (eventType.Equals("Microsoft.Media.JobOutputStateChange", StringComparison.InvariantCultureIgnoreCase))
             {

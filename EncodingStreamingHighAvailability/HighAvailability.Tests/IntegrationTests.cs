@@ -16,27 +16,22 @@ namespace HighAvailability.Tests
     [TestClass]
     public class IntegrationTests
     {
-        private static TableStorageService? jobStatusTableStorageService;
-        private static QueueClient? jobRequestQueue;
-        private static QueueClient? jobVerificationRequestQueue;
-        private static QueueClient? streamProvisioningRequestQueue;
-        private static QueueClient? streamProvisioningEventQueue;
-        private static TableStorageService? mediaServiceInstanceHealthTableStorageService;
+        private static TableStorageService jobStatusTableStorageService;
+        private static QueueClient jobRequestQueue;
+        private static QueueClient jobVerificationRequestQueue;
+        private static QueueClient streamProvisioningRequestQueue;
+        private static QueueClient streamProvisioningEventQueue;
+        private static TableStorageService mediaServiceInstanceHealthTableStorageService;
         private const string jobStatusTableName = "JobStatusTest";
         private const string jobRequestQueueName = "jobrequests-test";
         private const string jobVerificationRequestQueueName = "jobverificationrequests-test";
         private const string streamProvisioningRequestQueueName = "streamprovisioningrequests-test";
         private const string streamProvisioningEventQueueName = "streamprovisioningevents-test";
-        private static IConfigService? configService;
+        private static IConfigService configService;
 
         [ClassInitialize]
         public static async Task Initialize(TestContext testContext)
         {
-            if (testContext is null)
-            {
-                throw new System.ArgumentNullException(nameof(testContext));
-            }
-
             configService = new ConfigService("sipetrikha2-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
@@ -71,11 +66,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobStatusStorageService()
         {
-            if (jobStatusTableStorageService == null)
-            {
-                throw new Exception("jobStatusTableStorageService is not initialized");
-            }
-
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             var target = new JobStatusStorageService(jobStatusTableStorageService);
             var jobName = $"JobName-{uniqueness}";
@@ -130,11 +120,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobRequestStorageService()
         {
-            if (jobRequestQueue == null)
-            {
-                throw new Exception("jobRequestQueue is not initialized");
-            }
-
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             var jobName = $"JobName-{uniqueness}";
             var outputAssetName = $"OutputAssetName-{uniqueness}";
@@ -184,11 +169,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestMediaServiceInstanceHealthStorageService()
         {
-            if (mediaServiceInstanceHealthTableStorageService == null)
-            {
-                throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
-            }
-
             var target = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceAccountName1 = $"Account1";
             var mediaServiceAccountName2 = $"Account2";
@@ -265,21 +245,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobSchedulerService()
         {
-            if (mediaServiceInstanceHealthTableStorageService == null)
-            {
-                throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
-            }
-
-            if (jobVerificationRequestQueue == null)
-            {
-                throw new Exception("jobVerificationRequestQueue is not initialized");
-            }
-
-            if (configService == null)
-            {
-                throw new Exception("configService is not initialized");
-            }
-
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
@@ -297,16 +262,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestStreamProvisioningService()
         {
-            if (streamProvisioningEventQueue == null)
-            {
-                throw new Exception("streamProvisioningEventQueue is not initialized");
-            }
-
-            if (configService == null)
-            {
-                throw new Exception("configService is not initialized");
-            }
-
             var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue);
             var target = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
 
@@ -327,11 +282,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestStreamProvisioningRequestStorageService()
         {
-            if (streamProvisioningRequestQueue == null)
-            {
-                throw new Exception("streamProvisioningRequestQueue is not initialized");
-            }
-
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
             var target = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
@@ -362,11 +312,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobVerificationRequestStorageService()
         {
-            if (jobVerificationRequestQueue == null)
-            {
-                throw new Exception("jobVerificationRequestQueue is not initialized");
-            }
-
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             var jobId = $"JobId-{uniqueness}";
             var jobName = $"JobName-{uniqueness}";
@@ -432,26 +377,6 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobVerificationService()
         {
-            if (mediaServiceInstanceHealthTableStorageService == null)
-            {
-                throw new Exception("mediaServiceInstanceHealthTableStorageService is not initialized");
-            }
-
-            if (jobStatusTableStorageService == null)
-            {
-                throw new Exception("jobStatusTableStorageService is not initialized");
-            }
-
-            if (streamProvisioningRequestQueue == null)
-            {
-                throw new Exception("streamProvisioningRequestQueue is not initialized");
-            }
-
-            if (configService == null)
-            {
-                throw new Exception("configService is not initialized");
-            }
-
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             var jobId = $"JobId";
             var jobName = $"jobName-10-cf1cdda5-a7ac";

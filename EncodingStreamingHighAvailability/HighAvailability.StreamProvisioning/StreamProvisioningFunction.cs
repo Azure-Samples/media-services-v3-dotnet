@@ -23,8 +23,8 @@ namespace HighAvailabikity.StreamProvisioning
             try
             {
                 logger.LogInformation($"StreamProvisioningFunction::Run triggered, message={message}");
-                var streamProvisioningRequestModel = JsonConvert.DeserializeObject<StreamProvisioningRequestModel>(message);
 
+                var streamProvisioningRequestModel = JsonConvert.DeserializeObject<StreamProvisioningRequestModel>(message);
                 await this.streamProvisioningService.ProvisionStreamAsync(streamProvisioningRequestModel, logger).ConfigureAwait(false);
 
                 logger.LogInformation($"StreamProvisioningFunction::Run completed, message={message}");

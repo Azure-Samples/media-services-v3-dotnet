@@ -20,11 +20,6 @@
 
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
-            if (mediaServiceInstanceHealthModel == null)
-            {
-                throw new ArgumentNullException(nameof(mediaServiceInstanceHealthModel));
-            }
-
             var verifiedModel = new MediaServiceInstanceHealthModel
             {
                 IsHealthy = mediaServiceInstanceHealthModel.IsHealthy,
