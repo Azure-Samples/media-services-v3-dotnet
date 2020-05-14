@@ -6,7 +6,6 @@
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
 
     public class JobSchedulerService : IJobSchedulerService
@@ -17,13 +16,16 @@
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
         private readonly IConfigService configService;
+        private readonly IJobStatusStorageService jobStatusStorageService;
 
         public JobSchedulerService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
+                                    IJobStatusStorageService jobStatusStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
+            this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -58,18 +60,10 @@
         {
             logger.LogInformation($"JobSchedulerService::SubmitJobAsync started: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
 
-            var allInstances = await this.mediaServiceInstanceHealthService.ListAsync().ConfigureAwait(false);
-            //TBD
-            //var selectedInstance = allInstances.Where(i => i.IsHealthy).OrderBy(i => i.LastSubmittedJob).FirstOrDefault();
-            var selectedInstance = allInstances.FirstOrDefault();
-            if (selectedInstance == null)
-            {
-                throw new Exception($"Could not find a healthy AMS instance, found total instance count={allInstances.Count()}");
-            }
+            var selectedInstanceName = await this.mediaServiceInstanceHealthService.GetNextAvailableInstanceAsync(logger).ConfigureAwait(false);
+            logger.LogInformation($"JobSchedulerService::SubmitJobAsync selected healthy instance: MediaServiceAccountName={selectedInstanceName} jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
 
-            logger.LogInformation($"JobSchedulerService::SubmitJobAsync selected healthy instance: MediaServiceAccountName={selectedInstance.MediaServiceAccountName} jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
-
-            var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstance.MediaServiceAccountName];
+            var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
 
             // AzureMediaServicesClient is not thread safe, creating new one every time for now
             using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
@@ -103,8 +97,10 @@
                     Id = Guid.NewGuid().ToString(),
                     JobId = job.Id,
                     JobRequest = jobRequestModel,
-                    MediaServiceAccountName = selectedInstance.MediaServiceAccountName
+                    MediaServiceAccountName = selectedInstanceName
                 };
+
+                this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
 
                 var retryCount = 3;
                 var retryTimeOut = 1000;
@@ -114,6 +110,19 @@
                 {
                     try
                     {
+                        var jobStatusModel = new JobStatusModel
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            EventTime = job.LastModified,
+                            JobState = job.State,
+                            JobName = job.Name,
+                            MediaServiceAccountName = selectedInstanceName,
+                            JobOutputAssetName = jobRequestModel.OutputAssetName,
+                            TransformName = jobRequestModel.TransformName
+                        };
+
+                        await this.jobStatusStorageService.CreateOrUpdateAsync(jobStatusModel, logger).ConfigureAwait(false);
+
                         var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
                         logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
                         break;

@@ -27,7 +27,7 @@
     "frontDoorName": "[concat(parameters('deploymentNameBase'),'fd')]",
     "frontDoorHostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
     "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
-    "functionNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
+    "functionNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification", "InstanceHealth" ],
     "copy": [
       {
         "name": "functionNames",
@@ -377,6 +377,18 @@
                   {
                     "tenantId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').tenantId]",
                     "objectId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').principalId]",
+                    "permissions": {
+                      "keys": [],
+                      "secrets": [
+                        "Get",
+                        "List"
+                      ],
+                      "certificates": []
+                    }
+                  },
+                  {
+                    "tenantId": "[reference(variables('functionIdentities')[4], '2015-08-31-PREVIEW').tenantId]",
+                    "objectId": "[reference(variables('functionIdentities')[4], '2015-08-31-PREVIEW').principalId]",
                     "permissions": {
                       "keys": [],
                       "secrets": [

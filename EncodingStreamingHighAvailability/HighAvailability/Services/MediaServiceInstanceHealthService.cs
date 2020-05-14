@@ -5,6 +5,7 @@
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -13,14 +14,26 @@
     {
         private readonly IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService;
         private readonly IJobStatusStorageService jobStatusStorageService;
-        private readonly int numberOfMinutesInProcessToMarkJobStuck = 60;
-        private readonly float successRateForHealthyState = 0.9f;
-        private readonly float successRateForUnHealthyState = 0.5f;
+        private int numberOfMinutesInProcessToMarkJobStuck = 60;
+        private int timeWindowInMinutesToLoadJobs = 480;
+        private float successRateForHealthyState = 0.9f;
+        private float successRateForUnHealthyState = 0.5f;
+        private ConcurrentDictionary<string, ulong> mediaServiceInstanceUsage = new ConcurrentDictionary<string, ulong>();
 
-        public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService, IJobStatusStorageService jobStatusStorageService)
+        public MediaServiceInstanceHealthService(
+            IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
+            IJobStatusStorageService jobStatusStorageService,
+            int numberOfMinutesInProcessToMarkJobStuck,
+            int timeWindowInMinutesToLoadJobs,
+            float successRateForHealthyState,
+            float successRateForUnHealthyState)
         {
             this.mediaServiceInstanceHealthStorageService = mediaServiceInstanceHealthStorageService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthStorageService));
             this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
+            this.numberOfMinutesInProcessToMarkJobStuck = numberOfMinutesInProcessToMarkJobStuck;
+            this.timeWindowInMinutesToLoadJobs = timeWindowInMinutesToLoadJobs;
+            this.successRateForHealthyState = successRateForHealthyState;
+            this.successRateForUnHealthyState = successRateForUnHealthyState;
         }
 
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
@@ -28,51 +41,68 @@
             return await this.mediaServiceInstanceHealthStorageService.CreateOrUpdateAsync(mediaServiceInstanceHealthModel, logger).ConfigureAwait(false);
         }
 
-        public async Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName)
-        {
-            return await this.mediaServiceInstanceHealthStorageService.GetAsync(mediaServiceName).ConfigureAwait(false);
-        }
-
-        public async Task<InstanceHealthState> GetHealthStateAsync(string mediaServiceName)
-        {
-            var mediaServiceInstanceHealthModel = await this.mediaServiceInstanceHealthStorageService.GetAsync(mediaServiceName).ConfigureAwait(false);
-            return mediaServiceInstanceHealthModel.HealthState;
-        }
-
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync()
         {
             return await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<string>> ListHealthyAsync(ILogger logger)
+        public async Task<string> GetNextAvailableInstanceAsync(ILogger logger)
         {
-            var result = (await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false)).Where(i => i.HealthState == InstanceHealthState.Healthy).Select(i => i.MediaServiceAccountName);
-            logger.LogInformation($"MediaServiceInstanceHealthService::ListHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
-            return result;
+            var instance = string.Empty;
+
+            var allInstances = await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false);
+
+            var allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Healthy).Select(i => i.MediaServiceAccountName);
+
+            if (!allHealthyInstances.Any())
+            {
+                logger.LogWarning($"MediaServiceInstanceHealthService::GetNextAvailableInstanceAsync: There are no healthy instances available, falling back to degraded instances");
+                allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Degraded).Select(i => i.MediaServiceAccountName);
+
+                if (!allHealthyInstances.Any())
+                {
+                    throw new Exception($"There are no healthy or degraded instances available, can not process job request");
+                }
+            }
+
+            var candidates = allHealthyInstances.Except(this.mediaServiceInstanceUsage.Keys);
+
+            if (candidates.Any())
+            {
+                instance = candidates.FirstOrDefault();
+            }
+            else
+            {
+                instance = this.mediaServiceInstanceUsage.Where(c => allHealthyInstances.Contains(c.Key)).OrderBy(c => c.Value).FirstOrDefault().Key;
+            }
+
+            logger.LogInformation($"MediaServiceInstanceHealthService::GetNextAvailableInstanceAsync: result={instance}");
+            return instance;
         }
 
-        public async Task<IEnumerable<string>> ListUnHealthyAsync(ILogger logger)
+        public void RecordInstanceUsage(string mediaServiceName, ILogger logger)
         {
-            var result = (await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false)).Where(i => i.HealthState != InstanceHealthState.Healthy).Select(i => i.MediaServiceAccountName);
-            logger.LogInformation($"MediaServiceInstanceHealthService::ListUnHealthyAsync: result={LogHelper.FormatObjectForLog(result)}");
-            return result;
+            this.mediaServiceInstanceUsage.AddOrUpdate(mediaServiceName, 1, (name, usage) => usage + 1);
+            logger.LogInformation($"MediaServiceInstanceHealthService::RecordInstanceUsage: mediaServiceInstanceUsage={LogHelper.FormatObjectForLog(this.mediaServiceInstanceUsage)}");
         }
 
-        public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ReEvaluateMediaServicesHealthAsync()
+        public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ReEvaluateMediaServicesHealthAsync(ILogger logger)
         {
             var instances = await this.ListAsync().ConfigureAwait(false);
+            var updatedInstances = new List<MediaServiceInstanceHealthModel>();
 
             Parallel.ForEach(instances, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (mediaServiceInstanceHealthModel) =>
             {
-                var allJobs = this.jobStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName).GetAwaiter().GetResult();
+                var allJobs = this.jobStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowInMinutesToLoadJobs).GetAwaiter().GetResult();
+                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync loaded jobs history: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} count={allJobs.Count()}");
                 var aggregatedData = allJobs.GroupBy(i => i.JobName);
-                int successCount = 0;
-                int totalCount = 0;
-                int inHealthyProgressCount = 0;
+                var successCount = 0;
+                var totalCount = 0;
+                var inHealthyProgressCount = 0;
                 foreach (var jobData in aggregatedData)
                 {
                     totalCount++;
-                    bool finalStateReached = false;
+                    var finalStateReached = false;
 
                     if (jobData.Any(j => j.JobState == JobState.Finished))
                     {
@@ -99,33 +129,47 @@
                         var duration = lastUdate - firstUpdate;
 
                         // if duration below max threshold, 
-                        if (duration.TotalMinutes < numberOfMinutesInProcessToMarkJobStuck)
+                        if (duration.TotalMinutes < this.numberOfMinutesInProcessToMarkJobStuck)
                         {
                             inHealthyProgressCount++;
                         }
                     }
                 }
 
-                float successRate = ((float)(successCount + inHealthyProgressCount)) / totalCount;
-                InstanceHealthState state = InstanceHealthState.Degraded;
-                if (successRate > successRateForHealthyState)
+                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync aggregated data: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} successCount={successCount} totalCount={totalCount} inHealthyProgressCount={inHealthyProgressCount}");
+
+                // default is healthy
+                var successRate = 1f;
+                if (totalCount > 0)
+                {
+                    successRate = ((float)(successCount + inHealthyProgressCount)) / totalCount;
+                }
+
+                var state = InstanceHealthState.Degraded;
+                if (successRate > this.successRateForHealthyState)
                 {
                     state = InstanceHealthState.Healthy;
                 }
-                else if (successRate < successRateForUnHealthyState)
+                else if (successRate < this.successRateForUnHealthyState)
                 {
                     state = InstanceHealthState.Unhealthy;
                 }
 
-                this.UpdateHealthStateAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, state, DateTime.UtcNow).Wait();
+                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync setting health state: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} state={state}");
+
+                var updatedMediaServiceInstanceHealthModel = this.UpdateHealthStateAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, state, DateTime.UtcNow).GetAwaiter().GetResult();
+                lock (updatedInstances)
+                {
+                    updatedInstances.Add(updatedMediaServiceInstanceHealthModel);
+                }
             });
 
-            return null;
+            return updatedInstances;
         }
 
         public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime)
         {
             return await this.mediaServiceInstanceHealthStorageService.UpdateHealthStateAsync(mediaServiceName, instanceHealthState, eventDateTime).ConfigureAwait(false);
-        }       
+        }
     }
 }

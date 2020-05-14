@@ -20,7 +20,7 @@ namespace HighAvailability.JobStatus
             configService.LoadConfigurationAsync().Wait();
 
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
-            var tableClient = tableStorageAccount.CreateCloudTableClient();           
+            var tableClient = tableStorageAccount.CreateCloudTableClient();
 
             var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
             jobStatusTable.CreateIfNotExists();
@@ -29,7 +29,7 @@ namespace HighAvailability.JobStatus
             var streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningRequestQueueName);
             streamProvisioningRequestQueue.CreateIfNotExists();
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);           
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
             var jobStatusService = new JobStatusService(jobStatusStorageService, streamProvisioningRequestStorageService);
             var eventGridService = new EventGridService();

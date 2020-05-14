@@ -23,6 +23,6 @@
         // Load latest status for a given job 
         Task<JobStatusModel> GetLatestJobStatusAsync(string jobName);
 
-        Task<IEnumerable<JobStatusModel>> ListByMediaServiceAccountNameAsync(string mediaServiceAccountName);
+        Task<IEnumerable<JobStatusModel>> ListByMediaServiceAccountNameAsync(string mediaServiceAccountName, int timeWindowInMinutesToLoadJobs);
     }
 }

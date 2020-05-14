@@ -35,7 +35,8 @@ namespace HighAvailability.JobVerification
 
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
+                                                                                            configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
             var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, configService);
 

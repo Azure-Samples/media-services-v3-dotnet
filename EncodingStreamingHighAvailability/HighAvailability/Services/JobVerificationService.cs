@@ -106,8 +106,8 @@
             // It all depends on scenario, out of scope for v1
             logger.LogWarning($"JobVerificationService::ProcessFailedJob job failed, marking instance unhealthy: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
-           // var updateHealthStateResult = await this.mediaServiceInstanceHealthService.UpdateHealthStateAsync(jobVerificationRequestModel.MediaServiceAccountName, false, DateTime.UtcNow).ConfigureAwait(false);
-           // logger.LogInformation($"JobVerificationService::ProcessFailedJob job failed, marked instance unhealthy: updateHealthStateResult={LogHelper.FormatObjectForLog(updateHealthStateResult)}");
+            // var updateHealthStateResult = await this.mediaServiceInstanceHealthService.UpdateHealthStateAsync(jobVerificationRequestModel.MediaServiceAccountName, false, DateTime.UtcNow).ConfigureAwait(false);
+            // logger.LogInformation($"JobVerificationService::ProcessFailedJob job failed, marked instance unhealthy: updateHealthStateResult={LogHelper.FormatObjectForLog(updateHealthStateResult)}");
         }
 
         private async Task ProcessStuckJob(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
@@ -117,8 +117,8 @@
             // It all depends on scenario, out of scope for v1
             logger.LogWarning($"JobVerificationService::ProcessStuckJob job got stuck, marking instance unhealthy: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
-           // var updateHealthStateResult = await this.mediaServiceInstanceHealthService.UpdateHealthStateAsync(jobVerificationRequestModel.MediaServiceAccountName, false, DateTime.UtcNow).ConfigureAwait(false);
-           // logger.LogInformation($"JobVerificationService::ProcessStuckJob job failed, marked instance unhealthy: updateHealthStateResult={LogHelper.FormatObjectForLog(updateHealthStateResult)}");
+            // var updateHealthStateResult = await this.mediaServiceInstanceHealthService.UpdateHealthStateAsync(jobVerificationRequestModel.MediaServiceAccountName, false, DateTime.UtcNow).ConfigureAwait(false);
+            // logger.LogInformation($"JobVerificationService::ProcessStuckJob job failed, marked instance unhealthy: updateHealthStateResult={LogHelper.FormatObjectForLog(updateHealthStateResult)}");
         }
     }
 }
