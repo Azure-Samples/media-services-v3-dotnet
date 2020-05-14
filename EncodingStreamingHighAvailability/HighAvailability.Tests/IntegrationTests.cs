@@ -215,9 +215,10 @@ namespace HighAvailability.Tests
         {
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
+                                                                                            configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService);
+            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobStatusStorageService, configService);
 
             await target.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 
@@ -360,7 +361,8 @@ namespace HighAvailability.Tests
 
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);           
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
+                                                                                           configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
@@ -394,7 +396,7 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestLoadReEvaluateMediaServicesHealthAsync()
         {
-          //  await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            //  await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
             await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
 
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
@@ -427,12 +429,13 @@ namespace HighAvailability.Tests
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[0])).ConfigureAwait(false);
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[1])).ConfigureAwait(false);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
+                                                                                           configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            var result = await target.ReEvaluateMediaServicesHealthAsync().ConfigureAwait(false);
+            var result = await target.ReEvaluateMediaServicesHealthAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             stopWatch.Stop();
 

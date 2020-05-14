@@ -16,7 +16,7 @@
             this.PartitionKey = mediaServiceInstanceHealthModel.MediaServiceAccountName;
             this.RowKey = DefaultRowKeyValue;
             this.MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName;
-            this.HealthState = (int)mediaServiceInstanceHealthModel.HealthState;
+            this.HealthState = mediaServiceInstanceHealthModel.HealthState.ToString();
             this.LastUpdated = mediaServiceInstanceHealthModel.LastUpdated;
         }
 
@@ -24,7 +24,7 @@
         /// TBD need to decide if we want to duplicate PartitionKey field in table storage, for now, we are duplicating
         /// </summary>
         public string MediaServiceAccountName { get; set; }
-        public int HealthState { get; set; }
+        public string HealthState { get; set; }
         public DateTimeOffset LastUpdated { get; set; }
 
         public MediaServiceInstanceHealthModel GetMediaServiceInstanceHealthModel()
@@ -32,7 +32,7 @@
             return new MediaServiceInstanceHealthModel
             {
                 MediaServiceAccountName = this.MediaServiceAccountName,
-                HealthState = (InstanceHealthState)this.HealthState,
+                HealthState = Enum.Parse<InstanceHealthState>(this.HealthState),
                 LastUpdated = this.LastUpdated
             };
         }
