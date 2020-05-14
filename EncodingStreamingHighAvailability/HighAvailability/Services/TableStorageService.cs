@@ -8,7 +8,7 @@
     public class TableStorageService : ITableStorageService
     {
         private readonly CloudTable table;
-        private const int takeCount = 100;
+        private const int takeCount = 10000;
 
         public TableStorageService(CloudTable table)
         {
@@ -22,7 +22,7 @@
             var result = await this.table.ExecuteAsync(insertOrMergeOperation).ConfigureAwait(false);
             var tableEntityModelResult = result.Result as T;
 
-            if (tableEntityModelResult == null)
+            if (tableEntityModelResult == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
                 throw new Exception("Got error callig Table API");
             }
@@ -36,7 +36,7 @@
             var result = await this.table.ExecuteAsync(retrieveOperation).ConfigureAwait(false);
             var tableEntityModel = result.Result as T;
 
-            if (tableEntityModel == null)
+            if (tableEntityModel == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
                 throw new Exception("Got error callig Table API");
             }
@@ -50,7 +50,7 @@
             var result = await this.table.ExecuteAsync(mergeOperation).ConfigureAwait(false);
             var tableEntityModelResult = result.Result as T;
 
-            if (tableEntityModelResult == null)
+            if (tableEntityModelResult == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
                 throw new Exception("Got error callig Table API");
             }
@@ -88,6 +88,31 @@
             while (token != null);
 
             return results;
+        }
+
+        public async Task DeleteAsync<T>(T tableEntityModel) where T : TableEntity, new()
+        {
+            var deleteOperation = TableOperation.Delete(tableEntityModel);
+            var result = await this.table.ExecuteAsync(deleteOperation).ConfigureAwait(false);
+
+            if (!this.IsStatusCodeSuccess(result.HttpStatusCode))
+            {
+                throw new Exception("Got error callig Table API");
+            }
+        }
+
+        public async Task DeleteAllAsync<T>() where T : TableEntity, new()
+        {
+            var allItems = await this.ListAsync<T>().ConfigureAwait(false);
+            foreach (var item in allItems)
+            {
+                await this.DeleteAsync(item).ConfigureAwait(false);
+            }
+        }
+
+        private bool IsStatusCodeSuccess(int httpStatusCode)
+        {
+            return httpStatusCode >= 200 && httpStatusCode < 300;
         }
     }
 }

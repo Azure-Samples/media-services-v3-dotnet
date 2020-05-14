@@ -9,7 +9,7 @@
         public string JobName { get; set; }
         public string JobOutputAssetName { get; set; }
         public JobState JobState { get; set; }
-        public DateTime EventTime { get; set; }
+        public DateTimeOffset EventTime { get; set; }
         public string MediaServiceAccountName { get; set; }
     }
 }

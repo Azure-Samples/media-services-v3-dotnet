@@ -10,18 +10,19 @@ namespace HighAvailability.Tests
     using Moq;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
 
     [TestClass]
     public class IntegrationTests
     {
-        private static TableStorageService jobStatusTableStorageService;
+        private static ITableStorageService jobStatusTableStorageService;
         private static QueueClient jobRequestQueue;
         private static QueueClient jobVerificationRequestQueue;
         private static QueueClient streamProvisioningRequestQueue;
         private static QueueClient streamProvisioningEventQueue;
-        private static TableStorageService mediaServiceInstanceHealthTableStorageService;
+        private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
         private const string jobStatusTableName = "JobStatusTest";
         private const string jobRequestQueueName = "jobrequests-test";
         private const string jobVerificationRequestQueueName = "jobverificationrequests-test";
@@ -32,7 +33,7 @@ namespace HighAvailability.Tests
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
         {
-            configService = new ConfigService("sipetrikha2-keyvault");
+            configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
@@ -178,21 +179,15 @@ namespace HighAvailability.Tests
             var model1 = new MediaServiceInstanceHealthModel
             {
                 MediaServiceAccountName = mediaServiceAccountName1,
-                IsHealthy = true,
-                LastSuccessfulJob = currentDateTime.AddHours(-2),
-                LastFailedJob = currentDateTime.AddHours(-1),
-                LastUpdated = currentDateTime,
-                LastSubmittedJob = currentDateTime.AddMinutes(-1)
+                HealthState = InstanceHealthState.Degraded,
+                LastUpdated = currentDateTime
             };
 
             var model2 = new MediaServiceInstanceHealthModel
             {
                 MediaServiceAccountName = mediaServiceAccountName2,
-                IsHealthy = true,
-                LastSuccessfulJob = currentDateTime.AddHours(-3),
-                LastFailedJob = currentDateTime.AddHours(-4),
-                LastUpdated = currentDateTime,
-                LastSubmittedJob = currentDateTime.AddMinutes(-2)
+                HealthState = InstanceHealthState.Healthy,
+                LastUpdated = currentDateTime
             };
 
 
@@ -207,46 +202,20 @@ namespace HighAvailability.Tests
             Assert.IsTrue(this.AreEqualMediaServiceInstanceHealthModels(model1, resultModel1));
             Assert.IsTrue(this.AreEqualMediaServiceInstanceHealthModels(model2, resultModel2));
 
-            model1.IsHealthy = false;
+            model1.HealthState = InstanceHealthState.Unhealthy;
             model1.LastUpdated = currentDateTime.AddMinutes(1);
             Assert.IsNotNull(await target.CreateOrUpdateAsync(model1, Mock.Of<ILogger>()).ConfigureAwait(false));
 
             resultModel1 = await target.GetAsync(mediaServiceAccountName1).ConfigureAwait(false);
             Assert.IsTrue(this.AreEqualMediaServiceInstanceHealthModels(model1, resultModel1));
-
-            var updateDateTime = currentDateTime.AddMinutes(100);
-            var updatedResultModel1 = await target.UpdateProcessedJobStateAsync(mediaServiceAccountName1, false, updateDateTime).ConfigureAwait(false);
-            updatedResultModel1 = await target.GetAsync(mediaServiceAccountName1).ConfigureAwait(false);
-
-            Assert.AreEqual(updateDateTime, updatedResultModel1.LastFailedJob);
-            Assert.AreEqual(updateDateTime, updatedResultModel1.LastUpdated);
-            Assert.AreEqual(resultModel1.LastSuccessfulJob, updatedResultModel1.LastSuccessfulJob);
-            Assert.AreEqual(resultModel1.LastSubmittedJob, updatedResultModel1.LastSubmittedJob);
-
-            updateDateTime = currentDateTime.AddMinutes(200);
-            var updatedResultModel2 = await target.UpdateProcessedJobStateAsync(mediaServiceAccountName2, true, updateDateTime).ConfigureAwait(false);
-            updatedResultModel2 = await target.GetAsync(mediaServiceAccountName2).ConfigureAwait(false);
-
-            Assert.AreEqual(updateDateTime, updatedResultModel2.LastSuccessfulJob);
-            Assert.AreEqual(updateDateTime, updatedResultModel2.LastUpdated);
-            Assert.AreEqual(resultModel2.LastFailedJob, updatedResultModel2.LastFailedJob);
-            Assert.AreEqual(resultModel2.LastSubmittedJob, updatedResultModel2.LastSubmittedJob);
-
-            updateDateTime = currentDateTime.AddMinutes(300);
-            var updatedSubmittedResultModel2 = await target.UpdateSubmittedJobStateAsync(mediaServiceAccountName2, updateDateTime).ConfigureAwait(false);
-            updatedSubmittedResultModel2 = await target.GetAsync(mediaServiceAccountName2).ConfigureAwait(false);
-
-            Assert.AreEqual(updatedResultModel2.LastSuccessfulJob, updatedSubmittedResultModel2.LastSuccessfulJob);
-            Assert.AreEqual(updatedResultModel2.LastFailedJob, updatedSubmittedResultModel2.LastFailedJob);
-            Assert.AreEqual(updateDateTime, updatedSubmittedResultModel2.LastSubmittedJob);
-            Assert.AreEqual(updateDateTime, updatedSubmittedResultModel2.LastUpdated);
         }
 
         [TestMethod]
         public async Task TestJobSchedulerService()
         {
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService);
 
@@ -389,9 +358,9 @@ namespace HighAvailability.Tests
                                   label: $"label {uniqueness}"
                                   );
 
-            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);           
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
@@ -420,6 +389,76 @@ namespace HighAvailability.Tests
             };
 
             Assert.IsNotNull(await target.VerifyJobAsync(jobVerificationRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
+        }
+
+        [TestMethod]
+        public async Task TestLoadReEvaluateMediaServicesHealthAsync()
+        {
+          //  await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
+
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var currentTime = DateTime.UtcNow;
+
+            //var jobStatusList = CreateTestData(currentTime, "account2");
+            //for (int i = 0; i < 10000; i++)
+            //{
+            //    jobStatusList.AddRange(CreateTestData(currentTime, "account2"));
+            //}
+
+            var accounts = new List<MediaServiceInstanceHealthModel>
+            {
+                new MediaServiceInstanceHealthModel {MediaServiceAccountName = "account1", HealthState = InstanceHealthState.Healthy, LastUpdated = currentTime},
+                new MediaServiceInstanceHealthModel {MediaServiceAccountName = "account2", HealthState = InstanceHealthState.Healthy, LastUpdated = currentTime}
+            };
+
+            //foreach (var jobStatus in jobStatusList)
+            //{
+            //    await jobStatusTableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatus)).ConfigureAwait(false);
+            //}
+
+            //Parallel.ForEach(jobStatusList, new ParallelOptions { MaxDegreeOfParallelism = 400 }, (jobStatus) =>
+            //    {
+            //        jobStatusTableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatus)).Wait();
+            //    }
+            //);
+
+            await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[0])).ConfigureAwait(false);
+            await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[1])).ConfigureAwait(false);
+
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
+
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            var result = await target.ReEvaluateMediaServicesHealthAsync().ConfigureAwait(false);
+
+            stopWatch.Stop();
+
+            var elapsed = stopWatch.Elapsed.TotalSeconds;
+            Console.WriteLine($"It took {elapsed} seconds to run");
+        }
+
+        private static List<JobStatusModel> CreateTestData(DateTime currentTime, string accountName)
+        {
+            var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
+
+            return new List<JobStatusModel>
+            {
+                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(1), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Finished, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Error, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddHours(3), Id = Guid.NewGuid().ToString()}
+            };
         }
 
         private static JobRequestModel GenerateJobRequestModel()
@@ -453,11 +492,8 @@ namespace HighAvailability.Tests
         private bool AreEqualMediaServiceInstanceHealthModels(MediaServiceInstanceHealthModel m1, MediaServiceInstanceHealthModel m2)
         {
             return (m1.MediaServiceAccountName == m2.MediaServiceAccountName &&
-                    m1.IsHealthy == m2.IsHealthy &&
-                    m1.LastUpdated == m2.LastUpdated &&
-                    m1.LastSuccessfulJob == m2.LastSuccessfulJob &&
-                    m1.LastFailedJob == m2.LastFailedJob &&
-                    m1.LastSubmittedJob == m2.LastSubmittedJob);
+                    m1.HealthState == m2.HealthState &&
+                    m1.LastUpdated == m2.LastUpdated);
         }
     }
 }

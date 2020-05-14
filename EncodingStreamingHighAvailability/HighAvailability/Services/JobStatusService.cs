@@ -9,15 +9,12 @@
 
     public class JobStatusService : IJobStatusService
     {
-        private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobStatusStorageService jobStatusStorageService;
         private readonly IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService;
 
-        public JobStatusService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
-                                   IJobStatusStorageService jobStatusStorageService,
+        public JobStatusService(IJobStatusStorageService jobStatusStorageService,
                                    IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService)
         {
-            this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
             this.streamProvisioningRequestStorageService = streamProvisioningRequestStorageService ?? throw new ArgumentNullException(nameof(streamProvisioningRequestStorageService));
         }
@@ -28,9 +25,6 @@
 
             if (jobStatusModel.JobState == JobState.Finished)
             {
-                var jobStatusUpdateResult = await this.mediaServiceInstanceHealthService.UpdateJobStateAsync(jobStatusModel.MediaServiceAccountName, true, jobStatusModel.EventTime).ConfigureAwait(false);
-                logger.LogInformation($"JobStatusService::ProcessJobStatusAsync updated job status: result={LogHelper.FormatObjectForLog(jobStatusUpdateResult)}");
-
                 var streamProvisioningRequestResult = await this.streamProvisioningRequestStorageService.CreateAsync(
                     new StreamProvisioningRequestModel
                     {
@@ -42,11 +36,6 @@
 
                 logger.LogInformation($"JobStatusService::ProcessJobStatusAsync created stream provisioning request: result={LogHelper.FormatObjectForLog(streamProvisioningRequestResult)}");
 
-            }
-            else if (jobStatusModel.JobState == JobState.Error)
-            {
-                var jobStatusUpdateResult = await this.mediaServiceInstanceHealthService.UpdateJobStateAsync(jobStatusModel.MediaServiceAccountName, false, jobStatusModel.EventTime).ConfigureAwait(false);
-                logger.LogInformation($"JobStatusService::ProcessJobStatusAsync updated job status: result={LogHelper.FormatObjectForLog(jobStatusUpdateResult)}");
             }
 
             var jobStatusResult = await this.jobStatusStorageService.CreateOrUpdateAsync(jobStatusModel, logger).ConfigureAwait(false);

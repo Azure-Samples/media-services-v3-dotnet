@@ -11,5 +11,7 @@
         Task<IEnumerable<T>> ListAsync<T>() where T : TableEntity, new();
         Task<T> MergeAsync<T>(T tableEntityModel) where T : TableEntity, new();
         Task<IEnumerable<T>> QueryDataAsync<T>(TableQuery<T> rangeQuery) where T : TableEntity, new();
+        Task DeleteAsync<T>(T tableEntityModel) where T : TableEntity, new();
+        Task DeleteAllAsync<T>() where T : TableEntity, new();
     }
 }
