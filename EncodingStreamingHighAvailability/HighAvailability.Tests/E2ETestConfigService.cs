@@ -63,7 +63,7 @@
 
             // Copy this from azure function configuration AMSConfiguration key. 
             // Use advanced edit in configuration screen to get value with encoded quotes
-            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswesteurope\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus2\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus2\"}]";
+            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus\"}]";
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
         }

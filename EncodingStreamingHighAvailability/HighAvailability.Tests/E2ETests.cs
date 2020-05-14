@@ -16,7 +16,8 @@ namespace HighAvailability.Tests
     public class E2ETests
     {
         private static QueueClient jobRequestQueue;
-        private static TableStorageService mediaServiceInstanceHealthTableStorageService;
+        private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
+        private static ITableStorageService jobStatusTableStorageService;
         private static IConfigService configService;
         private static QueueClient jobVerificationRequestQueue;
 
@@ -35,6 +36,12 @@ namespace HighAvailability.Tests
             var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
+            await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
+
+            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
+            await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -46,8 +53,9 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobRequestStorageService()
         {
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, configService);
 
