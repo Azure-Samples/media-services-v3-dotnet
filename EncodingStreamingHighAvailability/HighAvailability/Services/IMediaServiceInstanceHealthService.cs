@@ -12,7 +12,7 @@
     public interface IMediaServiceInstanceHealthService
     {
         // Check if specific media service instance is healthy
-        Task<bool> IsHealthyAsync(string mediaServiceName);
+        Task<InstanceHealthState> GetHealthStateAsync(string mediaServiceName);
 
         // List all healthy instances
         Task<IEnumerable<string>> ListHealthyAsync(ILogger logger);
@@ -28,14 +28,9 @@
         // Get health info for specific media services instance
         Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName);
 
-        // This should persist new information. TBD if this should trigger recalculation of instance health
-        Task<MediaServiceInstanceHealthModel> UpdateJobStateAsync(string mediaServiceName, bool isJobCompletedSuccessfully, DateTime eventDateTime);
-
-        Task<MediaServiceInstanceHealthModel> UpdateSubmittedJobStateAsync(string mediaServiceName, DateTime eventDateTime);
-
         // This method should implement all the logic how to determine if given instance is healhy or not
         Task<IEnumerable<MediaServiceInstanceHealthModel>> ReEvaluateMediaServicesHealthAsync();
 
-        Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, bool isHealthy, DateTime eventDateTime);
+        Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime);
     }
 }

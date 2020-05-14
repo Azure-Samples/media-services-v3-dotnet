@@ -45,11 +45,8 @@
                     await this.mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
                     {
                         MediaServiceAccountName = config.Value.AccountName,
-                        IsHealthy = true,
-                        LastFailedJob = DateTime.MinValue,
-                        LastSuccessfulJob = DateTime.MinValue,
-                        LastUpdated = DateTime.UtcNow,
-                        LastSubmittedJob = DateTime.MinValue
+                        HealthState = InstanceHealthState.Healthy,
+                        LastUpdated = DateTime.UtcNow
                     }, logger).ConfigureAwait(false);
                 }
             }
@@ -62,7 +59,9 @@
             logger.LogInformation($"JobSchedulerService::SubmitJobAsync started: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
 
             var allInstances = await this.mediaServiceInstanceHealthService.ListAsync().ConfigureAwait(false);
-            var selectedInstance = allInstances.Where(i => i.IsHealthy).OrderBy(i => i.LastSubmittedJob).FirstOrDefault();
+            //TBD
+            //var selectedInstance = allInstances.Where(i => i.IsHealthy).OrderBy(i => i.LastSubmittedJob).FirstOrDefault();
+            var selectedInstance = allInstances.FirstOrDefault();
             if (selectedInstance == null)
             {
                 throw new Exception($"Could not find a healthy AMS instance, found total instance count={allInstances.Count()}");
@@ -117,16 +116,13 @@
                     {
                         var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
                         logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
-
-                        var jobStatusUpdateResult = await this.mediaServiceInstanceHealthService.UpdateSubmittedJobStateAsync(selectedInstance.MediaServiceAccountName, job.Created).ConfigureAwait(false);
-                        logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobStatusUpdate: result={LogHelper.FormatObjectForLog(jobStatusUpdateResult)}");
                         break;
                     }
 #pragma warning disable CA1031 // Do not catch general exception types
                     catch (Exception e)
 #pragma warning restore CA1031 // Do not catch general exception types
                     {
-                        logger.LogError($"JobSchedulerService::SubmitJobAsync got exception calling jobVerificationRequestStorageService.CreateAsync or mediaServiceInstanceHealthService.UpdateSubmittedJobStateAsync: retryCount={retryCount} message={e.Message} job={LogHelper.FormatObjectForLog(job)}");
+                        logger.LogError($"JobSchedulerService::SubmitJobAsync got exception calling jobVerificationRequestStorageService.CreateAsync: retryCount={retryCount} message={e.Message} job={LogHelper.FormatObjectForLog(job)}");
                         retryCount--;
                         await Task.Delay(retryTimeOut).ConfigureAwait(false);
                     }

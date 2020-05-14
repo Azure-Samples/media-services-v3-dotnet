@@ -43,7 +43,21 @@
             var rangeQuery = new TableQuery<JobStatusModelTableEntity>().Where(
                 TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobName));
 
-            return (await this.tableStorageService.QueryDataAsync<JobStatusModelTableEntity>(rangeQuery).ConfigureAwait(false)).Select(i => i.GetJobStatusModel());
+            return (await this.tableStorageService.QueryDataAsync(rangeQuery).ConfigureAwait(false)).Select(i => i.GetJobStatusModel());
+        }
+
+        public async Task<IEnumerable<JobStatusModel>> ListByMediaServiceAccountNameAsync(string mediaServiceAccountName)
+        {
+            TableQuery<JobStatusModelTableEntity> rangeQuery =
+                    new TableQuery<JobStatusModelTableEntity>().Where(
+                        TableQuery.CombineFilters(
+                            TableQuery.GenerateFilterCondition(nameof(JobStatusModelTableEntity.MediaServiceAccountName), QueryComparisons.Equal, mediaServiceAccountName),
+                            TableOperators.And,
+                            TableQuery.GenerateFilterConditionForDate(nameof(JobStatusModelTableEntity.EventTime), QueryComparisons.GreaterThanOrEqual, DateTime.UtcNow.AddMinutes(200))
+                            )
+                        );
+
+            return (await this.tableStorageService.QueryDataAsync(rangeQuery).ConfigureAwait(false)).Select(i => i.GetJobStatusModel());
         }
 
         public async Task<IEnumerable<JobStatusModel>> ListAsync()

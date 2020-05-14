@@ -21,15 +21,21 @@ namespace HighAvailability.JobScheduler
 
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
             var tableClient = tableStorageAccount.CreateCloudTableClient();
+
             var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             mediaServiceInstanceHealthTable.CreateIfNotExists();
             var mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
+            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
+            jobStatusTable.CreateIfNotExists();
+            var jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+
             var jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
             jobVerificationRequestQueue.CreateIfNotExists();
 
+            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, configService);
 
