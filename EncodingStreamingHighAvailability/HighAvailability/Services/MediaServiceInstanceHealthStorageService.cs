@@ -44,7 +44,7 @@
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync()
         {
             return (await this.tableStorageService.ListAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false)).Select(i => i.GetMediaServiceInstanceHealthModel());
-        }        
+        }
 
         public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime)
         {
@@ -52,7 +52,7 @@
 
             eventDateTime = VerifyMinValue(eventDateTime);
             getResult.LastUpdated = eventDateTime;
-            getResult.HealthState = (int)instanceHealthState;
+            getResult.HealthState = instanceHealthState.ToString();
 
             var mergeResult = await this.tableStorageService.MergeAsync(getResult).ConfigureAwait(false);
             return mergeResult.GetMediaServiceInstanceHealthModel();

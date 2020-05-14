@@ -24,6 +24,14 @@
 
         string FrontDoorHostName { get; }
 
+        int NumberOfMinutesInProcessToMarkJobStuck { get; }
+
+        int TimeWindowInMinutesToLoadJobs { get; }
+
+        float SuccessRateForHealthyState { get; }
+
+        float SuccessRateForUnHealthyState { get; }
+
         IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; }
 
         Task LoadConfigurationAsync();

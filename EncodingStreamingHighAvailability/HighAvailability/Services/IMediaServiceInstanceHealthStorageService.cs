@@ -12,7 +12,7 @@
 
         Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName);
 
-        Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync();    
+        Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync();
 
         Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime);
     }

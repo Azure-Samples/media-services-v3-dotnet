@@ -1,10 +1,9 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(HighAvailability.JobScheduler.Startup))]
+[assembly: FunctionsStartup(typeof(HighAvailability.InstanceHealth.Startup))]
 
-namespace HighAvailability.JobScheduler
+namespace HighAvailability.InstanceHealth
 {
-    using Azure.Storage.Queues;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -30,17 +29,14 @@ namespace HighAvailability.JobScheduler
             jobStatusTable.CreateIfNotExists();
             var jobStatusTableStorageService = new TableStorageService(jobStatusTable);
 
-            var jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
-            jobVerificationRequestQueue.CreateIfNotExists();
-
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
                                                                                             configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
-            var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobStatusStorageService, configService);
+            var jobStatusSyncService = new JobStatusSyncService(mediaServiceInstanceHealthService, jobStatusStorageService, configService);
 
-            builder.Services.AddSingleton<IJobSchedulerService>(jobSchedulerService);
+            builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);
+            builder.Services.AddSingleton<IJobStatusSyncService>(jobStatusSyncService);
         }
     }
 }

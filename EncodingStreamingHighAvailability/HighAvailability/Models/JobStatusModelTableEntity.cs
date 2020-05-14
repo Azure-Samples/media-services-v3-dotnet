@@ -19,6 +19,7 @@
             this.State = jobStatusModel.JobState.ToString();
             this.EventTime = jobStatusModel.EventTime;
             this.MediaServiceAccountName = jobStatusModel.MediaServiceAccountName;
+            this.TransformName = jobStatusModel.TransformName;
         }
 
         /// <summary>
@@ -31,6 +32,7 @@
         public string State { get; set; }
         public DateTimeOffset EventTime { get; set; }
         public string MediaServiceAccountName { get; set; }
+        public string TransformName { get; set; }
 
         public JobStatusModel GetJobStatusModel()
         {
@@ -41,7 +43,8 @@
                 JobOutputAssetName = this.JobOutputAssetName,
                 JobState = this.State,
                 EventTime = this.EventTime,
-                MediaServiceAccountName = this.MediaServiceAccountName
+                MediaServiceAccountName = this.MediaServiceAccountName,
+                TransformName = this.TransformName
             };
         }
     }
