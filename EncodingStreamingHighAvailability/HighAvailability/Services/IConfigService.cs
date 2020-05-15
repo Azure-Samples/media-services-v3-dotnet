@@ -26,7 +26,9 @@
 
         int NumberOfMinutesInProcessToMarkJobStuck { get; }
 
-        int TimeWindowInMinutesToLoadJobs { get; }
+        int TimeWindowToLoadJobsInMinutes { get; }
+
+        int TimeSinceLastUpdateToForceJobResyncInMinutes { get; }
 
         float SuccessRateForHealthyState { get; }
 
