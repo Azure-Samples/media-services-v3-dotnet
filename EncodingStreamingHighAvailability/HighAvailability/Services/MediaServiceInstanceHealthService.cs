@@ -14,26 +14,24 @@
     {
         private readonly IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService;
         private readonly IJobStatusStorageService jobStatusStorageService;
+        private readonly IConfigService configService;
         private int numberOfMinutesInProcessToMarkJobStuck = 60;
-        private int timeWindowInMinutesToLoadJobs = 480;
+        private int timeWindowToLoadJobsInMinutes = 480;
         private float successRateForHealthyState = 0.9f;
         private float successRateForUnHealthyState = 0.5f;
         private ConcurrentDictionary<string, ulong> mediaServiceInstanceUsage = new ConcurrentDictionary<string, ulong>();
 
-        public MediaServiceInstanceHealthService(
-            IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
-            IJobStatusStorageService jobStatusStorageService,
-            int numberOfMinutesInProcessToMarkJobStuck,
-            int timeWindowInMinutesToLoadJobs,
-            float successRateForHealthyState,
-            float successRateForUnHealthyState)
+        public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
+                                                    IJobStatusStorageService jobStatusStorageService,
+                                                    IConfigService configService)
         {
             this.mediaServiceInstanceHealthStorageService = mediaServiceInstanceHealthStorageService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthStorageService));
             this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
-            this.numberOfMinutesInProcessToMarkJobStuck = numberOfMinutesInProcessToMarkJobStuck;
-            this.timeWindowInMinutesToLoadJobs = timeWindowInMinutesToLoadJobs;
-            this.successRateForHealthyState = successRateForHealthyState;
-            this.successRateForUnHealthyState = successRateForUnHealthyState;
+            this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            this.numberOfMinutesInProcessToMarkJobStuck = configService.NumberOfMinutesInProcessToMarkJobStuck;
+            this.timeWindowToLoadJobsInMinutes = configService.TimeWindowToLoadJobsInMinutes;
+            this.successRateForHealthyState = configService.SuccessRateForHealthyState;
+            this.successRateForUnHealthyState = configService.SuccessRateForUnHealthyState;
         }
 
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
@@ -93,7 +91,7 @@
 
             Parallel.ForEach(instances, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (mediaServiceInstanceHealthModel) =>
             {
-                var allJobs = this.jobStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowInMinutesToLoadJobs).GetAwaiter().GetResult();
+                var allJobs = this.jobStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowToLoadJobsInMinutes).GetAwaiter().GetResult();
                 logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync loaded jobs history: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} count={allJobs.Count()}");
                 var aggregatedData = allJobs.GroupBy(i => i.JobName);
                 var successCount = 0;

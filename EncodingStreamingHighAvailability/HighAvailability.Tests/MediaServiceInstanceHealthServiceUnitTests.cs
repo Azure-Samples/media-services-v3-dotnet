@@ -18,6 +18,7 @@
         public async Task TestReEvaluateMediaServicesHealthAsync()
         {
             var jobStatusStorageServiceMock = new Mock<IJobStatusStorageService>();
+            var configServiceMock = new Mock<IConfigService>();
             var mediaServiceInstanceHealthStorageService = new Mock<IMediaServiceInstanceHealthStorageService>();
             var currentTime = DateTime.UtcNow;
 
@@ -45,7 +46,12 @@
             mediaServiceInstanceHealthStorageService.Setup(m => m.ListAsync()).ReturnsAsync(accounts);
             jobStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobStatusList);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, 5, 10, 0.9f, 0.7f);
+            configServiceMock.SetupGet(c => c.NumberOfMinutesInProcessToMarkJobStuck).Returns(60);
+            configServiceMock.SetupGet(c => c.TimeWindowToLoadJobsInMinutes).Returns(60);
+            configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.9f);
+            configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.7f);
+
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, configServiceMock.Object);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -61,6 +67,7 @@
         public async Task TestLoadReEvaluateMediaServicesHealthAsync()
         {
             var jobStatusStorageServiceMock = new Mock<IJobStatusStorageService>();
+            var configServiceMock = new Mock<IConfigService>();
             var mediaServiceInstanceHealthStorageService = new Mock<IMediaServiceInstanceHealthStorageService>();
             var currentTime = DateTime.UtcNow;
 
@@ -78,7 +85,12 @@
             mediaServiceInstanceHealthStorageService.Setup(m => m.ListAsync()).ReturnsAsync(accounts);
             jobStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobStatusList);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, 5, 10, 0.9f, 0.7f);
+            configServiceMock.SetupGet(c => c.NumberOfMinutesInProcessToMarkJobStuck).Returns(60);
+            configServiceMock.SetupGet(c => c.TimeWindowToLoadJobsInMinutes).Returns(60);
+            configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.9f);
+            configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.7f);
+
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, configServiceMock.Object);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();

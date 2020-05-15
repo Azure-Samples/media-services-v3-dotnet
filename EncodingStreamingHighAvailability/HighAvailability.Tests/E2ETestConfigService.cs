@@ -28,7 +28,8 @@
             this.TableStorageAccountConnectionString = string.Empty;
             this.FrontDoorHostName = "contoso.com";
             this.NumberOfMinutesInProcessToMarkJobStuck = 60;
-            this.TimeWindowInMinutesToLoadJobs = 480;
+            this.TimeWindowToLoadJobsInMinutes = 11480;
+            this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
         }
@@ -53,11 +54,14 @@
 
         public int NumberOfMinutesInProcessToMarkJobStuck { get; private set; }
 
-        public int TimeWindowInMinutesToLoadJobs { get; private set; }
+        public int TimeWindowToLoadJobsInMinutes { get; private set; }
+
+        public int TimeSinceLastUpdateToForceJobResyncInMinutes { get; private set; }
 
         public float SuccessRateForHealthyState { get; private set; }
 
         public float SuccessRateForUnHealthyState { get; private set; }
+
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
         public async Task LoadConfigurationAsync()

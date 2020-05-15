@@ -35,8 +35,7 @@ namespace HighAvailability.JobScheduler
 
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
-                                                                                            configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobStatusStorageService, configService);
 

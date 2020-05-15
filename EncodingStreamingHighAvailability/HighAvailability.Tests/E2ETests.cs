@@ -41,7 +41,7 @@ namespace HighAvailability.Tests
             var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
             await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             jobStatusTableStorageService = new TableStorageService(jobStatusTable);
-            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            //await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -55,8 +55,7 @@ namespace HighAvailability.Tests
         {
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
-                                                                                           configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobStatusStorageService, configService);
 
@@ -65,7 +64,7 @@ namespace HighAvailability.Tests
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 50; i++)
+            for (var i = 0; i < 10; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }
