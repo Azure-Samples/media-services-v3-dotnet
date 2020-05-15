@@ -215,8 +215,7 @@ namespace HighAvailability.Tests
         {
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
-                                                                                            configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobStatusStorageService, configService);
 
@@ -361,8 +360,7 @@ namespace HighAvailability.Tests
 
             var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
-                                                                                           configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
@@ -429,8 +427,7 @@ namespace HighAvailability.Tests
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[0])).ConfigureAwait(false);
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[1])).ConfigureAwait(false);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService.NumberOfMinutesInProcessToMarkJobStuck,
-                                                                                           configService.TimeWindowInMinutesToLoadJobs, configService.SuccessRateForHealthyState, configService.SuccessRateForUnHealthyState);
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
