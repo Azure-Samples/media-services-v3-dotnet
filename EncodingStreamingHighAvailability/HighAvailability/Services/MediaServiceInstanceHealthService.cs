@@ -50,12 +50,12 @@
 
             var allInstances = await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false);
 
-            var allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Healthy).Select(i => i.MediaServiceAccountName);
+            var allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Healthy && i.IsEnabled).Select(i => i.MediaServiceAccountName);
 
             if (!allHealthyInstances.Any())
             {
                 logger.LogWarning($"MediaServiceInstanceHealthService::GetNextAvailableInstanceAsync: There are no healthy instances available, falling back to degraded instances");
-                allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Degraded).Select(i => i.MediaServiceAccountName);
+                allHealthyInstances = allInstances.Where(i => i.HealthState == InstanceHealthState.Degraded && i.IsEnabled).Select(i => i.MediaServiceAccountName);
 
                 if (!allHealthyInstances.Any())
                 {
