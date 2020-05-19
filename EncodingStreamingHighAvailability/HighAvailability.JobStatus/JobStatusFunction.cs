@@ -2,11 +2,12 @@ namespace HighAvailability.JobStatus
 {
     using HighAvailability.Helpers;
     using HighAvailability.Services;
-    using Microsoft.Azure.EventGrid.Models;
+    using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.EventGrid;
     using Microsoft.Extensions.Logging;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public class JobStatusFunction
@@ -22,12 +23,16 @@ namespace HighAvailability.JobStatus
         }
 
         [FunctionName("JobStatusFunction")]
-        public async Task Run([EventGridTrigger]EventGridEvent eventGridEvent, ILogger logger)
+        public async Task Run([EventGridTrigger]string eventGridEvent, ILogger logger)
         {
             try
             {
                 logger.LogInformation($"JobStatusFunction::Run triggered: message={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                var jobStatusModel = this.eventGridService.ParseEventData(eventGridEvent, logger);
+
+                var eventGridSubscriber = new EventGridSubscriber();
+                var parsedEventGridEvents = eventGridSubscriber.DeserializeEventGridEvents($"[{eventGridEvent}]");
+
+                var jobStatusModel = this.eventGridService.ParseEventData(parsedEventGridEvents.FirstOrDefault(), logger);
                 if (jobStatusModel != null)
                 {
                     var result = await this.jobStatusService.ProcessJobStatusAsync(jobStatusModel, logger).ConfigureAwait(false);

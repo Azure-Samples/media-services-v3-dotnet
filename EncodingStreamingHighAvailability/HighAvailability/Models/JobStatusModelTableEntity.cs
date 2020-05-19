@@ -20,6 +20,7 @@
             this.EventTime = jobStatusModel.EventTime;
             this.MediaServiceAccountName = jobStatusModel.MediaServiceAccountName;
             this.TransformName = jobStatusModel.TransformName;
+            this.IsSystemError = jobStatusModel.IsSystemError;
         }
 
         /// <summary>
@@ -33,6 +34,7 @@
         public DateTimeOffset EventTime { get; set; }
         public string MediaServiceAccountName { get; set; }
         public string TransformName { get; set; }
+        public bool IsSystemError { get; set; }
 
         public JobStatusModel GetJobStatusModel()
         {
@@ -44,7 +46,8 @@
                 JobState = this.State,
                 EventTime = this.EventTime,
                 MediaServiceAccountName = this.MediaServiceAccountName,
-                TransformName = this.TransformName
+                TransformName = this.TransformName,
+                IsSystemError = this.IsSystemError
             };
         }
     }
