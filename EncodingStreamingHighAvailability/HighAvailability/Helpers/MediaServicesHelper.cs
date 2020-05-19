@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Helpers
 {
     using HighAvailability.Models;
+    using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Azure.Services.AppAuthentication;
@@ -56,6 +57,38 @@
             }
 
             return transform;
+        }
+
+        public static bool IsSystemError(Job job)
+        {
+            if (job.State == JobState.Error)
+            {
+                foreach (var jobError in job.Outputs)
+                {
+                    if (jobError.State == JobState.Error)
+                    {
+                        if (jobError.Error.Retry == JobRetry.MayRetry)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IsSystemError(MediaJobOutputAsset jobOutput)
+        {
+            if (jobOutput.State == MediaJobState.Error)
+            {
+                if (jobOutput.Error.Retry == MediaJobRetry.MayRetry)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

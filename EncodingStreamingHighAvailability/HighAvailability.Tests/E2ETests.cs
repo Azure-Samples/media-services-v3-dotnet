@@ -64,7 +64,7 @@ namespace HighAvailability.Tests
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }
@@ -77,10 +77,10 @@ namespace HighAvailability.Tests
             var outputAssetName = $"output-{sequenceNumber}-{uniqueness}";
 
             var input = new JobInputHttp(
-                                    baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
-                                    files: new List<string> { "Ignite-short.mp4" },
-                                    label: "input1"
-                                    );
+                                   baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
+                                   files: new List<string> { "Ignite-short.mp4" },
+                                   label: "input1"
+                                   );
 
             var request = new JobRequestModel
             {
