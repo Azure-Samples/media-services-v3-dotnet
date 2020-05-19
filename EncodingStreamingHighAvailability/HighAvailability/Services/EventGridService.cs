@@ -11,8 +11,6 @@
 
     public class EventGridService : IEventGridService
     {
-        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-
         public JobStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             var eventId = eventGridEvent.Id;
