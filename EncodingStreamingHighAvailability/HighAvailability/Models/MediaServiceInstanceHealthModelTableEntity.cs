@@ -18,6 +18,7 @@
             this.MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName;
             this.HealthState = mediaServiceInstanceHealthModel.HealthState.ToString();
             this.LastUpdated = mediaServiceInstanceHealthModel.LastUpdated;
+            this.IsEnabled = mediaServiceInstanceHealthModel.IsEnabled;
         }
 
         /// <summary>
@@ -26,6 +27,7 @@
         public string MediaServiceAccountName { get; set; }
         public string HealthState { get; set; }
         public DateTimeOffset LastUpdated { get; set; }
+        public bool IsEnabled { get; set; }
 
         public MediaServiceInstanceHealthModel GetMediaServiceInstanceHealthModel()
         {
@@ -33,7 +35,8 @@
             {
                 MediaServiceAccountName = this.MediaServiceAccountName,
                 HealthState = Enum.Parse<InstanceHealthState>(this.HealthState),
-                LastUpdated = this.LastUpdated
+                LastUpdated = this.LastUpdated,
+                IsEnabled = this.IsEnabled
             };
         }
     }

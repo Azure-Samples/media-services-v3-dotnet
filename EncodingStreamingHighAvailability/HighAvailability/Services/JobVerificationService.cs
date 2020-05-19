@@ -74,7 +74,7 @@
                 }
             }
 
-            logger.LogInformation($"JobVerificationService::VerifyJobAsync jobStatus={jobStatus}");
+            logger.LogInformation($"JobVerificationService::VerifyJobAsync jobStatus={LogHelper.FormatObjectForLog(jobStatus)}");
 
             if (jobStatus?.JobState == JobState.Finished)
             {
@@ -167,6 +167,12 @@
                     // need new job name
                     var jobName = $"{jobVerificationRequestModel.OriginalJobRequestModel.JobName}-{jobVerificationRequestModel.RetryCount}";
                     var jobOutputAssetName = $"{jobVerificationRequestModel.OriginalJobRequestModel.OutputAssetName}-{jobVerificationRequestModel.RetryCount}";
+
+                    var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
+                        clientConfiguration.ResourceGroup,
+                        clientConfiguration.AccountName,
+                        jobOutputAssetName,
+                        new Asset()).ConfigureAwait(false);
 
                     JobOutput[] jobOutputs =
                     {

@@ -64,7 +64,7 @@ namespace HighAvailability.Tests
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < 1; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }

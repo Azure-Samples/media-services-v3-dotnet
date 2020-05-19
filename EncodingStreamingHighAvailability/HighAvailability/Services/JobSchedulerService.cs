@@ -46,11 +46,13 @@
                         new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
 
                     await this.mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
-                    {
-                        MediaServiceAccountName = config.Value.AccountName,
-                        HealthState = InstanceHealthState.Healthy,
-                        LastUpdated = DateTime.UtcNow
-                    }, logger).ConfigureAwait(false);
+                        {
+                            MediaServiceAccountName = config.Value.AccountName,
+                            HealthState = InstanceHealthState.Healthy,
+                            LastUpdated = DateTime.UtcNow,
+                            IsEnabled = true
+                        }, 
+                        logger).ConfigureAwait(false);
                 }
             }
 
