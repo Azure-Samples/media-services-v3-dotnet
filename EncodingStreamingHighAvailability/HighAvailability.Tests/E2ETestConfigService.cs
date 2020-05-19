@@ -32,6 +32,7 @@
             this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
+            this.TimeDurationInMinutesToVerifyJobStatus = 10;
         }
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
@@ -61,6 +62,8 @@
         public float SuccessRateForHealthyState { get; private set; }
 
         public float SuccessRateForUnHealthyState { get; private set; }
+
+        public int TimeDurationInMinutesToVerifyJobStatus { get; private set; }
 
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 

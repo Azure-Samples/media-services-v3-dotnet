@@ -46,7 +46,9 @@
       "properties": {
         "filter": {
           "includedEventTypes": [
-            "Microsoft.Media.JobOutputStateChange"
+            "Microsoft.Media.JobOutputFinished",
+            "Microsoft.Media.JobOutputErrored",
+            "Microsoft.Media.JobOutputCanceled"
           ]
         },
         "destination": {
