@@ -2,6 +2,7 @@
 {
     using HighAvailability.Helpers;
     using HighAvailability.Models;
+    using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -18,54 +19,66 @@
             var eventType = eventGridEvent.EventType;
             var amsAccountResourceId = eventGridEvent.Topic;
             var jobId = eventGridEvent.Subject;
-            var eventDataStr = eventGridEvent.Data.ToString();
             var eventTime = eventGridEvent.EventTime;
 
-            JobStatusModel jobStatusModel = null;
-
-            if (eventType.Equals("Microsoft.Media.JobOutputStateChange", StringComparison.InvariantCultureIgnoreCase))
+            var jobName = string.Empty;
+            var match = Regex.Match(jobId, @".+/(?<jobname>.+)");
+            if (match.Success)
             {
-                var eventData = JsonConvert.DeserializeObject<JobOutputStateChangeEventDataModel>(eventDataStr, jsonSettings);
+                jobName = match.Groups["jobname"].ToString();
+            }
+            if (string.IsNullOrEmpty(jobName))
+            {
+                logger.LogError($"EventGridService::ParseEventData failed to parse job name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                return null;
+            }
 
-                var jobName = string.Empty;
-                var match = Regex.Match(jobId, @".+/(?<jobname>.+)");
-                if (match.Success)
-                {
-                    jobName = match.Groups["jobname"].ToString();
-                }
-                if (string.IsNullOrEmpty(jobName))
-                {
-                    logger.LogError($"EventGridService::ParseEventData failed to parse job name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                    return null;
-                }
+            var amsAccountName = "";
+            var matchAccount = Regex.Match(amsAccountResourceId, @".+/(?<accountname>.+)");
+            if (matchAccount.Success)
+            {
+                amsAccountName = matchAccount.Groups["accountname"].ToString();
+            }
+            if (string.IsNullOrEmpty(amsAccountName))
+            {
+                logger.LogError($"EventGridService::ParseEventData failed to parse MSA account name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                return null;
+            }
 
-                var amsAccountName = "";
-                var matchAccount = Regex.Match(amsAccountResourceId, @".+/(?<accountname>.+)");
-                if (matchAccount.Success)
-                {
-                    amsAccountName = matchAccount.Groups["accountname"].ToString();
-                }
-                if (string.IsNullOrEmpty(amsAccountName))
-                {
-                    logger.LogError($"EventGridService::ParseEventData failed to parse MSA account name, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
-                    return null;
-                }
+            MediaJobOutputAsset asset = null;
 
-                jobStatusModel = new JobStatusModel
-                {
-                    Id = eventId,
-                    JobName = jobName,
-                    JobOutputAssetName = eventData.JobOutput.OutputAssetName,
-                    JobState = eventData.JobOutput.State.ToString(),
-                    EventTime = eventTime,
-                    MediaServiceAccountName = amsAccountName
-                };
-                logger.LogError($"EventGridService::ParseEventData successfully parsed, jobStatusMode={LogHelper.FormatObjectForLog(jobStatusModel)}");
+            if (eventType.Equals(EventTypes.MediaJobOutputFinishedEvent, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var mediaJobOutputFinishedEventData = (MediaJobOutputFinishedEventData)eventGridEvent.Data;
+                asset = (MediaJobOutputAsset)mediaJobOutputFinishedEventData.Output;
+            }
+            else if (eventType.Equals(EventTypes.MediaJobOutputErroredEvent, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var mediaJobOutputErroredEventData = (MediaJobOutputErroredEventData)eventGridEvent.Data;
+                asset = (MediaJobOutputAsset)mediaJobOutputErroredEventData.Output;               
+            }
+            else if (eventType.Equals(EventTypes.MediaJobOutputCanceledEvent, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var mediaJobOutputCanceledEventData = (MediaJobOutputCanceledEventData)eventGridEvent.Data;
+                asset = (MediaJobOutputAsset)mediaJobOutputCanceledEventData.Output;
             }
             else
             {
-                logger.LogInformation($"EventGridService::ParseEventData eventType is not Microsoft.Media.JobOutputStateChange, eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                logger.LogInformation($"EventGridService::ParseEventData eventType is not {EventTypes.MediaJobOutputFinishedEvent} or {EventTypes.MediaJobOutputErroredEvent} or {EventTypes.MediaJobOutputCanceledEvent} , eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                return null;
             }
+
+            var jobStatusModel = new JobStatusModel
+            {
+                Id = eventId,
+                JobName = jobName,
+                JobOutputAssetName = asset.AssetName,
+                JobState = asset.State.ToString(),
+                EventTime = eventTime,
+                MediaServiceAccountName = amsAccountName,
+                IsSystemError = MediaServicesHelper.IsSystemError(asset)
+            };
+            logger.LogInformation($"EventGridService::ParseEventData successfully parsed, jobStatusMode={LogHelper.FormatObjectForLog(jobStatusModel)}");
 
             return jobStatusModel;
         }

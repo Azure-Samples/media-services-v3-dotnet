@@ -11,7 +11,7 @@
         public JobState JobState { get; set; }
         public DateTimeOffset EventTime { get; set; }
         public string MediaServiceAccountName { get; set; }
-
         public string TransformName { get; set; }
+        public bool IsSystemError { get; set; }
     }
 }
