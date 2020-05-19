@@ -12,7 +12,7 @@
     {
         private readonly string transformName = "AdaptiveBitrate";
         // 10 minutes, very short for this test, should be longer for prod
-        private readonly TimeSpan verificationDelay = new TimeSpan(0, 10, 0);
+        private readonly TimeSpan verificationDelay;
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
         private readonly IConfigService configService;
@@ -27,6 +27,7 @@
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
         }
 
         public async Task Initialize(ILogger logger)
@@ -96,8 +97,22 @@
                 {
                     Id = Guid.NewGuid().ToString(),
                     JobId = job.Id,
-                    JobRequest = jobRequestModel,
-                    MediaServiceAccountName = selectedInstanceName
+                    OriginalJobRequestModel = jobRequestModel,
+                    MediaServiceAccountName = selectedInstanceName,
+                    JobOutputAssetName = jobRequestModel.OutputAssetName,
+                    JobName = job.Name,
+                    RetryCount = 0
+                };
+
+                var jobStatusModel = new JobStatusModel
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EventTime = job.LastModified,
+                    JobState = job.State,
+                    JobName = job.Name,
+                    MediaServiceAccountName = selectedInstanceName,
+                    JobOutputAssetName = jobRequestModel.OutputAssetName,
+                    TransformName = jobRequestModel.TransformName
                 };
 
                 this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
@@ -110,17 +125,6 @@
                 {
                     try
                     {
-                        var jobStatusModel = new JobStatusModel
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            EventTime = job.LastModified,
-                            JobState = job.State,
-                            JobName = job.Name,
-                            MediaServiceAccountName = selectedInstanceName,
-                            JobOutputAssetName = jobRequestModel.OutputAssetName,
-                            TransformName = jobRequestModel.TransformName
-                        };
-
                         await this.jobStatusStorageService.CreateOrUpdateAsync(jobStatusModel, logger).ConfigureAwait(false);
 
                         var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);

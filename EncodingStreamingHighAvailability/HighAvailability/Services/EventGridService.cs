@@ -5,7 +5,6 @@
     using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
     using System;
     using System.Text.RegularExpressions;
 
@@ -53,7 +52,7 @@
             else if (eventType.Equals(EventTypes.MediaJobOutputErroredEvent, StringComparison.InvariantCultureIgnoreCase))
             {
                 var mediaJobOutputErroredEventData = (MediaJobOutputErroredEventData)eventGridEvent.Data;
-                asset = (MediaJobOutputAsset)mediaJobOutputErroredEventData.Output;               
+                asset = (MediaJobOutputAsset)mediaJobOutputErroredEventData.Output;
             }
             else if (eventType.Equals(EventTypes.MediaJobOutputCanceledEvent, StringComparison.InvariantCultureIgnoreCase))
             {
