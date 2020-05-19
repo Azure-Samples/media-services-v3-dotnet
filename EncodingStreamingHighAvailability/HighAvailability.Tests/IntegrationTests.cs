@@ -311,7 +311,7 @@ namespace HighAvailability.Tests
             {
                 Id = Guid.NewGuid().ToString(),
                 JobId = jobId,
-                JobRequest = jobRequest,
+                OriginalJobRequestModel = jobRequest,
                 MediaServiceAccountName = $"AccountName-{uniqueness}",
             };
 
@@ -330,15 +330,15 @@ namespace HighAvailability.Tests
             }
 
             Assert.AreEqual(jobVerificationRequest.Id, result.Id);
-            Assert.AreEqual(jobVerificationRequest.JobRequest.JobInputs.Inputs.Count, result.JobRequest.JobInputs.Inputs.Count);
-            var jobInputResult = (JobInputHttp)result.JobRequest.JobInputs.Inputs[0];
+            Assert.AreEqual(jobVerificationRequest.OriginalJobRequestModel.JobInputs.Inputs.Count, result.OriginalJobRequestModel.JobInputs.Inputs.Count);
+            var jobInputResult = (JobInputHttp)result.OriginalJobRequestModel.JobInputs.Inputs[0];
             Assert.AreEqual(jobInput.BaseUri, jobInputResult.BaseUri);
             Assert.AreEqual(jobInput.Files[0], jobInputResult.Files[0]);
             Assert.AreEqual(jobInput.Files[1], jobInputResult.Files[1]);
             Assert.AreEqual(jobInput.Label, jobInputResult.Label);
-            Assert.AreEqual(jobVerificationRequest.JobRequest.JobName, result.JobRequest.JobName);
-            Assert.AreEqual(jobRequest.OutputAssetName, result.JobRequest.OutputAssetName);
-            Assert.AreEqual(jobRequest.TransformName, result.JobRequest.TransformName);
+            Assert.AreEqual(jobVerificationRequest.OriginalJobRequestModel.JobName, result.OriginalJobRequestModel.JobName);
+            Assert.AreEqual(jobRequest.OutputAssetName, result.OriginalJobRequestModel.OutputAssetName);
+            Assert.AreEqual(jobRequest.TransformName, result.OriginalJobRequestModel.TransformName);
             Assert.AreEqual(jobVerificationRequest.JobId, result.JobId);
             Assert.AreEqual(jobVerificationRequest.MediaServiceAccountName, result.MediaServiceAccountName);
         }
@@ -362,10 +362,12 @@ namespace HighAvailability.Tests
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
+            var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
                                                     jobStatusStorageService,
                                                     streamProvisioningRequestStorageService,
+                                                    jobVerificationRequestStorageService,
                                                     configService);
 
             var jobRequest = new JobRequestModel
@@ -384,7 +386,7 @@ namespace HighAvailability.Tests
             {
                 Id = Guid.NewGuid().ToString(),
                 JobId = jobId,
-                JobRequest = jobRequest,
+                OriginalJobRequestModel = jobRequest,
                 MediaServiceAccountName = "sipetriktestmain",
             };
 

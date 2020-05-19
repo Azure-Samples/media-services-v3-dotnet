@@ -34,6 +34,8 @@
 
         float SuccessRateForUnHealthyState { get; }
 
+        int TimeDurationInMinutesToVerifyJobStatus { get; }
+
         IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; }
 
         Task LoadConfigurationAsync();
