@@ -134,7 +134,7 @@
         private async Task ProcessFailedJob(JobVerificationRequestModel jobVerificationRequestModel, JobOutputStatusModel jobOutputStatusModel, ILogger logger)
         {
             logger.LogInformation($"JobVerificationService::ProcessFailedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
-            
+
             await this.DeleteJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
             // Job is resubmitted for system failures
@@ -153,9 +153,9 @@
 
         private async Task ProcessStuckJob(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
         {
-            logger.LogInformation($"JobVerificationService::ProcessStuckJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");            
-            
-            await SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
+            logger.LogInformation($"JobVerificationService::ProcessStuckJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+
+            await this.SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::ProcessStuckJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
@@ -170,7 +170,7 @@
         private async Task DeleteJobAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
         {
             logger.LogInformation($"JobVerificationService::DeleteJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
-            
+
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
             using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
             {

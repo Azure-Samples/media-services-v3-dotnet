@@ -7,7 +7,6 @@
     using Microsoft.Azure.Services.AppAuthentication;
     using Microsoft.Rest;
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
 
     public static class MediaServicesHelper

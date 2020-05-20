@@ -5,7 +5,6 @@
     using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Extensions.Logging;
-    using System;
     using System.Text.RegularExpressions;
 
     public class EventGridService : IEventGridService
@@ -13,7 +12,6 @@
         public JobOutputStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             var eventId = eventGridEvent.Id;
-            var eventType = eventGridEvent.EventType;
             var amsAccountResourceId = eventGridEvent.Topic;
             var jobId = eventGridEvent.Subject;
             var eventTime = eventGridEvent.EventTime;
@@ -42,23 +40,10 @@
                 return null;
             }
 
-            MediaJobOutputAsset asset;
-            if (eventType.Equals(EventTypes.MediaJobOutputFinishedEvent, StringComparison.InvariantCultureIgnoreCase))
-            {
-                var mediaJobOutputFinishedEventData = (MediaJobOutputFinishedEventData)eventGridEvent.Data;
-                asset = (MediaJobOutputAsset)mediaJobOutputFinishedEventData.Output;
-            }
-            else if (eventType.Equals(EventTypes.MediaJobOutputErroredEvent, StringComparison.InvariantCultureIgnoreCase))
-            {
-                var mediaJobOutputErroredEventData = (MediaJobOutputErroredEventData)eventGridEvent.Data;
-                asset = (MediaJobOutputAsset)mediaJobOutputErroredEventData.Output;
-            }
-            else if (eventType.Equals(EventTypes.MediaJobOutputCanceledEvent, StringComparison.InvariantCultureIgnoreCase))
-            {
-                var mediaJobOutputCanceledEventData = (MediaJobOutputCanceledEventData)eventGridEvent.Data;
-                asset = (MediaJobOutputAsset)mediaJobOutputCanceledEventData.Output;
-            }
-            else
+            var mediaJobOutputStateChangeEventData = (MediaJobOutputStateChangeEventData)eventGridEvent.Data;
+            var asset = (MediaJobOutputAsset)mediaJobOutputStateChangeEventData.Output;
+
+            if (asset == null)
             {
                 logger.LogInformation($"EventGridService::ParseEventData eventType is not {EventTypes.MediaJobOutputFinishedEvent} or {EventTypes.MediaJobOutputErroredEvent} or {EventTypes.MediaJobOutputCanceledEvent} , eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
                 return null;
