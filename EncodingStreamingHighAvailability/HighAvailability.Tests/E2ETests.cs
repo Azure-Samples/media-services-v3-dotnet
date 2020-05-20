@@ -41,7 +41,7 @@ namespace HighAvailability.Tests
             var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
             await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             jobStatusTableStorageService = new TableStorageService(jobStatusTable);
-            //await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
