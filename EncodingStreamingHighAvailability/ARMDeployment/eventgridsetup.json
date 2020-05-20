@@ -48,7 +48,10 @@
           "includedEventTypes": [
             "Microsoft.Media.JobOutputFinished",
             "Microsoft.Media.JobOutputErrored",
-            "Microsoft.Media.JobOutputCanceled"
+            "Microsoft.Media.JobOutputCanceled",
+            "Microsoft.Media.JobOutputProcessing",
+            "Microsoft.Media.JobOutputScheduled",
+            "Microsoft.Media.JobOutputCanceling"
           ]
         },
         "destination": {
