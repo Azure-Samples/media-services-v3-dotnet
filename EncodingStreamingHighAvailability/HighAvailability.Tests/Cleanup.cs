@@ -34,11 +34,7 @@ namespace HighAvailability.Tests
                 var transforms = await client.Transforms.ListAsync(config.ResourceGroup, config.AccountName).ConfigureAwait(false);
                 foreach (var transform in transforms)
                 {
-                    var jobs = await client.Jobs.ListAsync(config.ResourceGroup, config.AccountName, transform.Name).ConfigureAwait(false);
-                    foreach (var job in jobs)
-                    {
-                        await client.Jobs.DeleteAsync(config.ResourceGroup, config.AccountName, transform.Name, job.Name).ConfigureAwait(false);
-                    }
+                    await client.Transforms.DeleteAsync(config.ResourceGroup, config.AccountName, transform.Name).ConfigureAwait(false);
                 }
             }
         }

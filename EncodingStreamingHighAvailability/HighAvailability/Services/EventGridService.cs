@@ -42,8 +42,7 @@
                 return null;
             }
 
-            MediaJobOutputAsset asset = null;
-
+            MediaJobOutputAsset asset;
             if (eventType.Equals(EventTypes.MediaJobOutputFinishedEvent, StringComparison.InvariantCultureIgnoreCase))
             {
                 var mediaJobOutputFinishedEventData = (MediaJobOutputFinishedEventData)eventGridEvent.Data;
