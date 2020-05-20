@@ -24,7 +24,8 @@
             {
                 HealthState = mediaServiceInstanceHealthModel.HealthState,
                 LastUpdated = VerifyMinValue(mediaServiceInstanceHealthModel.LastUpdated),
-                MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName
+                MediaServiceAccountName = mediaServiceInstanceHealthModel.MediaServiceAccountName,
+                IsEnabled = mediaServiceInstanceHealthModel.IsEnabled
             };
 
             var mediaServiceInstanceHealthResult = await this.tableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(verifiedModel)).ConfigureAwait(false);
