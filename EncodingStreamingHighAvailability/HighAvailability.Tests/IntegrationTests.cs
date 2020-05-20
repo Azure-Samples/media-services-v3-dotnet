@@ -44,12 +44,15 @@ namespace HighAvailability.Tests
             // Create a table client for interacting with the table service 
             var jobStatusTable = tableClient.GetTableReference(jobStatusTableName);
             await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+
             jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
 
             // Create a table client for interacting with the table service 
             var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
             await mediaServiceInstanceHealthTable.CreateIfNotExistsAsync().ConfigureAwait(false);
             mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
+            await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, jobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -83,7 +86,7 @@ namespace HighAvailability.Tests
                 JobOutputAssetName = outputAssetName
             }, Mock.Of<ILogger>()).ConfigureAwait(false));
 
-            var result = await target.ListAsync(jobName).ConfigureAwait(false);
+            var result = await target.ListAsync(jobName, outputAssetName).ConfigureAwait(false);
             Assert.AreEqual(1, result.Count());
 
             var currentTime = DateTime.UtcNow;
@@ -106,10 +109,10 @@ namespace HighAvailability.Tests
                 await target.CreateOrUpdateAsync(jobStatusModel, Mock.Of<ILogger>()).ConfigureAwait(false);
             }
 
-            var allStatuses = target.ListAsync(jobName);
+            var allStatuses = target.ListAsync(jobName, outputAssetName);
             Assert.AreEqual(4, allStatuses.Result.Count());
 
-            var latestStatus = await target.GetLatestJobStatusAsync(jobName).ConfigureAwait(false);
+            var latestStatus = await target.GetLatestJobStatusAsync(jobName, outputAssetName).ConfigureAwait(false);
             Assert.AreEqual(testData[0].Id, latestStatus.Id);
             Assert.AreEqual(testData[0].JobName, latestStatus.JobName);
             Assert.AreEqual(testData[0].JobState, latestStatus.JobState);

@@ -34,7 +34,7 @@
         {
             logger.LogInformation($"JobVerificationService::VerifyJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
-            var jobStatus = await this.jobStatusStorageService.GetLatestJobStatusAsync(jobVerificationRequestModel.JobName).ConfigureAwait(false);
+            var jobStatus = await this.jobStatusStorageService.GetLatestJobStatusAsync(jobVerificationRequestModel.JobName, jobVerificationRequestModel.JobOutputAssetName).ConfigureAwait(false);
             var jobStatusLoadedFromAPI = false;
 
             if (jobStatus?.JobState != JobState.Finished && jobStatus?.JobState != JobState.Error && jobStatus?.JobState != JobState.Canceled)
