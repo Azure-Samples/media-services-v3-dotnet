@@ -72,7 +72,7 @@
             var currentTime = DateTime.UtcNow;
 
             var jobStatusList = CreateTestData(currentTime);
-            for (var i = 0; i < 1000000; i++)
+            for (var i = 0; i < 10; i++)
             {
                 jobStatusList.AddRange(CreateTestData(currentTime));
             }

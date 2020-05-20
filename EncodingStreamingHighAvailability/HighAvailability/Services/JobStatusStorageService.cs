@@ -28,20 +28,21 @@
             return jobStatusModelResult;
         }
 
-        public Task<JobStatusModel> GetAsync(string id)
+        public async Task<JobStatusModel> GetLatestJobStatusAsync(string jobName, string jobOutputAssetName)
         {
-            throw new NotImplementedException();
+            return (await this.ListAsync(jobName, jobOutputAssetName).ConfigureAwait(false)).OrderByDescending(i => i.EventTime).FirstOrDefault();
         }
 
-        public async Task<JobStatusModel> GetLatestJobStatusAsync(string jobName)
+        public async Task<IEnumerable<JobStatusModel>> ListAsync(string jobName, string jobOutputAssetName)
         {
-            return (await this.ListAsync(jobName).ConfigureAwait(false)).OrderByDescending(i => i.EventTime).FirstOrDefault();
-        }
-
-        public async Task<IEnumerable<JobStatusModel>> ListAsync(string jobName)
-        {
-            var rangeQuery = new TableQuery<JobStatusModelTableEntity>().Where(
-                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobName));
+            var rangeQuery =
+                   new TableQuery<JobStatusModelTableEntity>().Where(
+                       TableQuery.CombineFilters(
+                           TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, jobName),
+                           TableOperators.And,
+                           TableQuery.GenerateFilterCondition(nameof(JobStatusModelTableEntity.JobOutputAssetName), QueryComparisons.Equal, jobOutputAssetName)
+                           )
+                       );
 
             return (await this.tableStorageService.QueryDataAsync(rangeQuery).ConfigureAwait(false)).Select(i => i.GetJobStatusModel());
         }
