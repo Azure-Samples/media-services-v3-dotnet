@@ -16,16 +16,16 @@
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
         private readonly IConfigService configService;
-        private readonly IJobStatusStorageService jobStatusStorageService;
+        private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         public JobSchedulerService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
-                                    IJobStatusStorageService jobStatusStorageService,
+                                    IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
-            this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
+            this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
         }
@@ -46,12 +46,12 @@
                         new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
 
                     await this.mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
-                        {
-                            MediaServiceAccountName = config.Value.AccountName,
-                            HealthState = InstanceHealthState.Healthy,
-                            LastUpdated = DateTime.UtcNow,
-                            IsEnabled = true
-                        }, 
+                    {
+                        MediaServiceAccountName = config.Value.AccountName,
+                        HealthState = InstanceHealthState.Healthy,
+                        LastUpdated = DateTime.UtcNow,
+                        IsEnabled = true
+                    },
                         logger).ConfigureAwait(false);
                 }
             }
@@ -106,11 +106,11 @@
                     RetryCount = 0
                 };
 
-                var jobStatusModel = new JobStatusModel
+                var jobOutputStatusModel = new JobOutputStatusModel
                 {
                     Id = Guid.NewGuid().ToString(),
                     EventTime = job.LastModified,
-                    JobState = job.State,
+                    JobOutputState = job.State,// TBD should take individual status
                     JobName = job.Name,
                     MediaServiceAccountName = selectedInstanceName,
                     JobOutputAssetName = jobRequestModel.OutputAssetName,
@@ -127,7 +127,7 @@
                 {
                     try
                     {
-                        await this.jobStatusStorageService.CreateOrUpdateAsync(jobStatusModel, logger).ConfigureAwait(false);
+                        await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModel, logger).ConfigureAwait(false);
 
                         var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
                         logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");

@@ -10,7 +10,7 @@
 
     public class EventGridService : IEventGridService
     {
-        public JobStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
+        public JobOutputStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             var eventId = eventGridEvent.Id;
             var eventType = eventGridEvent.EventType;
@@ -64,19 +64,19 @@
                 return null;
             }
 
-            var jobStatusModel = new JobStatusModel
+            var jobOutputStatusModel = new JobOutputStatusModel
             {
                 Id = eventId,
                 JobName = jobName,
                 JobOutputAssetName = asset.AssetName,
-                JobState = asset.State.ToString(),
+                JobOutputState = asset.State.ToString(),
                 EventTime = eventTime,
                 MediaServiceAccountName = amsAccountName,
                 IsSystemError = MediaServicesHelper.IsSystemError(asset)
             };
-            logger.LogInformation($"EventGridService::ParseEventData successfully parsed, jobStatusMode={LogHelper.FormatObjectForLog(jobStatusModel)}");
+            logger.LogInformation($"EventGridService::ParseEventData successfully parsed, jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
 
-            return jobStatusModel;
+            return jobOutputStatusModel;
         }
     }
 }

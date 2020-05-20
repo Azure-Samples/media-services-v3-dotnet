@@ -11,20 +11,20 @@
     public class JobVerificationService : IJobVerificationService
     {
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
-        private readonly IJobStatusStorageService jobStatusStorageService;
+        private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
         private readonly IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
         private readonly IConfigService configService;
         private readonly int maxNumberOfRetries = 2;
 
         public JobVerificationService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
-                                    IJobStatusStorageService jobStatusStorageService,
+                                    IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
-            this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
+            this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.streamProvisioningRequestStorageService = streamProvisioningRequestStorageService ?? throw new ArgumentNullException(nameof(streamProvisioningRequestStorageService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -34,10 +34,10 @@
         {
             logger.LogInformation($"JobVerificationService::VerifyJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
-            var jobStatus = await this.jobStatusStorageService.GetLatestJobStatusAsync(jobVerificationRequestModel.JobName, jobVerificationRequestModel.JobOutputAssetName).ConfigureAwait(false);
-            var jobStatusLoadedFromAPI = false;
+            var jobOutputStatus = await this.jobOutputStatusStorageService.GetLatestJobOutputStatusAsync(jobVerificationRequestModel.JobName, jobVerificationRequestModel.JobOutputAssetName).ConfigureAwait(false);
+            var jobOutputStatusLoadedFromAPI = false;
 
-            if (jobStatus?.JobState != JobState.Finished && jobStatus?.JobState != JobState.Error && jobStatus?.JobState != JobState.Canceled)
+            if (jobOutputStatus?.JobOutputState != JobState.Finished && jobOutputStatus?.JobOutputState != JobState.Error && jobOutputStatus?.JobOutputState != JobState.Canceled)
             {
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
 
@@ -55,11 +55,11 @@
 
                     if (job != null)
                     {
-                        jobStatus = new JobStatusModel
+                        jobOutputStatus = new JobOutputStatusModel
                         {
                             Id = Guid.NewGuid().ToString(),
                             EventTime = job.LastModified,
-                            JobState = job.State,
+                            JobOutputState = job.State, // TBD this should be specific status from output
                             JobName = job.Name,
                             MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                             JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
@@ -67,35 +67,35 @@
                             IsSystemError = MediaServicesHelper.IsSystemError(job)
                         };
 
-                        jobStatusLoadedFromAPI = true;
+                        jobOutputStatusLoadedFromAPI = true;
 
-                        await this.jobStatusStorageService.CreateOrUpdateAsync(jobStatus, logger).ConfigureAwait(false);
+                        await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatus, logger).ConfigureAwait(false);
                     }
                 }
             }
 
-            logger.LogInformation($"JobVerificationService::VerifyJobAsync jobStatus={LogHelper.FormatObjectForLog(jobStatus)}");
+            logger.LogInformation($"JobVerificationService::VerifyJobAsync jobOutputStatus={LogHelper.FormatObjectForLog(jobOutputStatus)}");
 
-            if (jobStatus?.JobState == JobState.Finished)
+            if (jobOutputStatus?.JobOutputState == JobState.Finished)
             {
                 // if there is no status in job status storage, assumption is that job status function did not get that status from EventGrid and provisioning request needs to be created
-                await this.ProcessFinishedJobAsync(jobVerificationRequestModel, jobStatusLoadedFromAPI, logger).ConfigureAwait(false);
+                await this.ProcessFinishedJobAsync(jobVerificationRequestModel, jobOutputStatusLoadedFromAPI, logger).ConfigureAwait(false);
 
-                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job was completed successfully: jobStatus={LogHelper.FormatObjectForLog(jobStatus)}");
+                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job was completed successfully: jobOutputStatus={LogHelper.FormatObjectForLog(jobOutputStatus)}");
                 return jobVerificationRequestModel;
             }
 
-            if (jobStatus?.JobState == JobState.Error)
+            if (jobOutputStatus?.JobOutputState == JobState.Error)
             {
-                await this.ProcessFailedJob(jobVerificationRequestModel, jobStatus, logger).ConfigureAwait(false);
+                await this.ProcessFailedJob(jobVerificationRequestModel, jobOutputStatus, logger).ConfigureAwait(false);
 
-                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job failed: jobStatus={LogHelper.FormatObjectForLog(jobStatus)}");
+                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job failed: jobOutputStatus={LogHelper.FormatObjectForLog(jobOutputStatus)}");
                 return jobVerificationRequestModel;
             }
 
-            if (jobStatus?.JobState == JobState.Canceled)
+            if (jobOutputStatus?.JobOutputState == JobState.Canceled)
             {
-                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job canceled: jobStatus={LogHelper.FormatObjectForLog(jobStatus)}");
+                logger.LogInformation($"JobVerificationService::VerifyJobAsync] job canceled: jobOutputStatus={LogHelper.FormatObjectForLog(jobOutputStatus)}");
                 return jobVerificationRequestModel;
             }
 
@@ -129,11 +129,11 @@
             logger.LogInformation($"JobVerificationService::ProcessFinishedJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
 
-        private async Task ProcessFailedJob(JobVerificationRequestModel jobVerificationRequestModel, JobStatusModel jobStatusModel, ILogger logger)
+        private async Task ProcessFailedJob(JobVerificationRequestModel jobVerificationRequestModel, JobOutputStatusModel jobOutputStatusModel, ILogger logger)
         {
-            logger.LogInformation($"JobVerificationService::ProcessFailedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobStatusModel={LogHelper.FormatObjectForLog(jobStatusModel)}");
+            logger.LogInformation($"JobVerificationService::ProcessFailedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
             // Job is resubmitted for system failures
-            if (jobStatusModel.IsSystemError)
+            if (jobOutputStatusModel.IsSystemError)
             {
                 // check if we need to resubmit job
                 await this.ResubmitJob(jobVerificationRequestModel, logger).ConfigureAwait(false);
@@ -143,7 +143,7 @@
                 logger.LogInformation($"JobVerificationService::ProcessFailedJob job failed, not a system error, skipping retry: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
             }
 
-            logger.LogInformation($"JobVerificationService::ProcessFailedJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobStatusModel={LogHelper.FormatObjectForLog(jobStatusModel)}");
+            logger.LogInformation($"JobVerificationService::ProcessFailedJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
         }
 
         private async Task ProcessStuckJob(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)

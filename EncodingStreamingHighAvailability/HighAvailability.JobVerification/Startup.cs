@@ -26,9 +26,9 @@ namespace HighAvailability.JobVerification
             mediaServiceInstanceHealthTable.CreateIfNotExists();
             var mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
-            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
-            jobStatusTable.CreateIfNotExists();
-            var jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+            var jobOutputStatusTable = tableClient.GetTableReference(configService.JobOutputStatusTableName);
+            jobOutputStatusTable.CreateIfNotExists();
+            var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
             var streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningRequestQueueName);
             streamProvisioningRequestQueue.CreateIfNotExists();
@@ -36,12 +36,12 @@ namespace HighAvailability.JobVerification
             var jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
             jobVerificationRequestQueue.CreateIfNotExists();
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobStatusStorageService, streamProvisioningRequestStorageService, jobVerificationRequestStorageService, configService);
+            var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, streamProvisioningRequestStorageService, jobVerificationRequestStorageService, configService);
 
             builder.Services.AddSingleton<IJobVerificationService>(jobVerificationService);
         }

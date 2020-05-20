@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
-    <RootNamespace>HighAvailability.JobStatus</RootNamespace>
+    <RootNamespace>HighAvailability.JobOutputStatus</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Models\**" />

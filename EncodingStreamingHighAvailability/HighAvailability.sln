@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.Tests", "H
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobScheduler", "HighAvailability.JobScheduler\HighAvailability.JobScheduler.csproj", "{FBC85549-B509-47B0-9E50-E378C9797770}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobStatus", "HighAvailability.JobStatus\HighAvailability.JobStatus.csproj", "{FAE812A4-F34A-40D3-9665-1B273F874D55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobOutputStatus", "HighAvailability.JobOutputStatus\HighAvailability.JobOutputStatus.csproj", "{FAE812A4-F34A-40D3-9665-1B273F874D55}"
 EndProject
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ARMDeployment", "ARMDeployment\ARMDeployment.deployproj", "{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}"
 EndProject
@@ -23,7 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		deploy.ps1 = deploy.ps1
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HighAvailability.InstanceHealth", "HighAvailability.InstanceHealth\HighAvailability.InstanceHealth.csproj", "{3C2995C9-4EC1-4DB9-BED8-74A84A83376B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.InstanceHealth", "HighAvailability.InstanceHealth\HighAvailability.InstanceHealth.csproj", "{3C2995C9-4EC1-4DB9-BED8-74A84A83376B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

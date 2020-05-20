@@ -17,25 +17,25 @@
         [TestMethod]
         public async Task TestReEvaluateMediaServicesHealthAsync()
         {
-            var jobStatusStorageServiceMock = new Mock<IJobStatusStorageService>();
+            var jobOutputStatusStorageServiceMock = new Mock<IJobOutputStatusStorageService>();
             var configServiceMock = new Mock<IConfigService>();
             var mediaServiceInstanceHealthStorageService = new Mock<IMediaServiceInstanceHealthStorageService>();
             var currentTime = DateTime.UtcNow;
 
-            var jobStatusList = new List<JobStatusModel>
+            var jobOutputStatusList = new List<JobOutputStatusModel>
             {
-                new JobStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(1)},
-                new JobStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobState = JobState.Finished, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobState = JobState.Error, EventTime = currentTime.AddSeconds(3)},
-                new JobStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(3)},
-                new JobStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddHours(3)}
+                new JobOutputStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(1)},
+                new JobOutputStatusModel {JobName = "job1", MediaServiceAccountName = "account1", JobOutputState = JobState.Finished, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = "job2", MediaServiceAccountName = "account1", JobOutputState = JobState.Error, EventTime = currentTime.AddSeconds(3)},
+                new JobOutputStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = "job3", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(3)},
+                new JobOutputStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = "job4", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddHours(3)}
             };
 
             var accounts = new List<MediaServiceInstanceHealthModel>
@@ -44,14 +44,14 @@
             };
 
             mediaServiceInstanceHealthStorageService.Setup(m => m.ListAsync()).ReturnsAsync(accounts);
-            jobStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobStatusList);
+            jobOutputStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobOutputStatusList);
 
             configServiceMock.SetupGet(c => c.NumberOfMinutesInProcessToMarkJobStuck).Returns(60);
             configServiceMock.SetupGet(c => c.TimeWindowToLoadJobsInMinutes).Returns(60);
             configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.9f);
             configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.7f);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, configServiceMock.Object);
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobOutputStatusStorageServiceMock.Object, configServiceMock.Object);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -66,15 +66,15 @@
         [TestMethod]
         public async Task TestLoadReEvaluateMediaServicesHealthAsync()
         {
-            var jobStatusStorageServiceMock = new Mock<IJobStatusStorageService>();
+            var jobOutputStatusStorageServiceMock = new Mock<IJobOutputStatusStorageService>();
             var configServiceMock = new Mock<IConfigService>();
             var mediaServiceInstanceHealthStorageService = new Mock<IMediaServiceInstanceHealthStorageService>();
             var currentTime = DateTime.UtcNow;
 
-            var jobStatusList = CreateTestData(currentTime);
+            var jobOutputStatusList = CreateTestData(currentTime);
             for (var i = 0; i < 10; i++)
             {
-                jobStatusList.AddRange(CreateTestData(currentTime));
+                jobOutputStatusList.AddRange(CreateTestData(currentTime));
             }
 
             var accounts = new List<MediaServiceInstanceHealthModel>
@@ -83,14 +83,14 @@
             };
 
             mediaServiceInstanceHealthStorageService.Setup(m => m.ListAsync()).ReturnsAsync(accounts);
-            jobStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobStatusList);
+            jobOutputStatusStorageServiceMock.Setup(j => j.ListByMediaServiceAccountNameAsync(It.IsAny<string>(), It.IsAny<int>())).ReturnsAsync(jobOutputStatusList);
 
             configServiceMock.SetupGet(c => c.NumberOfMinutesInProcessToMarkJobStuck).Returns(60);
             configServiceMock.SetupGet(c => c.TimeWindowToLoadJobsInMinutes).Returns(60);
             configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.9f);
             configServiceMock.SetupGet(c => c.SuccessRateForHealthyState).Returns(0.7f);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobStatusStorageServiceMock.Object, configServiceMock.Object);
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService.Object, jobOutputStatusStorageServiceMock.Object, configServiceMock.Object);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -103,24 +103,24 @@
             Console.WriteLine($"It took {elapsed} seconds to run");
         }
 
-        private static List<JobStatusModel> CreateTestData(DateTime currentTime)
+        private static List<JobOutputStatusModel> CreateTestData(DateTime currentTime)
         {
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            return new List<JobStatusModel>
+            return new List<JobOutputStatusModel>
             {
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(1)},
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Finished, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Error, EventTime = currentTime.AddSeconds(3)},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(3)},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobState = JobState.Processing, EventTime = currentTime.AddHours(3)}
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(1)},
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Finished, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Error, EventTime = currentTime.AddSeconds(3)},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(3)},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2)},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = "account1", JobOutputState = JobState.Processing, EventTime = currentTime.AddHours(3)}
             };
         }
     }

@@ -17,7 +17,7 @@ namespace HighAvailability.Tests
     {
         private static QueueClient jobRequestQueue;
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
-        private static ITableStorageService jobStatusTableStorageService;
+        private static ITableStorageService jobOutputStatusTableStorageService;
         private static IConfigService configService;
         private static QueueClient jobVerificationRequestQueue;
 
@@ -38,10 +38,10 @@ namespace HighAvailability.Tests
             mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
             await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
 
-            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
-            await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
-            jobStatusTableStorageService = new TableStorageService(jobStatusTable);
-            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            var jobOutputStatusTable = tableClient.GetTableReference(configService.JobOutputStatusTableName);
+            await jobOutputStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
+            await jobOutputStatusTableStorageService.DeleteAllAsync<JobOutputStatusModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
@@ -53,18 +53,18 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobRequestStorageService()
         {
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobStatusStorageService, configService);
+            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOutputStatusStorageService, configService);
 
             await jobSchedulerService.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 1; i++)
+            for (var i = 0; i < 2; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }

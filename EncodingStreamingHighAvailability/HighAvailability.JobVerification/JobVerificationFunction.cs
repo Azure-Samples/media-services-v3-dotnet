@@ -21,7 +21,7 @@ namespace HighAvailability.JobVerification
         }
 
         [FunctionName("JobVerificationFunction")]
-        public async Task Run([QueueTrigger("job-verification-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
+        public async Task Run([QueueTrigger("job-verification-requests", Connection = "StorageAccountConnectionString")] string message, ILogger logger)
         {
             try
             {

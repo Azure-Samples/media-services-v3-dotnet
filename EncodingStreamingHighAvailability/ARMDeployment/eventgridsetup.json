@@ -19,7 +19,7 @@
     }
   },
   "variables": {
-    "functionNamesSuffixes": [ "JobScheduler", "JobStatus", "StreamProvisioning", "JobVerification" ],
+    "functionNamesSuffixes": [ "JobScheduler", "JobOutputStatus", "StreamProvisioning", "JobVerification" ],
     "copy": [
       {
         "name": "functionNames",
@@ -32,7 +32,7 @@
         "input": "[concat(parameters('deploymentNameBase'),'ams', parameters('amsRegions')[copyIndex('amsInstanceNames')])]"
       }
     ],
-    "amsJobOutputStateUpdateFunctionUrl": "[concat('https://', variables('functionNames')[1],'.azurewebsites.net/runtime/webhooks/eventgrid?functionName=JobStatusFunction&code=')]"
+    "amsJobOutputStateUpdateFunctionUrl": "[concat('https://', variables('functionNames')[1],'.azurewebsites.net/runtime/webhooks/eventgrid?functionName=JobOutputStatusFunction&code=')]"
   },
   "resources": [
     {
