@@ -9,7 +9,7 @@
     {
         // This is the main function to submit jobs
         // It should use IMediaServiceInstanceHealthService to determine what media service account to use to submit this job. 
-        // It could also use IJobStatusStorageService to determine number of outstanding jobs before submitting new one
+        // It could also use IJobOutputStatusStorageService to determine number of outstanding jobs before submitting new one
         Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger);
     }
 }

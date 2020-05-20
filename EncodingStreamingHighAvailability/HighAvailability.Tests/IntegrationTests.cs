@@ -17,13 +17,13 @@ namespace HighAvailability.Tests
     [TestClass]
     public class IntegrationTests
     {
-        private static ITableStorageService jobStatusTableStorageService;
+        private static ITableStorageService jobOutputStatusTableStorageService;
         private static QueueClient jobRequestQueue;
         private static QueueClient jobVerificationRequestQueue;
         private static QueueClient streamProvisioningRequestQueue;
         private static QueueClient streamProvisioningEventQueue;
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
-        private const string jobStatusTableName = "JobStatusTest";
+        private const string jobOutputStatusTableName = "JobOutputStatusTest";
         private const string jobRequestQueueName = "jobrequests-test";
         private const string jobVerificationRequestQueueName = "jobverificationrequests-test";
         private const string streamProvisioningRequestQueueName = "streamprovisioningrequests-test";
@@ -42,11 +42,11 @@ namespace HighAvailability.Tests
             var tableClient = storageAccount.CreateCloudTableClient();
 
             // Create a table client for interacting with the table service 
-            var jobStatusTable = tableClient.GetTableReference(jobStatusTableName);
-            await jobStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            var jobOutputStatusTable = tableClient.GetTableReference(jobOutputStatusTableName);
+            await jobOutputStatusTable.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-            jobStatusTableStorageService = new TableStorageService(jobStatusTable);
-            await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
+            await jobOutputStatusTableStorageService.DeleteAllAsync<JobOutputStatusModelTableEntity>().ConfigureAwait(false);
 
             // Create a table client for interacting with the table service 
             var mediaServiceInstanceHealthTable = tableClient.GetTableReference(configService.MediaServiceInstanceHealthTableName);
@@ -68,20 +68,20 @@ namespace HighAvailability.Tests
         }
 
         [TestMethod]
-        public async Task TestJobStatusStorageService()
+        public async Task TestJobOutputStatusStorageService()
         {
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-            var target = new JobStatusStorageService(jobStatusTableStorageService);
+            var target = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var jobName = $"JobName-{uniqueness}";
             var mediaServiceAccountName = $"Account1-{uniqueness}";
             var outputAssetName = $"AssetName-{uniqueness}";
 
-            Assert.IsNotNull(await target.CreateOrUpdateAsync(new JobStatusModel
+            Assert.IsNotNull(await target.CreateOrUpdateAsync(new JobOutputStatusModel
             {
                 Id = Guid.NewGuid().ToString(),
                 JobName = jobName,
                 MediaServiceAccountName = mediaServiceAccountName,
-                JobState = JobState.Finished,
+                JobOutputState = JobState.Finished,
                 EventTime = DateTime.UtcNow,
                 JobOutputAssetName = outputAssetName
             }, Mock.Of<ILogger>()).ConfigureAwait(false));
@@ -90,32 +90,32 @@ namespace HighAvailability.Tests
             Assert.AreEqual(1, result.Count());
 
             var currentTime = DateTime.UtcNow;
-            var testData = new List<JobStatusModel>();
+            var testData = new List<JobOutputStatusModel>();
             for (var i = 0; i < 3; i++)
             {
-                testData.Add(new JobStatusModel
+                testData.Add(new JobOutputStatusModel
                 {
                     Id = Guid.NewGuid().ToString(),
                     JobName = jobName,
                     MediaServiceAccountName = mediaServiceAccountName,
-                    JobState = JobState.Processing,
+                    JobOutputState = JobState.Processing,
                     EventTime = currentTime.AddMinutes(-i),
                     JobOutputAssetName = outputAssetName
                 });
             }
 
-            foreach (var jobStatusModel in testData)
+            foreach (var jobOutputStatusModel in testData)
             {
-                await target.CreateOrUpdateAsync(jobStatusModel, Mock.Of<ILogger>()).ConfigureAwait(false);
+                await target.CreateOrUpdateAsync(jobOutputStatusModel, Mock.Of<ILogger>()).ConfigureAwait(false);
             }
 
             var allStatuses = target.ListAsync(jobName, outputAssetName);
             Assert.AreEqual(4, allStatuses.Result.Count());
 
-            var latestStatus = await target.GetLatestJobStatusAsync(jobName, outputAssetName).ConfigureAwait(false);
+            var latestStatus = await target.GetLatestJobOutputStatusAsync(jobName, outputAssetName).ConfigureAwait(false);
             Assert.AreEqual(testData[0].Id, latestStatus.Id);
             Assert.AreEqual(testData[0].JobName, latestStatus.JobName);
-            Assert.AreEqual(testData[0].JobState, latestStatus.JobState);
+            Assert.AreEqual(testData[0].JobOutputState, latestStatus.JobOutputState);
             Assert.AreEqual(testData[0].EventTime, latestStatus.EventTime);
             Assert.AreEqual(testData[0].MediaServiceAccountName, latestStatus.MediaServiceAccountName);
             Assert.AreEqual(testData[0].JobOutputAssetName, latestStatus.JobOutputAssetName);
@@ -216,11 +216,11 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestJobSchedulerService()
         {
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOOutputStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobStatusStorageService, configService);
+            var target = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOOutputStatusStorageService, configService);
 
             await target.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 
@@ -361,14 +361,14 @@ namespace HighAvailability.Tests
                                   label: $"label {uniqueness}"
                                   );
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
-                                                    jobStatusStorageService,
+                                                    jobOutputStatusStorageService,
                                                     streamProvisioningRequestStorageService,
                                                     jobVerificationRequestStorageService,
                                                     configService);
@@ -399,17 +399,17 @@ namespace HighAvailability.Tests
         [TestMethod]
         public async Task TestLoadReEvaluateMediaServicesHealthAsync()
         {
-            //  await jobStatusTableStorageService.DeleteAllAsync<JobStatusModelTableEntity>().ConfigureAwait(false);
+            // await jobOutputStatusTableStorageService.DeleteAllAsync<JobOutputStatusModelTableEntity>().ConfigureAwait(false);
             await mediaServiceInstanceHealthTableStorageService.DeleteAllAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false);
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var currentTime = DateTime.UtcNow;
 
-            //var jobStatusList = CreateTestData(currentTime, "account2");
+            //var jobOutputStatusList = CreateTestData(currentTime, "account2");
             //for (int i = 0; i < 10000; i++)
             //{
-            //    jobStatusList.AddRange(CreateTestData(currentTime, "account2"));
+            //    jobOutputStatusList.AddRange(CreateTestData(currentTime, "account2"));
             //}
 
             var accounts = new List<MediaServiceInstanceHealthModel>
@@ -418,21 +418,21 @@ namespace HighAvailability.Tests
                 new MediaServiceInstanceHealthModel {MediaServiceAccountName = "account2", HealthState = InstanceHealthState.Healthy, LastUpdated = currentTime}
             };
 
-            //foreach (var jobStatus in jobStatusList)
+            //foreach (var jobOutputStatus in jobOutputStatusList)
             //{
-            //    await jobStatusTableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatus)).ConfigureAwait(false);
+            //    await jobOutputStatusTableStorageService.CreateOrUpdateAsync(new JobOutputStatusModelTableEntity(jobOutputStatus)).ConfigureAwait(false);
             //}
 
-            //Parallel.ForEach(jobStatusList, new ParallelOptions { MaxDegreeOfParallelism = 400 }, (jobStatus) =>
+            //Parallel.ForEach(jobOutputStatusList, new ParallelOptions { MaxDegreeOfParallelism = 400 }, (jobOutputStatus) =>
             //    {
-            //        jobStatusTableStorageService.CreateOrUpdateAsync(new JobStatusModelTableEntity(jobStatus)).Wait();
+            //        jobOutputStatusTableStorageService.CreateOrUpdateAsync(new JobOutputStatusModelTableEntity(jobOutputStatus)).Wait();
             //    }
             //);
 
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[0])).ConfigureAwait(false);
             await mediaServiceInstanceHealthTableStorageService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModelTableEntity(accounts[1])).ConfigureAwait(false);
 
-            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var target = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
 
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -445,24 +445,24 @@ namespace HighAvailability.Tests
             Console.WriteLine($"It took {elapsed} seconds to run");
         }
 
-        private static List<JobStatusModel> CreateTestData(DateTime currentTime, string accountName)
+        private static List<JobOutputStatusModel> CreateTestData(DateTime currentTime, string accountName)
         {
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            return new List<JobStatusModel>
+            return new List<JobOutputStatusModel>
             {
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(1), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Finished, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Error, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
-                new JobStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobState = JobState.Processing, EventTime = currentTime.AddHours(3), Id = Guid.NewGuid().ToString()}
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(1), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job1-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Finished, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job2-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Error, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job3-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(3), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime, Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddSeconds(2), Id = Guid.NewGuid().ToString()},
+                new JobOutputStatusModel {JobName = $"job4-{uniqueness}", MediaServiceAccountName = accountName, JobOutputState = JobState.Processing, EventTime = currentTime.AddHours(3), Id = Guid.NewGuid().ToString()}
             };
         }
 

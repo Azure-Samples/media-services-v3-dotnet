@@ -18,7 +18,7 @@
         {
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
             this.MediaServiceInstanceHealthTableName = "MediaServiceInstanceHealth";
-            this.JobStatusTableName = "JobStatus";
+            this.JobOutputStatusTableName = "JobOutputStatus";
             this.StreamProvisioningRequestQueueName = "stream-provisioning-requests";
             this.JobVerificationRequestQueueName = "job-verification-requests";
             this.JobRequestQueueName = "job-requests";
@@ -37,7 +37,7 @@
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
 
-        public string JobStatusTableName { get; private set; }
+        public string JobOutputStatusTableName { get; private set; }
 
         public string StorageAccountConnectionString { get; private set; }
 

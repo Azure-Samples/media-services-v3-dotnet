@@ -13,7 +13,7 @@
     public class MediaServiceInstanceHealthService : IMediaServiceInstanceHealthService
     {
         private readonly IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService;
-        private readonly IJobStatusStorageService jobStatusStorageService;
+        private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
         private readonly IConfigService configService;
         private int numberOfMinutesInProcessToMarkJobStuck = 60;
         private int timeWindowToLoadJobsInMinutes = 480;
@@ -22,11 +22,11 @@
         private ConcurrentDictionary<string, ulong> mediaServiceInstanceUsage = new ConcurrentDictionary<string, ulong>();
 
         public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
-                                                    IJobStatusStorageService jobStatusStorageService,
+                                                    IJobOutputStatusStorageService jobOutputStatusStorageService,
                                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthStorageService = mediaServiceInstanceHealthStorageService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthStorageService));
-            this.jobStatusStorageService = jobStatusStorageService ?? throw new ArgumentNullException(nameof(jobStatusStorageService));
+            this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.numberOfMinutesInProcessToMarkJobStuck = configService.NumberOfMinutesInProcessToMarkJobStuck;
             this.timeWindowToLoadJobsInMinutes = configService.TimeWindowToLoadJobsInMinutes;
@@ -91,7 +91,7 @@
 
             Parallel.ForEach(instances, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (mediaServiceInstanceHealthModel) =>
             {
-                var allJobs = this.jobStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowToLoadJobsInMinutes).GetAwaiter().GetResult();
+                var allJobs = this.jobOutputStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowToLoadJobsInMinutes).GetAwaiter().GetResult();
                 logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync loaded jobs history: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} count={allJobs.Count()}");
                 var aggregatedData = allJobs.GroupBy(i => i.JobName);
                 var successCount = 0;
@@ -102,19 +102,19 @@
                     totalCount++;
                     var finalStateReached = false;
 
-                    if (jobData.Any(j => j.JobState == JobState.Finished))
+                    if (jobData.Any(j => j.JobOutputState == JobState.Finished))
                     {
                         successCount++;
                         finalStateReached = true;
                     }
 
-                    if (jobData.Any(j => j.JobState == JobState.Error))
+                    if (jobData.Any(j => j.JobOutputState == JobState.Error))
                     {
                         finalStateReached = true;
                     }
 
                     // do not count canceled jobs
-                    if (jobData.Any(j => j.JobState == JobState.Canceled))
+                    if (jobData.Any(j => j.JobOutputState == JobState.Canceled))
                     {
                         totalCount--;
                         finalStateReached = true;

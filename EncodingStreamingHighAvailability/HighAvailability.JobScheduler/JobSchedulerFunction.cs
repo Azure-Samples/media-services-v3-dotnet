@@ -22,7 +22,7 @@ namespace HighAvailability.JobScheduler
 
 
         [FunctionName("JobSchedulerFunction")]
-        public async Task Run([QueueTrigger("job-requests", Connection = "StorageAccountConnectionString")]string message, ILogger logger)
+        public async Task Run([QueueTrigger("job-requests", Connection = "StorageAccountConnectionString")] string message, ILogger logger)
         {
             try
             {

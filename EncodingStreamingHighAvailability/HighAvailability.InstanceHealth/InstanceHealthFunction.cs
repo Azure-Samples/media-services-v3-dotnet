@@ -11,16 +11,16 @@ namespace HighAvailability.InstanceHealth
     {
         private IMediaServiceInstanceHealthService mediaServiceInstanceHealthService { get; set; }
 
-        private IJobStatusSyncService jobStatusSyncService { get; set; }
+        private IJobOutputStatusSyncService jobOutputStatusSyncService { get; set; }
 
-        public InstanceHealthFunction(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService, IJobStatusSyncService jobStatusSyncService)
+        public InstanceHealthFunction(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService, IJobOutputStatusSyncService jobOutputStatusSyncService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
-            this.jobStatusSyncService = jobStatusSyncService ?? throw new ArgumentNullException(nameof(jobStatusSyncService));
+            this.jobOutputStatusSyncService = jobOutputStatusSyncService ?? throw new ArgumentNullException(nameof(jobOutputStatusSyncService));
         }
 
         [FunctionName("InstanceHealthFunction")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo timerInfo, ILogger logger)
+        public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo timerInfo, ILogger logger)
         {
             try
             {
@@ -37,20 +37,20 @@ namespace HighAvailability.InstanceHealth
             }
         }
 
-        [FunctionName("JobStatusSyncFunction")]
-        public async Task JobStatusSyncRun([TimerTrigger("0 */2 * * * *")]TimerInfo timerInfo, ILogger logger)
+        [FunctionName("JobOutputStatusSyncFunction")]
+        public async Task JobOutputStatusSyncRun([TimerTrigger("0 */2 * * * *")] TimerInfo timerInfo, ILogger logger)
         {
             try
             {
-                logger.LogInformation($"JobStatusSyncRun::Run triggered timerInfo={LogHelper.FormatObjectForLog(timerInfo)}");
+                logger.LogInformation($"JobOutputStatusSyncFunction::Run triggered timerInfo={LogHelper.FormatObjectForLog(timerInfo)}");
 
-                await this.jobStatusSyncService.SyncJobStatusAsync(DateTime.UtcNow, logger).ConfigureAwait(false);
+                await this.jobOutputStatusSyncService.SyncJobOutputStatusAsync(DateTime.UtcNow, logger).ConfigureAwait(false);
 
-                logger.LogInformation($"JobStatusSyncRun::Run completed");
+                logger.LogInformation($"JobOutputStatusSyncFunction::Run completed");
             }
             catch (Exception e)
             {
-                logger.LogError($"JobStatusSyncRun::Run failed, exception={e.Message}");
+                logger.LogError($"JobOutputStatusSyncFunction::Run failed, exception={e.Message}");
                 throw;
             }
         }

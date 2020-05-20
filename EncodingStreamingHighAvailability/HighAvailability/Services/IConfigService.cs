@@ -8,7 +8,7 @@
     {
         string MediaServiceInstanceHealthTableName { get; }
 
-        string JobStatusTableName { get; }
+        string JobOutputStatusTableName { get; }
 
         string StreamProvisioningRequestQueueName { get; }
 
