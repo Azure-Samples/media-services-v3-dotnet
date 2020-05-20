@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace HighAvailability.Services
 {
-    public interface IJobStatusSyncService
+    public interface IJobOutputStatusSyncService
     {
-        Task SyncJobStatusAsync(DateTime currentTime, ILogger logger);
+        Task SyncJobOutputStatusAsync(DateTime currentTime, ILogger logger);
     }
 }

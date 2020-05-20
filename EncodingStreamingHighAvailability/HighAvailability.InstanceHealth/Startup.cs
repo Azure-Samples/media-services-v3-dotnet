@@ -25,17 +25,17 @@ namespace HighAvailability.InstanceHealth
             mediaServiceInstanceHealthTable.CreateIfNotExists();
             var mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
-            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
-            jobStatusTable.CreateIfNotExists();
-            var jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+            var jobOutputStatusTable = tableClient.GetTableReference(configService.JobOutputStatusTableName);
+            jobOutputStatusTable.CreateIfNotExists();
+            var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
-            var jobStatusSyncService = new JobStatusSyncService(mediaServiceInstanceHealthService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
+            var jobOutputStatusSyncService = new JobOutputStatusSyncService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);
-            builder.Services.AddSingleton<IJobStatusSyncService>(jobStatusSyncService);
+            builder.Services.AddSingleton<IJobOutputStatusSyncService>(jobOutputStatusSyncService);
         }
     }
 }

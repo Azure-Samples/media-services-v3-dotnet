@@ -31,7 +31,7 @@ if ($numberOfRetries -eq 0)
 
 $createdFunctionNames = $mainDeployment.Outputs['functionNames'].Value
 Write-Host "Created following azure functions: $createdFunctionNames"
-$functionFolders = @{JobScheduler="HighAvailability.JobScheduler"; JobStatus="HighAvailability.JobStatus"; StreamProvisioning="HighAvailability.StreamProvisioning"; JobVerification="HighAvailability.JobVerification"; InstanceHealth="HighAvailability.InstanceHealth";}
+$functionFolders = @{JobScheduler="HighAvailability.JobScheduler"; JobOutputStatus="HighAvailability.JobOutputStatus"; StreamProvisioning="HighAvailability.StreamProvisioning"; JobVerification="HighAvailability.JobVerification"; InstanceHealth="HighAvailability.InstanceHealth";}
 
 . dotnet publish HighAvailability.sln
 

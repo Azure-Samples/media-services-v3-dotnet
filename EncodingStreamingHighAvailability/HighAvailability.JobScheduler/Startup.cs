@@ -26,18 +26,18 @@ namespace HighAvailability.JobScheduler
             mediaServiceInstanceHealthTable.CreateIfNotExists();
             var mediaServiceInstanceHealthTableStorageService = new TableStorageService(mediaServiceInstanceHealthTable);
 
-            var jobStatusTable = tableClient.GetTableReference(configService.JobStatusTableName);
-            jobStatusTable.CreateIfNotExists();
-            var jobStatusTableStorageService = new TableStorageService(jobStatusTable);
+            var jobOutputStatusTable = tableClient.GetTableReference(configService.JobOutputStatusTableName);
+            jobOutputStatusTable.CreateIfNotExists();
+            var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
             var jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
             jobVerificationRequestQueue.CreateIfNotExists();
 
-            var jobStatusStorageService = new JobStatusStorageService(jobStatusTableStorageService);
+            var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobStatusStorageService, configService);
+            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, configService);
 
             builder.Services.AddSingleton<IJobSchedulerService>(jobSchedulerService);
         }
