@@ -110,7 +110,7 @@
                 {
                     Id = Guid.NewGuid().ToString(),
                     EventTime = job.LastModified,
-                    JobOutputState = job.State,// TBD should take individual status
+                    JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobRequestModel.OutputAssetName),
                     JobName = job.Name,
                     MediaServiceAccountName = selectedInstanceName,
                     JobOutputAssetName = jobRequestModel.OutputAssetName,
