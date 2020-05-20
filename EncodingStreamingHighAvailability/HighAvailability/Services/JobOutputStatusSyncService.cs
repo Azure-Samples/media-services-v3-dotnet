@@ -133,7 +133,7 @@
                 {
                     Id = Guid.NewGuid().ToString(),
                     EventTime = job.LastModified,
-                    JobOutputState = job.State, // TBD to determine correct status
+                    JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobOutputStatusModel.JobOutputAssetName),
                     JobName = jobOutputStatusModel.JobName,
                     MediaServiceAccountName = mediaServiceAccountName,
                     JobOutputAssetName = jobOutputStatusModel.JobOutputAssetName,

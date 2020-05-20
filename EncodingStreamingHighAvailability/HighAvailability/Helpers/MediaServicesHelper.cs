@@ -7,6 +7,7 @@
     using Microsoft.Azure.Services.AppAuthentication;
     using Microsoft.Rest;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public static class MediaServicesHelper
@@ -59,23 +60,44 @@
             return transform;
         }
 
-        public static bool IsSystemError(Job job)
+        public static bool IsSystemError(Job job, string jobOutputAssetName)
         {
             if (job.State == JobState.Error)
             {
-                foreach (var jobError in job.Outputs)
+                foreach (var jobOutput in job.Outputs)
                 {
-                    if (jobError.State == JobState.Error)
+                    if (jobOutput is JobOutputAsset)
                     {
-                        if (jobError.Error.Retry == JobRetry.MayRetry)
+                        var jobOutputAsset = (JobOutputAsset)jobOutput;
+                        if (jobOutputAsset.State == JobState.Error && jobOutputAsset.AssetName.Equals(jobOutputAssetName, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            return true;
+                            if (jobOutputAsset.Error.Retry == JobRetry.MayRetry)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
             }
 
             return false;
+        }
+
+        public static JobState GetJobOutputState(Job job, string jobOutputAssetName)
+        {
+            foreach (var jobOutput in job.Outputs)
+            {
+                if (jobOutput is JobOutputAsset)
+                {
+                    var jobOutputAsset = (JobOutputAsset)jobOutput;
+                    if (jobOutputAsset.AssetName.Equals(jobOutputAssetName, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return jobOutputAsset.State;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public static bool IsSystemError(MediaJobOutputAsset jobOutput)

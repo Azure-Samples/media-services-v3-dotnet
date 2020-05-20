@@ -59,12 +59,12 @@
                         {
                             Id = Guid.NewGuid().ToString(),
                             EventTime = job.LastModified,
-                            JobOutputState = job.State, // TBD this should be specific status from output
+                            JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobVerificationRequestModel.JobOutputAssetName),
                             JobName = job.Name,
                             MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                             JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
                             TransformName = jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                            IsSystemError = MediaServicesHelper.IsSystemError(job)
+                            IsSystemError = MediaServicesHelper.IsSystemError(job, jobVerificationRequestModel.JobOutputAssetName)
                         };
 
                         jobOutputStatusLoadedFromAPI = true;
@@ -126,12 +126,17 @@
                 logger.LogInformation($"JobVerificationService::ProcessFinishedJob stream provisioning request submitted for completed job: streamProvisioningRequestResult={LogHelper.FormatObjectForLog(streamProvisioningRequestResult)}");
             }
 
+            await this.DeleteJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
+
             logger.LogInformation($"JobVerificationService::ProcessFinishedJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
 
         private async Task ProcessFailedJob(JobVerificationRequestModel jobVerificationRequestModel, JobOutputStatusModel jobOutputStatusModel, ILogger logger)
         {
             logger.LogInformation($"JobVerificationService::ProcessFailedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
+            
+            await this.DeleteJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
+
             // Job is resubmitted for system failures
             if (jobOutputStatusModel.IsSystemError)
             {
@@ -148,11 +153,31 @@
 
         private async Task ProcessStuckJob(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
         {
-            logger.LogInformation($"JobVerificationService::ProcessStuckJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
-
-            await this.ResubmitJob(jobVerificationRequestModel, logger).ConfigureAwait(false);
+            logger.LogInformation($"JobVerificationService::ProcessStuckJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");            
+            
+            await SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::ProcessStuckJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+        }
+
+        private async Task SubmitVerificationRequestAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
+        {
+            var verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus * (jobVerificationRequestModel.RetryCount + 1), 0);
+            var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, verificationDelay, logger).ConfigureAwait(false);
+            logger.LogInformation($"JobVerificationService::SubmitVerificationRequestAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
+        }
+
+        private async Task DeleteJobAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
+        {
+            logger.LogInformation($"JobVerificationService::DeleteJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+            
+            var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
+            using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
+            {
+                await clientInstance.Jobs.DeleteAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
+            }
+
+            logger.LogInformation($"JobVerificationService::DeleteJobAsync completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
 
         private async Task ResubmitJob(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
@@ -164,26 +189,23 @@
                 using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
                 {
                     jobVerificationRequestModel.RetryCount++;
-                    // need new job name
-                    var jobName = $"{jobVerificationRequestModel.OriginalJobRequestModel.JobName}-{jobVerificationRequestModel.RetryCount}";
-                    var jobOutputAssetName = $"{jobVerificationRequestModel.OriginalJobRequestModel.OutputAssetName}-{jobVerificationRequestModel.RetryCount}";
 
                     var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
                         clientConfiguration.ResourceGroup,
                         clientConfiguration.AccountName,
-                        jobOutputAssetName,
+                        jobVerificationRequestModel.JobOutputAssetName,
                         new Asset()).ConfigureAwait(false);
 
                     JobOutput[] jobOutputs =
                     {
-                        new JobOutputAsset(jobOutputAssetName)
+                        new JobOutputAsset(outputAsset.Name)
                     };
 
                     var job = await clientInstance.Jobs.CreateAsync(
                        clientConfiguration.ResourceGroup,
                        clientConfiguration.AccountName,
                        jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                       jobName,
+                       jobVerificationRequestModel.JobName,
                        new Job
                        {
                            Input = jobVerificationRequestModel.OriginalJobRequestModel.JobInputs,
@@ -194,13 +216,10 @@
 
                     jobVerificationRequestModel.JobId = job.Id;
                     jobVerificationRequestModel.MediaServiceAccountName = selectedInstanceName;
-                    jobVerificationRequestModel.JobOutputAssetName = jobOutputAssetName;
                     jobVerificationRequestModel.JobName = job.Name;
+                    jobVerificationRequestModel.JobOutputAssetName = outputAsset.Name;
 
-                    var verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus * (jobVerificationRequestModel.RetryCount + 1), 0);
-
-                    var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, verificationDelay, logger).ConfigureAwait(false);
-                    logger.LogInformation($"JobVerificationService::ResubmitJob successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
+                    await this.SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
                     this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
                 }
