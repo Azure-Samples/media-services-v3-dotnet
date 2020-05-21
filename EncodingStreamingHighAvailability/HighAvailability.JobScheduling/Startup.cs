@@ -1,8 +1,8 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(HighAvailability.JobScheduler.Startup))]
+[assembly: FunctionsStartup(typeof(HighAvailability.JobScheduling.Startup))]
 
-namespace HighAvailability.JobScheduler
+namespace HighAvailability.JobScheduling
 {
     using Azure.Storage.Queues;
     using HighAvailability.Services;
@@ -37,9 +37,9 @@ namespace HighAvailability.JobScheduler
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, configService);
+            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, configService);
 
-            builder.Services.AddSingleton<IJobSchedulerService>(jobSchedulerService);
+            builder.Services.AddSingleton<IJobSchedulingService>(jobSchedulerService);
         }
     }
 }

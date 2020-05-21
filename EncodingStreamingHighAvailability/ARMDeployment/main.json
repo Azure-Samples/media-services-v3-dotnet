@@ -27,7 +27,7 @@
     "frontDoorName": "[concat(parameters('deploymentNameBase'),'fd')]",
     "frontDoorHostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
     "storageAccountNameLink": "[toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('storageAccountName')))]",
-    "functionNamesSuffixes": [ "JobScheduler", "JobOutputStatus", "StreamProvisioning", "JobVerification", "InstanceHealth" ],
+    "functionNamesSuffixes": [ "JobScheduling", "JobOutputStatus", "Provisioning", "JobVerification", "InstanceHealth" ],
     "copy": [
       {
         "name": "functionNames",
