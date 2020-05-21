@@ -10,7 +10,6 @@
 
     public class JobSchedulingService : IJobSchedulingService
     {
-        private readonly string transformName = "AdaptiveBitrate";
         // 10 minutes, very short for this test, should be longer for prod
         private readonly TimeSpan verificationDelay;
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
@@ -28,35 +27,6 @@
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
-        }
-
-        public async Task Initialize(ILogger logger)
-        {
-            foreach (var config in this.configService.MediaServiceInstanceConfiguration)
-            {
-                using (var client = await MediaServicesHelper.CreateMediaServicesClientAsync(config.Value).ConfigureAwait(false))
-                {
-                    client.LongRunningOperationRetryTimeout = 2;
-
-                    await MediaServicesHelper.EnsureTransformExists(
-                        client,
-                        config.Value.ResourceGroup,
-                        config.Value.AccountName,
-                        this.transformName,
-                        new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
-
-                    await this.mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
-                    {
-                        MediaServiceAccountName = config.Value.AccountName,
-                        HealthState = InstanceHealthState.Healthy,
-                        LastUpdated = DateTime.UtcNow,
-                        IsEnabled = true
-                    },
-                        logger).ConfigureAwait(false);
-                }
-            }
-
-            logger.LogInformation($"JobSchedulerService::Initialization completed");
         }
 
         public async Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger)

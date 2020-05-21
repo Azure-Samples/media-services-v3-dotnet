@@ -1,5 +1,6 @@
 ﻿namespace HighAvailability.Tests
 {
+    using HighAvailability.Helpers;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.KeyVault;
@@ -8,11 +9,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Threading.Tasks;
 
     public class E2ETestConfigService : IConfigService
     {
         private readonly string keyVaultName;
+        private byte[] clearKeyStreamingKey;
 
         public E2ETestConfigService(string keyVaultName)
         {
@@ -34,6 +37,9 @@
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
             this.TimeDurationInMinutesToVerifyJobStatus = 10;
+            this.ContentKeyPolicyName = "TestPolicyName";
+            this.TokenAudience = "TestTokenAudience";
+            this.TokenIssuer = "TestTokenIssuer";
         }
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
@@ -66,9 +72,20 @@
 
         public int TimeDurationInMinutesToVerifyJobStatus { get; private set; }
 
+        public string ContentKeyPolicyName { get; private set; }
+
+        public string TokenIssuer { get; private set; }
+
+        public string TokenAudience { get; private set; }
+
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
         public IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; private set; }
+
+        public byte[] GetClearKeyStreamingKey()
+        {
+            return this.clearKeyStreamingKey;
+        }
 
         public async Task LoadConfigurationAsync()
         {
@@ -91,6 +108,13 @@
                 {
                     secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
                     this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
+                }
+
+                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+                {
+                    this.clearKeyStreamingKey = new byte[40];
+                    rng.GetBytes(this.clearKeyStreamingKey);
+                    await keyVaultClient.SetSecretAsync($"https://{this.keyVaultName}.vault.azure.net", "ClearKeyStreamingKey", Convert.ToBase64String(this.clearKeyStreamingKey)).ConfigureAwait(false);
                 }
             }
         }

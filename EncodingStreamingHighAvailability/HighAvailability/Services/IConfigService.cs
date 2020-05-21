@@ -2,6 +2,7 @@
 {
     using HighAvailability.Models;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Threading.Tasks;
 
     public interface IConfigService
@@ -36,9 +37,17 @@
 
         int TimeDurationInMinutesToVerifyJobStatus { get; }
 
+        string ContentKeyPolicyName { get; }
+
+        string TokenIssuer { get; }
+
+        string TokenAudience { get; }
+
         IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; }
 
         IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; }
+
+        byte[] GetClearKeyStreamingKey();
 
         Task LoadConfigurationAsync();
     }

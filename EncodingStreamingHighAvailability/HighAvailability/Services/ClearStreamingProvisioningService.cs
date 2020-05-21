@@ -30,8 +30,8 @@
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
-                var locator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
-                locator = await this.ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest, locator, logger).ConfigureAwait(false);
+                var sourceLocator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
+                sourceLocator = await this.ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest, sourceLocator, logger).ConfigureAwait(false);
 
                 var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(streamProvisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
@@ -40,7 +40,8 @@
                     var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
-                        var targetLocator = await this.ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest, locator, logger).ConfigureAwait(false);
+                        var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId);
+                        targetLocator = await this.ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest, targetLocator, logger).ConfigureAwait(false);
                     }
                 }
             }

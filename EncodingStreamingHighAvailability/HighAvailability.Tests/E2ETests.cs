@@ -1,6 +1,7 @@
 namespace HighAvailability.Tests
 {
     using Azure.Storage.Queues;
+    using HighAvailability.Helpers;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;
@@ -15,6 +16,8 @@ namespace HighAvailability.Tests
     [TestClass]
     public class E2ETests
     {
+        private static string transformName = "TestTransform";
+
         private static QueueClient jobRequestQueue;
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
         private static ITableStorageService jobOutputStatusTableStorageService;
@@ -56,10 +59,39 @@ namespace HighAvailability.Tests
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
-            var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOutputStatusStorageService, configService);
 
-            await jobSchedulerService.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
+            foreach (var config in configService.MediaServiceInstanceConfiguration)
+            {
+                using (var client = await MediaServicesHelper.CreateMediaServicesClientAsync(config.Value).ConfigureAwait(false))
+                {
+                    client.LongRunningOperationRetryTimeout = 2;
+
+                    await MediaServicesHelper.EnsureTransformExists(
+                        client,
+                        config.Value.ResourceGroup,
+                        config.Value.AccountName,
+                        transformName,
+                        new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
+
+                    await mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
+                        {
+                            MediaServiceAccountName = config.Value.AccountName,
+                            HealthState = InstanceHealthState.Healthy,
+                            LastUpdated = DateTime.UtcNow,
+                            IsEnabled = true
+                        },
+                        Mock.Of<ILogger>()).ConfigureAwait(false);
+
+                    await MediaServicesHelper.EnsureContentKeyPolicyExists(
+                        client,
+                        config.Value.ResourceGroup,
+                        config.Value.AccountName,
+                        configService.ContentKeyPolicyName, 
+                        configService.GetClearKeyStreamingKey(), 
+                        configService.TokenIssuer, 
+                        configService.TokenAudience).ConfigureAwait(false);
+                }
+            }
 
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
@@ -87,7 +119,7 @@ namespace HighAvailability.Tests
                 Id = jobId,
                 JobName = jobName,
                 OutputAssetName = outputAssetName,
-                TransformName = "AdaptiveBitrate",
+                TransformName = transformName,
                 JobInputs = new JobInputs
                 {
                     Inputs = new List<JobInput> { input }
