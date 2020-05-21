@@ -123,6 +123,8 @@
             if (targetAsset == null)
             {
                 targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                // TBD to verify 
+                // need to reload asset to get Container value populated, otherwise Container is null after asset creation
                 targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName).ConfigureAwait(false);
             }
 
@@ -137,15 +139,15 @@
 
             var sourceBlobClient = new BlobContainerClient(sourceContainerSasUrl);
 
-            var loadTasks = new List<Task>();
+            var copyTasks = new List<Task>();
 
             await foreach (var blobItem in sourceBlobClient.GetBlobsAsync())
             {
-                loadTasks.Add(Task.Run(() =>
+                copyTasks.Add(Task.Run(() =>
                 {
                     var targetBlob = new BlobBaseClient(this.configService.MediaServiceInstanceStorageAccountConnectionStrings[targetConfig.AccountName], targetAsset.Container, blobItem.Name);
-                    var blob = sourceBlobClient.GetBlobClient(blobItem.Name);
-                    var copyOperation = targetBlob.StartCopyFromUri(blob.Uri);
+                    var sourceBlob = sourceBlobClient.GetBlobClient(blobItem.Name);
+                    var copyOperation = targetBlob.StartCopyFromUri(sourceBlob.Uri);
                     var copyResult = copyOperation.WaitForCompletionAsync().GetAwaiter().GetResult();
                     if (copyResult.GetRawResponse().Status != 200)
                     {
@@ -154,7 +156,7 @@
                 }));
             }
 
-            await Task.WhenAll(loadTasks).ConfigureAwait(false);
+            await Task.WhenAll(copyTasks).ConfigureAwait(false);
             logger.LogInformation($"StreamProvisioningService::CopyAssetAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName} numberOfFiles={loadTasks.Count}");
 
             return targetAsset;
