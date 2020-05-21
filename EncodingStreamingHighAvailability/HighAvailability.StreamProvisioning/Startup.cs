@@ -9,6 +9,7 @@ namespace HighAvailability.StreamProvisioning
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection;
     using System;
+    using System.Collections.Generic;
 
     public class Startup : FunctionsStartup
     {
@@ -22,9 +23,15 @@ namespace HighAvailability.StreamProvisioning
             streamProvisioningEventQueue.CreateIfNotExists();
 
             var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue);
-            var streamProvisioningService = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
+            //var streamProvisioningService = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
 
-            builder.Services.AddSingleton<IStreamProvisioningService>(streamProvisioningService);
+            var assetDataProvisioningService = new AssetDataProvisioningService(configService);
+            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(configService);
+
+            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService });
+
+            //builder.Services.AddSingleton<IStreamProvisioningService>(streamProvisioningService);
+            builder.Services.AddSingleton<IProvisioningOrchestrator>(provisioningOrchestrator);
         }
     }
 }
