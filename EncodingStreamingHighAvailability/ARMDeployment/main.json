@@ -299,6 +299,27 @@
     },
     {
       "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyVaultName'), '/AMSStorageAccountConnectionString-', variables('amsInstanceNames')[copyIndex()])]",
+      "apiVersion": "2016-10-01",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "scale": null,
+      "copy": {
+        "name": "storageaccountsecretscopy",
+        "count": "[length(variables('amsInstanceStorageNames'))]"
+      },
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('amsInstanceStorageNames')[copyIndex()],';AccountKey=',listKeys(toLower(concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/','Microsoft.Storage/storageAccounts/', variables('amsInstanceStorageNames')[copyIndex()])),'2015-05-01-preview').key1)]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "storageaccountcopy"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
       "name": "[concat(variables('keyVaultName'), '/TableStorageAccountConnectionString')]",
       "apiVersion": "2016-10-01",
       "location": "[parameters('deploymentRegionLocation')]",
@@ -425,7 +446,7 @@
           "maxIntervalInSeconds": 86400,
           "maxStalenessPrefix": 1000000
         },
-        
+
         "capabilities": [
           {
             "name": "EnableTable"

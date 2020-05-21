@@ -1,7 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using Azure.Storage.Blobs;
-    using Azure.Storage.Blobs.Models;
+    using Azure.Storage.Blobs.Specialized;
     using HighAvailability.Helpers;
     using HighAvailability.Models;
     using Microsoft.Azure.Management.Media;
@@ -9,7 +9,6 @@
     using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -36,24 +35,48 @@
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
-                var locator = await this.ProvisionPrimaryLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest, logger).ConfigureAwait(false);
-
-                var streamProvisioningEventModel = await this.CreateStreamProvisioningEventModelAsync(sourceClient, sourceClientConfiguration, locator, streamProvisioningRequest, logger).ConfigureAwait(false);
-                var streamProvisioningEventResult = await this.streamProvisioningEventStorageService.CreateAsync(streamProvisioningEventModel, logger).ConfigureAwait(false);
-                logger.LogInformation($"StreamProvisioningService::ProvisionStreamAsync created stream provisining event: result={LogHelper.FormatObjectForLog(streamProvisioningEventResult)}");
+                var locator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
+                locator = await this.ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest, locator, logger).ConfigureAwait(false);
 
                 var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(streamProvisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+
                 foreach (var target in targetInstances)
                 {
                     var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
-                        var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, streamProvisioningRequest, Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()), logger).ConfigureAwait(false);
-                        var targetLocator = await this.ProvisionSecondaryLocatorAsync(targetClient, targetClientConfiguration, locator, logger).ConfigureAwait(false);
+                        var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, streamProvisioningRequest, logger).ConfigureAwait(false);
+                        var targetLocator = await this.ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest, locator, logger).ConfigureAwait(false);
                     }
                 }
-                logger.LogInformation($"StreamProvisioningService::ProvisionStreamAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
+
+                var streamProvisioningEventModel = await this.CreateStreamProvisioningEventModelAsync(sourceClient, sourceClientConfiguration, locator, streamProvisioningRequest, logger).ConfigureAwait(false);
+                var streamProvisioningEventResult = await this.streamProvisioningEventStorageService.CreateAsync(streamProvisioningEventModel, logger).ConfigureAwait(false);
+
+                logger.LogInformation($"StreamProvisioningService::ProvisionStreamAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} streamProvisioningEventResult={LogHelper.FormatObjectForLog(streamProvisioningEventResult)}");
             }
+        }
+
+        private async Task<StreamingLocator> ProvisionLocatorAsync(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, StreamProvisioningRequestModel streamProvisioningRequest, StreamingLocator locatorToProvision, ILogger logger)
+        {
+            logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} instanceName={config.AccountName}");
+
+            var locator = await client.StreamingLocators.GetAsync(config.ResourceGroup, config.AccountName, streamProvisioningRequest.StreamingLocatorName).ConfigureAwait(false);
+
+            if (locator != null && !locator.AssetName.Equals(streamProvisioningRequest.EncodedAssetName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new Exception($"Locator already exists with incorrect asset name, accountName={config.AccountName} locatorName={locator.Name} existingAssetNane={locator.AssetName} requestedAssetName={streamProvisioningRequest.EncodedAssetName}");
+            }
+
+            if (locator == null)
+            {
+                locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup, config.AccountName, streamProvisioningRequest.StreamingLocatorName, locatorToProvision).ConfigureAwait(false);
+                logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync new locator provisioned: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
+            }
+
+            logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
+
+            return locator;
         }
 
         private async Task<StreamProvisioningEventModel> CreateStreamProvisioningEventModelAsync(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, StreamingLocator locator, StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
@@ -89,122 +112,49 @@
             return result;
         }
 
-        private async Task<StreamingLocator> ProvisionPrimaryLocatorAsync(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
-        {
-            logger.LogInformation($"StreamProvisioningService::ProvisionPrimaryLocatorAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} instanceName={config.AccountName}");
-            var existingLocators = await client.StreamingLocators.ListAsync(config.ResourceGroup, config.AccountName).ConfigureAwait(false);
-            var locator = existingLocators.FirstOrDefault(i => i.Name.Equals(streamProvisioningRequest.StreamingLocatorName, StringComparison.InvariantCultureIgnoreCase) && i.AssetName.Equals(streamProvisioningRequest.EncodedAssetName, StringComparison.InvariantCultureIgnoreCase));
-
-            if (locator == null)
-            {
-                locator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
-                locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup, config.AccountName, streamProvisioningRequest.StreamingLocatorName, locator).ConfigureAwait(false);
-                logger.LogInformation($"StreamProvisioningService::ProvisionPrimaryLocatorAsync new locator provisioned: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
-            }
-
-            logger.LogInformation($"StreamProvisioningService::ProvisionPrimaryLocatorAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
-
-            return locator;
-        }
-
-        private async Task<StreamingLocator> ProvisionSecondaryLocatorAsync(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, StreamingLocator sourceLocator, ILogger logger)
-        {
-            logger.LogInformation($"StreamProvisioningService::ProvisionSecondaryLocatorAsync started: sourceLocator={LogHelper.FormatObjectForLog(sourceLocator)} instanceName={config.AccountName}");
-            var existingLocators = await client.StreamingLocators.ListAsync(config.ResourceGroup, config.AccountName).ConfigureAwait(false);
-            var locator = existingLocators.FirstOrDefault(i => i.Name.Equals(sourceLocator.Name, StringComparison.InvariantCultureIgnoreCase) && i.AssetName.Equals(sourceLocator.AssetName, StringComparison.InvariantCultureIgnoreCase));
-
-            if (locator == null)
-            {
-                locator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId);
-                locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup, config.AccountName, locator.Name, locator).ConfigureAwait(false);
-                logger.LogInformation($"StreamProvisioningService::ProvisionSecondaryLocatorAsync new locator provisioned: sourceLocator={LogHelper.FormatObjectForLog(sourceLocator)} locator={LogHelper.FormatObjectForLog(locator)}");
-            }
-
-            logger.LogInformation($"StreamProvisioningService::ProvisionSecondaryLocatorAsync completed: sourceLocator={LogHelper.FormatObjectForLog(sourceLocator)} locator={LogHelper.FormatObjectForLog(locator)}");
-
-            return locator;
-        }
-
         private async Task<Asset> CopyAssetAsync(IAzureMediaServicesClient sourceClient, MediaServiceConfigurationModel sourceConfig,
-                                                        IAzureMediaServicesClient targetClient, MediaServiceConfigurationModel targetConfig,
-                                                        StreamProvisioningRequestModel streamProvisioningRequest, string tempFolder, ILogger logger)
+                                                       IAzureMediaServicesClient targetClient, MediaServiceConfigurationModel targetConfig,
+                                                       StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
         {
-
             logger.LogInformation($"StreamProvisioningService::CopyAssetAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName}");
 
-            if (Directory.Exists(tempFolder))
-            {
-                Directory.Delete(tempFolder, true);
-            }
-
-            Directory.CreateDirectory(tempFolder);
-
-            var existingAssets = await targetClient.Assets.ListAsync(targetConfig.ResourceGroup, targetConfig.AccountName).ConfigureAwait(false);
-            var targetAsset = existingAssets.FirstOrDefault(i => i.Name.Equals(streamProvisioningRequest.EncodedAssetName, StringComparison.InvariantCultureIgnoreCase));
+            var targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName).ConfigureAwait(false);
 
             if (targetAsset == null)
             {
                 targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName).ConfigureAwait(false);
             }
+
             var sourceAssetContainerSas = await sourceClient.Assets.ListContainerSasAsync(
-                sourceConfig.ResourceGroup,
-                sourceConfig.AccountName,
-                streamProvisioningRequest.EncodedAssetName,
-                permissions: AssetContainerPermission.Read,
-                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
+               sourceConfig.ResourceGroup,
+               sourceConfig.AccountName,
+               streamProvisioningRequest.EncodedAssetName,
+               permissions: AssetContainerPermission.Read,
+               expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
 
             var sourceContainerSasUrl = new Uri(sourceAssetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-
-            var targetAssetContainerSas = await targetClient.Assets.ListContainerSasAsync(
-                targetConfig.ResourceGroup,
-                targetConfig.AccountName,
-                targetAsset.Name,
-                permissions: AssetContainerPermission.ReadWrite,
-                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
-
-            var targetContainerSasUrl = new Uri(targetAssetContainerSas.AssetContainerSasUrls.FirstOrDefault());
 
             var sourceBlobClient = new BlobContainerClient(sourceContainerSasUrl);
 
             var loadTasks = new List<Task>();
-            var contentTypeMapping = new Dictionary<string, string>();
 
             await foreach (var blobItem in sourceBlobClient.GetBlobsAsync())
             {
-                contentTypeMapping.Add(blobItem.Name, blobItem.Properties.ContentType);
                 loadTasks.Add(Task.Run(() =>
                 {
-                    var downloadPath = Path.Combine(tempFolder, blobItem.Name);
+                    var targetBlob = new BlobBaseClient(this.configService.MediaServiceInstanceStorageAccountConnectionStrings[targetConfig.AccountName], targetAsset.Container, blobItem.Name);
                     var blob = sourceBlobClient.GetBlobClient(blobItem.Name);
-                    BlobDownloadInfo download = blob.Download();
-                    using (var file = File.OpenWrite(downloadPath))
+                    var copyOperation = targetBlob.StartCopyFromUri(blob.Uri);
+                    var copyResult = copyOperation.WaitForCompletionAsync().GetAwaiter().GetResult();
+                    if (copyResult.GetRawResponse().Status != 200)
                     {
-                        download.Content.CopyTo(file);
+                        throw new Exception($"Copy operation failed, sourceAccount={sourceConfig.AccountName} targetAccount={targetConfig.AccountName} assetName={streamProvisioningRequest.EncodedAssetName} blobName={blobItem.Name} httpStatus={copyResult.GetRawResponse().Status}");
                     }
                 }));
             }
 
             await Task.WhenAll(loadTasks).ConfigureAwait(false);
-            logger.LogInformation($"StreamProvisioningService::CopyAssetAsync downloaded files to temp storage: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName} numberOfFiles={loadTasks.Count}");
-
-            var targetBlobClient = new BlobContainerClient(targetContainerSasUrl);
-            loadTasks.Clear();
-
-            foreach (var filename in Directory.GetFiles(tempFolder))
-            {
-                loadTasks.Add(Task.Run(() =>
-                {
-                    var uploadFileName = Path.GetFileName(filename);
-                    var blob = targetBlobClient.GetBlobClient(uploadFileName);
-                    blob.Upload(filename, true);
-                    blob.SetHttpHeaders(new BlobHttpHeaders { ContentType = contentTypeMapping[uploadFileName] });
-                }));
-            }
-
-            await Task.WhenAll(loadTasks).ConfigureAwait(false);
-
-            Directory.Delete(tempFolder, true);
-
             logger.LogInformation($"StreamProvisioningService::CopyAssetAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName} numberOfFiles={loadTasks.Count}");
 
             return targetAsset;
