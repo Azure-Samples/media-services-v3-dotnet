@@ -38,6 +38,8 @@
 
         IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; }
 
+        IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; }
+
         Task LoadConfigurationAsync();
     }
 }

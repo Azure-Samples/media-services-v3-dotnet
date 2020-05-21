@@ -25,6 +25,7 @@
             this.JobRequestQueueName = "job-requests";
             this.StreamProvisioningEventQueueName = "stream-provisioning-events";
             this.MediaServiceInstanceConfiguration = new Dictionary<string, MediaServiceConfigurationModel>();
+            this.MediaServiceInstanceStorageAccountConnectionStrings = new Dictionary<string, string>();
             this.StorageAccountConnectionString = string.Empty;
             this.TableStorageAccountConnectionString = string.Empty;
             this.FrontDoorHostName = string.Empty;
@@ -68,18 +69,10 @@
 
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
+        public IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; private set; }
+
         public async Task LoadConfigurationAsync()
         {
-            var azureServiceTokenProvider = new AzureServiceTokenProvider();
-            using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
-            {
-                var secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/StorageAccountConnectionString").ConfigureAwait(false);
-                this.StorageAccountConnectionString = secret.Value;
-
-                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/TableStorageAccountConnectionString").ConfigureAwait(false);
-                this.TableStorageAccountConnectionString = secret.Value;
-            }
-
             var amsConfigurationString = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
 
             if (amsConfigurationString == null)
@@ -95,6 +88,22 @@
             if (this.FrontDoorHostName == null)
             {
                 throw new Exception($"Function confo does not have {this.FrontDoorHostNameKeyName} value");
+            }
+
+            var azureServiceTokenProvider = new AzureServiceTokenProvider();
+            using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
+            {
+                var secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/StorageAccountConnectionString").ConfigureAwait(false);
+                this.StorageAccountConnectionString = secret.Value;
+
+                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/TableStorageAccountConnectionString").ConfigureAwait(false);
+                this.TableStorageAccountConnectionString = secret.Value;
+
+                foreach (var configuration in this.MediaServiceInstanceConfiguration)
+                {
+                    secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
+                    this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
+                }
             }
         }
     }
