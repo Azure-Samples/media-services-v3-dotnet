@@ -19,7 +19,7 @@
     }
   },
   "variables": {
-    "functionNamesSuffixes": [ "JobScheduler", "JobOutputStatus", "StreamProvisioning", "JobVerification" ],
+    "functionNamesSuffixes": [ "JobScheduling", "JobOutputStatus", "StreamProvisioning", "JobVerification", "InstanceHealth" ],
     "copy": [
       {
         "name": "functionNames",

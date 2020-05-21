@@ -1,8 +1,8 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(HighAvailability.StreamProvisioning.Startup))]
+[assembly: FunctionsStartup(typeof(HighAvailability.Provisioner.Startup))]
 
-namespace HighAvailability.StreamProvisioning
+namespace HighAvailability.Provisioner
 {
     using Azure.Storage.Queues;
     using HighAvailability.Services;

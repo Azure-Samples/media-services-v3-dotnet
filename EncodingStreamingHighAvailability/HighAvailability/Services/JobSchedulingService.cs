@@ -8,7 +8,7 @@
     using System;
     using System.Threading.Tasks;
 
-    public class JobSchedulerService : IJobSchedulerService
+    public class JobSchedulingService : IJobSchedulingService
     {
         private readonly string transformName = "AdaptiveBitrate";
         // 10 minutes, very short for this test, should be longer for prod
@@ -18,7 +18,7 @@
         private readonly IConfigService configService;
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
-        public JobSchedulerService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
+        public JobSchedulingService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IConfigService configService)
