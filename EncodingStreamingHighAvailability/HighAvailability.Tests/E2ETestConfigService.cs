@@ -24,6 +24,7 @@
             this.JobRequestQueueName = "job-requests";
             this.StreamProvisioningEventQueueName = "stream-provisioning-events";
             this.MediaServiceInstanceConfiguration = new Dictionary<string, MediaServiceConfigurationModel>();
+            this.MediaServiceInstanceStorageAccountConnectionStrings = new Dictionary<string, string>();
             this.StorageAccountConnectionString = string.Empty;
             this.TableStorageAccountConnectionString = string.Empty;
             this.FrontDoorHostName = "contoso.com";
@@ -67,8 +68,16 @@
 
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
+        public IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; private set; }
+
         public async Task LoadConfigurationAsync()
         {
+            // Copy this from azure function configuration AMSConfiguration key. 
+            // Use advanced edit in configuration screen to get value with encoded quotes
+            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus\"}]";
+            var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
+            this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
+
             var azureServiceTokenProvider = new AzureServiceTokenProvider();
             using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
             {
@@ -77,13 +86,13 @@
 
                 secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/TableStorageAccountConnectionString").ConfigureAwait(false);
                 this.TableStorageAccountConnectionString = secret.Value;
-            }
 
-            // Copy this from azure function configuration AMSConfiguration key. 
-            // Use advanced edit in configuration screen to get value with encoded quotes
-            var amsConfigurationString = "[{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamseastus\"},{\"SubscriptionId\":\"465d1912-ea98-4b36-94d2-fabbf55fe648\",\"ResourceGroup\":\"ha-test2\",\"AccountName\":\"sipetrikamswestus\"}]";
-            var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
-            this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
+                foreach (var configuration in this.MediaServiceInstanceConfiguration)
+                {
+                    secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
+                    this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
+                }
+            }
         }
     }
 }
