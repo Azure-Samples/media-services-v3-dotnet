@@ -27,8 +27,9 @@ namespace HighAvailability.Provisioner
 
             var assetDataProvisioningService = new AssetDataProvisioningService(configService);
             var clearStreamingProvisioningService = new ClearStreamingProvisioningService(configService);
+            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(configService);
 
-            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService });
+            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService });
 
             //builder.Services.AddSingleton<IStreamProvisioningService>(streamProvisioningService);
             builder.Services.AddSingleton<IProvisioningOrchestrator>(provisioningOrchestrator);
