@@ -57,7 +57,7 @@ namespace HighAvailability.Tests
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulerService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOutputStatusStorageService, configService);
+            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOutputStatusStorageService, configService);
 
             await jobSchedulerService.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
 

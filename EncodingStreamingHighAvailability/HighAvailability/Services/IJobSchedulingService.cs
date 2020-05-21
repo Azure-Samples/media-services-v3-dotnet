@@ -5,7 +5,7 @@
     using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
 
-    public interface IJobSchedulerService
+    public interface IJobSchedulingService
     {
         // This is the main function to submit jobs
         // It should use IMediaServiceInstanceHealthService to determine what media service account to use to submit this job. 

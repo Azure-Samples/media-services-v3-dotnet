@@ -7,13 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability", "HighAva
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.Tests", "HighAvailability.Tests\HighAvailability.Tests.csproj", "{99D66F47-76B8-4706-899D-71ED1387E630}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobScheduler", "HighAvailability.JobScheduler\HighAvailability.JobScheduler.csproj", "{FBC85549-B509-47B0-9E50-E378C9797770}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobScheduling", "HighAvailability.JobScheduling\HighAvailability.JobScheduling.csproj", "{FBC85549-B509-47B0-9E50-E378C9797770}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobOutputStatus", "HighAvailability.JobOutputStatus\HighAvailability.JobOutputStatus.csproj", "{FAE812A4-F34A-40D3-9665-1B273F874D55}"
 EndProject
 Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ARMDeployment", "ARMDeployment\ARMDeployment.deployproj", "{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.StreamProvisioning", "HighAvailability.StreamProvisioning\HighAvailability.StreamProvisioning.csproj", "{A10C6871-70F2-48F0-9D6A-74992C984B9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.Provisioning", "HighAvailability.Provisioning\HighAvailability.Provisioning.csproj", "{A10C6871-70F2-48F0-9D6A-74992C984B9C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobVerification", "HighAvailability.JobVerification\HighAvailability.JobVerification.csproj", "{E641CC6D-E13D-4CCD-B633-025183147213}"
 EndProject
