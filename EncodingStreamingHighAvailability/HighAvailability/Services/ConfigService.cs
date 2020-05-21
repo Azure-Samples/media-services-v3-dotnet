@@ -6,6 +6,7 @@
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@
         private readonly string keyVaultName;
         private readonly string AMSConfigurationKeyName = "AMSConfiguration";
         private readonly string FrontDoorHostNameKeyName = "FrontDoorHostName";
+
+        private byte[] clearKeyStreamingKey;
 
         public ConfigService(string keyVaultName)
         {
@@ -35,6 +38,9 @@
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
             this.TimeDurationInMinutesToVerifyJobStatus = 10;
+            this.ContentKeyPolicyName = "TestPolicyName";
+            this.TokenAudience = "TestTokenAudience";
+            this.TokenIssuer = "TestTokenIssuer";
         }
 
         public string MediaServiceInstanceHealthTableName { get; private set; }
@@ -67,9 +73,20 @@
 
         public int TimeDurationInMinutesToVerifyJobStatus { get; private set; }
 
+        public string ContentKeyPolicyName { get; private set; }
+
+        public string TokenIssuer { get; private set; }
+
+        public string TokenAudience { get; private set; }
+
         public IDictionary<string, MediaServiceConfigurationModel> MediaServiceInstanceConfiguration { get; private set; }
 
         public IDictionary<string, string> MediaServiceInstanceStorageAccountConnectionStrings { get; private set; }
+
+        public byte[] GetClearKeyStreamingKey()
+        {
+            return this.clearKeyStreamingKey;
+        }
 
         public async Task LoadConfigurationAsync()
         {
@@ -103,7 +120,10 @@
                 {
                     secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
                     this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
-                }
+                }                
+
+                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/ClearKeyStreamingKey").ConfigureAwait(false);
+                this.clearKeyStreamingKey = Convert.FromBase64String(secret.Value);
             }
         }
     }
