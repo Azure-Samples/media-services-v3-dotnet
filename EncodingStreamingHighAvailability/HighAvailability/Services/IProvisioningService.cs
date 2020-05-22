@@ -6,6 +6,6 @@
 
     public interface IProvisioningService
     {
-        Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ILogger logger);
+        Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger);
     }
 }
