@@ -18,7 +18,7 @@ namespace HighAvailabikity.Provisioner
         }
 
         [FunctionName("ProvisioningFunction")]
-        public async Task Run([QueueTrigger("stream-provisioning-requests", Connection = "StorageAccountConnectionString")] string message, ILogger logger)
+        public async Task Run([QueueTrigger("provisioning-requests", Connection = "StorageAccountConnectionString")] string message, ILogger logger)
         {
             try
             {

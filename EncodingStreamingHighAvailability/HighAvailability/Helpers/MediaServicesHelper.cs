@@ -65,14 +65,14 @@
 
         public static async Task<ContentKeyPolicy> EnsureContentKeyPolicyExists(IAzureMediaServicesClient client, string resourceGroup, string accountName, string contentKeyPolicyName, byte[] tokenSigningKey, string issuer, string audience)
         {
-            ContentKeyPolicySymmetricTokenKey primaryKey = new ContentKeyPolicySymmetricTokenKey(tokenSigningKey);
+            var primaryKey = new ContentKeyPolicySymmetricTokenKey(tokenSigningKey);
             List<ContentKeyPolicyRestrictionTokenKey> alternateKeys = null;
-            List<ContentKeyPolicyTokenClaim> requiredClaims = new List<ContentKeyPolicyTokenClaim>()
+            var requiredClaims = new List<ContentKeyPolicyTokenClaim>()
             {
                 ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim
             };
 
-            List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>()
+            var options = new List<ContentKeyPolicyOption>()
             {
                 new ContentKeyPolicyOption(
                     new ContentKeyPolicyClearKeyConfiguration(),
@@ -83,7 +83,7 @@
             // since we are randomly generating the signing key each time, make sure to create or update the policy each time.
             // Normally you would use a long lived key so you would just check for the policies existence with Get instead of
             // ensuring to create or update it each time.
-            ContentKeyPolicy policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(resourceGroup, accountName, contentKeyPolicyName, options).ConfigureAwait(false);
+            var policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(resourceGroup, accountName, contentKeyPolicyName, options).ConfigureAwait(false);
 
             return policy;
         }
@@ -92,18 +92,18 @@
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
 
-            SigningCredentials cred = new SigningCredentials(
+            var cred = new SigningCredentials(
                 tokenSigningKey,
                 // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
                 SecurityAlgorithms.HmacSha256,
                 SecurityAlgorithms.Sha256Digest);
 
-            Claim[] claims = new Claim[]
+            var claims = new Claim[]
             {
                 new Claim(ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim.ClaimType, keyIdentifier)
             };
 
-            JwtSecurityToken token = new JwtSecurityToken(
+            var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
@@ -111,7 +111,7 @@
                 expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: cred);
 
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            var handler = new JwtSecurityTokenHandler();
 
             return handler.WriteToken(token);
         }

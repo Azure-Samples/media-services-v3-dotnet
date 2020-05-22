@@ -18,7 +18,7 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
-        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger)
         {
             logger.LogInformation($"ClearStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
@@ -32,6 +32,7 @@
             {
                 var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
                 sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
+                provisioningCompletedEventModel.AddClearStreamingLocators(sourceLocator);
 
                 var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
@@ -42,6 +43,7 @@
                     {
                         var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId);
                         targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, targetLocator, logger).ConfigureAwait(false);
+                        provisioningCompletedEventModel.AddClearStreamingLocators(targetLocator);
                     }
                 }
             }

@@ -22,13 +22,13 @@ namespace HighAvailability.Provisioner
             var provisioningCompletedEventQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningCompletedEventQueueName);
             provisioningCompletedEventQueue.CreateIfNotExists();
 
-            var provisioningEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
+            var provisioningCompletedEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
 
             var assetDataProvisioningService = new AssetDataProvisioningService(configService);
             var clearStreamingProvisioningService = new ClearStreamingProvisioningService(configService);
             var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(configService);
 
-            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService });
+            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService }, provisioningCompletedEventStorageService);
 
             builder.Services.AddSingleton<IProvisioningOrchestrator>(provisioningOrchestrator);
         }

@@ -18,7 +18,7 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
-        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger)
         {
             logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
@@ -32,14 +32,14 @@
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
-                var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearKey, defaultContentKeyPolicyName: configService.ContentKeyPolicyName);
+                var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearKey, defaultContentKeyPolicyName: this.configService.ContentKeyPolicyName);
                 sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, provisioningRequest.EncodedAssetName, streamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
+                provisioningCompletedEventModel.AddClearKeyStreamingLocators(sourceLocator);
 
                 var sourceContentKeysResponse = await sourceClient.StreamingLocators.ListContentKeysAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, streamingLocatorName).ConfigureAwait(false);
-                string keyIdentifier = sourceContentKeysResponse.ContentKeys.First().Id.ToString();
+                var keyIdentifier = sourceContentKeysResponse.ContentKeys.First().Id.ToString();
 
-                //  var sourceContentKeyPolicyProperties = await sourceClient.ContentKeyPolicies.GetPolicyPropertiesWithSecretsAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, sourceLocator.DefaultContentKeyPolicyName).ConfigureAwait(false);
-                var streamUrl = await this.GenerateStreamingUrl(sourceClient, sourceClientConfiguration, streamingLocatorName, keyIdentifier).ConfigureAwait(false);
+                provisioningCompletedEventModel.PrimaryUrl = await this.GenerateStreamingUrl(sourceClient, sourceClientConfiguration, streamingLocatorName, keyIdentifier).ConfigureAwait(false);
 
                 var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
@@ -50,16 +50,17 @@
                     {
                         var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId, defaultContentKeyPolicyName: sourceLocator.DefaultContentKeyPolicyName, contentKeys: sourceContentKeysResponse.ContentKeys);
                         targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, provisioningRequest.EncodedAssetName, streamingLocatorName, targetLocator, logger).ConfigureAwait(false);
+                        provisioningCompletedEventModel.AddClearKeyStreamingLocators(targetLocator);
                     }
                 }
             }
 
             logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
-        }        
+        }
 
         private async Task<string> GenerateStreamingUrl(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, string locatorName, string keyIdentifier)
         {
-            var token = MediaServicesHelper.GetToken(configService.TokenIssuer, configService.TokenAudience, keyIdentifier, configService.GetClearKeyStreamingKey());
+            var token = MediaServicesHelper.GetToken(this.configService.TokenIssuer, this.configService.TokenAudience, keyIdentifier, this.configService.GetClearKeyStreamingKey());
 
             var paths = await client.StreamingLocators.ListPathsAsync(config.ResourceGroup, config.AccountName, locatorName).ConfigureAwait(false);
 

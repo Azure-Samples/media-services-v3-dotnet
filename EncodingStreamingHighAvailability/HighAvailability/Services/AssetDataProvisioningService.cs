@@ -21,7 +21,7 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
-        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger)
         {
             logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
@@ -31,6 +31,7 @@
             }
 
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
+            provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.EncodedAssetMediaServiceAccountName);
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
@@ -42,6 +43,7 @@
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
                         var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
+                        provisioningCompletedEventModel.AddMediaServiceAccountName(target);
                     }
                 }
             }
