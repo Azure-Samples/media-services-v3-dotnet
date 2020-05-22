@@ -16,16 +16,16 @@
             this.provisioningServices = provisioningServices ?? throw new ArgumentNullException(nameof(provisioningServices));
         }
 
-        public async Task ProvisionAsync(StreamProvisioningRequestModel request, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ILogger logger)
         {
-            logger.LogInformation($"ProvisioningOrchestrator::ProvisionAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(request)}");
+            logger.LogInformation($"ProvisioningOrchestrator::ProvisionAsync started: provisioningRequestModel={LogHelper.FormatObjectForLog(provisioningRequestModel)}");
 
             foreach (var service in this.provisioningServices)
             {
-                await service.ProvisionAsync(request, logger).ConfigureAwait(false);
+                await service.ProvisionAsync(provisioningRequestModel, logger).ConfigureAwait(false);
             }
 
-            logger.LogInformation($"ProvisioningOrchestrator::ProvisionAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(request)}");
+            logger.LogInformation($"ProvisioningOrchestrator::ProvisionAsync completed: provisioningRequestModel={LogHelper.FormatObjectForLog(provisioningRequestModel)}");
         }
     }
 }

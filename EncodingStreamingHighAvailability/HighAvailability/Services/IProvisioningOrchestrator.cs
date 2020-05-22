@@ -6,6 +6,6 @@
 
     public interface IProvisioningOrchestrator
     {
-        Task ProvisionAsync(StreamProvisioningRequestModel request, ILogger logger);
+        Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ILogger logger);
     }
 }
