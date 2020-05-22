@@ -9,7 +9,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class ClearKeyStreamingProvisioningService : IProvisioningService
+    public class ClearKeyStreamingProvisioningService : StreamingProvisioningService, IProvisioningService
     {
         private readonly IConfigService configService;
 
@@ -33,7 +33,7 @@
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
                 var sourceLocator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearKey, defaultContentKeyPolicyName: configService.ContentKeyPolicyName);
-                sourceLocator = await this.ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest, streamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
+                sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest.EncodedAssetName, streamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
 
                 var sourceContentKeysResponse = await sourceClient.StreamingLocators.ListContentKeysAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, streamingLocatorName).ConfigureAwait(false);
                 string keyIdentifier = sourceContentKeysResponse.ContentKeys.First().Id.ToString();
@@ -49,35 +49,13 @@
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
                         var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId, defaultContentKeyPolicyName: sourceLocator.DefaultContentKeyPolicyName, contentKeys: sourceContentKeysResponse.ContentKeys);
-                        targetLocator = await this.ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest, streamingLocatorName, targetLocator, logger).ConfigureAwait(false);
+                        targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest.EncodedAssetName, streamingLocatorName, targetLocator, logger).ConfigureAwait(false);
                     }
                 }
             }
 
             logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
-        }
-
-        private async Task<StreamingLocator> ProvisionLocatorAsync(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, StreamProvisioningRequestModel streamProvisioningRequest, string locatorName, StreamingLocator locatorToProvision, ILogger logger)
-        {
-            logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} instanceName={config.AccountName}");
-
-            var locator = await client.StreamingLocators.GetAsync(config.ResourceGroup, config.AccountName, locatorName).ConfigureAwait(false);
-
-            if (locator != null && !locator.AssetName.Equals(streamProvisioningRequest.EncodedAssetName, StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new Exception($"Locator already exists with incorrect asset name, accountName={config.AccountName} locatorName={locator.Name} existingAssetNane={locator.AssetName} requestedAssetName={streamProvisioningRequest.EncodedAssetName}");
-            }
-
-            if (locator == null)
-            {
-                locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup, config.AccountName, locatorName, locatorToProvision).ConfigureAwait(false);
-                logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync new locator provisioned: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
-            }
-
-            logger.LogInformation($"StreamProvisioningService::ProvisionLocatorAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} locator={LogHelper.FormatObjectForLog(locator)}");
-
-            return locator;
-        }
+        }        
 
         private async Task<string> GenerateStreamingUrl(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, string locatorName, string keyIdentifier)
         {
