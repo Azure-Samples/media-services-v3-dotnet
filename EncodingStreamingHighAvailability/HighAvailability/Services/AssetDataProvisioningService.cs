@@ -21,54 +21,54 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
-        public async Task ProvisionAsync(StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
         {
-            logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
+            logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
-            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(streamProvisioningRequest.EncodedAssetMediaServiceAccountName))
+            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.EncodedAssetMediaServiceAccountName))
             {
-                throw new Exception($"AssetDataProvisioningService::ProvisionAsync does not have configuration for account={streamProvisioningRequest.EncodedAssetMediaServiceAccountName}");
+                throw new Exception($"AssetDataProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.EncodedAssetMediaServiceAccountName}");
             }
 
-            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[streamProvisioningRequest.EncodedAssetMediaServiceAccountName];
+            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
-                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(streamProvisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
                 foreach (var target in targetInstances)
                 {
                     var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
-                        var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, streamProvisioningRequest, logger).ConfigureAwait(false);
+                        var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
                     }
                 }
             }
 
-            logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
+            logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
         }
 
         private async Task<Asset> CopyAssetAsync(IAzureMediaServicesClient sourceClient, MediaServiceConfigurationModel sourceConfig,
                                                   IAzureMediaServicesClient targetClient, MediaServiceConfigurationModel targetConfig,
-                                                  StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
+                                                  ProvisioningRequestModel provisioningRequest, ILogger logger)
         {
-            logger.LogInformation($"StreamProvisioningService::CopyAssetAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName}");
+            logger.LogInformation($"AssetDataProvisioningService::CopyAssetAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName}");
 
-            var targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName).ConfigureAwait(false);
+            var targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
 
             if (targetAsset == null)
             {
-                targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
                 // TBD to verify 
                 // need to reload asset to get Container value populated, otherwise Container is null after asset creation
-                targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, streamProvisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
             }
 
             var sourceAssetContainerSas = await sourceClient.Assets.ListContainerSasAsync(
                sourceConfig.ResourceGroup,
                sourceConfig.AccountName,
-               streamProvisioningRequest.EncodedAssetName,
+               provisioningRequest.EncodedAssetName,
                permissions: AssetContainerPermission.Read,
                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
 
@@ -88,13 +88,13 @@
                     var copyResult = copyOperation.WaitForCompletionAsync().GetAwaiter().GetResult();
                     if (copyResult.GetRawResponse().Status != 200)
                     {
-                        throw new Exception($"Copy operation failed, sourceAccount={sourceConfig.AccountName} targetAccount={targetConfig.AccountName} assetName={streamProvisioningRequest.EncodedAssetName} blobName={blobItem.Name} httpStatus={copyResult.GetRawResponse().Status}");
+                        throw new Exception($"Copy operation failed, sourceAccount={sourceConfig.AccountName} targetAccount={targetConfig.AccountName} assetName={provisioningRequest.EncodedAssetName} blobName={blobItem.Name} httpStatus={copyResult.GetRawResponse().Status}");
                     }
                 }));
             }
 
             await Task.WhenAll(copyTasks).ConfigureAwait(false);
-            logger.LogInformation($"StreamProvisioningService::CopyAssetAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName} numberOfFiles={copyTasks.Count}");
+            logger.LogInformation($"AssetDataProvisioningService::CopyAssetAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName} numberOfFiles={copyTasks.Count}");
 
             return targetAsset;
         }

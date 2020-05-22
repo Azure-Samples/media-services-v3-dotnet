@@ -22,15 +22,15 @@
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
             this.MediaServiceInstanceHealthTableName = "MediaServiceInstanceHealth";
             this.JobOutputStatusTableName = "JobOutputStatus";
-            this.StreamProvisioningRequestQueueName = "stream-provisioning-requests";
+            this.ProvisioningRequestQueueName = "provisioning-requests";
             this.JobVerificationRequestQueueName = "job-verification-requests";
             this.JobRequestQueueName = "job-requests";
-            this.StreamProvisioningEventQueueName = "stream-provisioning-events";
+            this.ProvisioningCompletedEventQueueName = "provisioning-completed-events";
             this.MediaServiceInstanceConfiguration = new Dictionary<string, MediaServiceConfigurationModel>();
             this.MediaServiceInstanceStorageAccountConnectionStrings = new Dictionary<string, string>();
             this.StorageAccountConnectionString = string.Empty;
             this.TableStorageAccountConnectionString = string.Empty;
-            this.FrontDoorHostName = "contoso.com";
+            this.FrontDoorHostName = string.Empty;
             this.NumberOfMinutesInProcessToMarkJobStuck = 60;
             this.TimeWindowToLoadJobsInMinutes = 11480;
             this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
@@ -50,13 +50,13 @@
 
         public string TableStorageAccountConnectionString { get; private set; }
 
-        public string StreamProvisioningRequestQueueName { get; private set; }
+        public string ProvisioningRequestQueueName { get; private set; }
 
         public string JobVerificationRequestQueueName { get; private set; }
 
         public string JobRequestQueueName { get; private set; }
 
-        public string StreamProvisioningEventQueueName { get; private set; }
+        public string ProvisioningCompletedEventQueueName { get; private set; }
 
         public string FrontDoorHostName { get; private set; }
 

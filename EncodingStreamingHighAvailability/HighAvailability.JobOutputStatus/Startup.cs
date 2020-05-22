@@ -26,12 +26,12 @@ namespace HighAvailability.JobOutputStatus
             jobOutputStatusTable.CreateIfNotExists();
             var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
-            var streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningRequestQueueName);
-            streamProvisioningRequestQueue.CreateIfNotExists();
+            var provisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningRequestQueueName);
+            provisioningRequestQueue.CreateIfNotExists();
 
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
-            var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
-            var jobOutputStatusService = new JobOutputStatusService(jobOutputStatusStorageService, streamProvisioningRequestStorageService);
+            var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
+            var jobOutputStatusService = new JobOutputStatusService(jobOutputStatusStorageService, provisioningRequestStorageService);
             var eventGridService = new EventGridService();
 
             builder.Services.AddSingleton<IJobOutputStatusService>(jobOutputStatusService);

@@ -24,8 +24,8 @@ namespace HighAvailabikity.Provisioner
             {
                 logger.LogInformation($"ProvisioningFunction::Run triggered, message={message}");
 
-                var streamProvisioningRequestModel = JsonConvert.DeserializeObject<StreamProvisioningRequestModel>(message);
-                await this.provisioningOrchestrator.ProvisionAsync(streamProvisioningRequestModel, logger).ConfigureAwait(false);
+                var provisioningRequestModel = JsonConvert.DeserializeObject<ProvisioningRequestModel>(message);
+                await this.provisioningOrchestrator.ProvisionAsync(provisioningRequestModel, logger).ConfigureAwait(false);
 
                 logger.LogInformation($"ProvisioningFunction::Run completed, message={message}");
             }

@@ -1,6 +1,6 @@
 ﻿namespace HighAvailability.Models
 {
-    public class StreamProvisioningEventModel
+    public class ProvisioningCompletedEventModel
     {
         public string Id { get; set; }
         public string AssetName { get; set; }

@@ -19,11 +19,10 @@ namespace HighAvailability.Provisioner
             var configService = new ConfigService(keyVaultName);
             configService.LoadConfigurationAsync().Wait();
 
-            var streamProvisioningEventQueue = new QueueClient(configService.StorageAccountConnectionString, configService.StreamProvisioningEventQueueName);
-            streamProvisioningEventQueue.CreateIfNotExists();
+            var provisioningCompletedEventQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningCompletedEventQueueName);
+            provisioningCompletedEventQueue.CreateIfNotExists();
 
-            var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue);
-            //var streamProvisioningService = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
+            var provisioningEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
 
             var assetDataProvisioningService = new AssetDataProvisioningService(configService);
             var clearStreamingProvisioningService = new ClearStreamingProvisioningService(configService);
@@ -31,7 +30,6 @@ namespace HighAvailability.Provisioner
 
             var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService });
 
-            //builder.Services.AddSingleton<IStreamProvisioningService>(streamProvisioningService);
             builder.Services.AddSingleton<IProvisioningOrchestrator>(provisioningOrchestrator);
         }
     }

@@ -1,6 +1,6 @@
 ﻿namespace HighAvailability.Models
 {
-    public class StreamProvisioningRequestModel
+    public class ProvisioningRequestModel
     {
         public string Id { get; set; }
         public string EncodedAssetName { get; set; }
