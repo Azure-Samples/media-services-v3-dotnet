@@ -11,7 +11,7 @@
 
         string JobOutputStatusTableName { get; }
 
-        string StreamProvisioningRequestQueueName { get; }
+        string ProvisioningRequestQueueName { get; }
 
         string StorageAccountConnectionString { get; }
 
@@ -21,7 +21,7 @@
 
         string JobRequestQueueName { get; }
 
-        string StreamProvisioningEventQueueName { get; }
+        string ProvisioningCompletedEventQueueName { get; }
 
         string FrontDoorHostName { get; }
 

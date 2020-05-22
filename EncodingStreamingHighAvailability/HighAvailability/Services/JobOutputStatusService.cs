@@ -10,13 +10,13 @@
     public class JobOutputStatusService : IJobOutputStatusService
     {
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
-        private readonly IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService;
+        private readonly IProvisioningRequestStorageService provisioningRequestStorageService;
 
         public JobOutputStatusService(IJobOutputStatusStorageService jobOutputStatusStorageService,
-                                   IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService)
+                                   IProvisioningRequestStorageService provisioningRequestStorageService)
         {
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
-            this.streamProvisioningRequestStorageService = streamProvisioningRequestStorageService ?? throw new ArgumentNullException(nameof(streamProvisioningRequestStorageService));
+            this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
         }
 
         public async Task<JobOutputStatusModel> ProcessJobOutputStatusAsync(JobOutputStatusModel jobOutputStatusModel, ILogger logger)
@@ -25,8 +25,8 @@
 
             if (jobOutputStatusModel.JobOutputState == JobState.Finished)
             {
-                var streamProvisioningRequestResult = await this.streamProvisioningRequestStorageService.CreateAsync(
-                    new StreamProvisioningRequestModel
+                var provisioningRequestResult = await this.provisioningRequestStorageService.CreateAsync(
+                    new ProvisioningRequestModel
                     {
                         Id = Guid.NewGuid().ToString(),
                         EncodedAssetMediaServiceAccountName = jobOutputStatusModel.MediaServiceAccountName,
@@ -34,7 +34,7 @@
                         StreamingLocatorName = $"streaming-{jobOutputStatusModel.JobOutputAssetName}"
                     }, logger).ConfigureAwait(false);
 
-                logger.LogInformation($"JobOutputStatusService::ProcessJobOutputStatusAsync created stream provisioning request: result={LogHelper.FormatObjectForLog(streamProvisioningRequestResult)}");
+                logger.LogInformation($"JobOutputStatusService::ProcessJobOutputStatusAsync created stream provisioning request: result={LogHelper.FormatObjectForLog(provisioningRequestResult)}");
 
             }
 

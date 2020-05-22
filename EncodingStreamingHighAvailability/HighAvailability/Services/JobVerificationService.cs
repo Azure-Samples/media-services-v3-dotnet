@@ -12,20 +12,20 @@
     {
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
-        private readonly IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService;
+        private readonly IProvisioningRequestStorageService provisioningRequestStorageService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
         private readonly IConfigService configService;
         private readonly int maxNumberOfRetries = 2;
 
         public JobVerificationService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
-                                    IStreamProvisioningRequestStorageService streamProvisioningRequestStorageService,
+                                    IProvisioningRequestStorageService provisioningRequestStorageService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
-            this.streamProvisioningRequestStorageService = streamProvisioningRequestStorageService ?? throw new ArgumentNullException(nameof(streamProvisioningRequestStorageService));
+            this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
@@ -107,15 +107,15 @@
             return jobVerificationRequestModel;
         }
 
-        private async Task ProcessFinishedJobAsync(JobVerificationRequestModel jobVerificationRequestModel, bool submitStreamProvisioningRequest, ILogger logger)
+        private async Task ProcessFinishedJobAsync(JobVerificationRequestModel jobVerificationRequestModel, bool submitProvisioningRequest, ILogger logger)
         {
             logger.LogInformation($"JobVerificationService::ProcessFinishedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
             // check if stream provisioning requests needs to be submitted           
-            if (submitStreamProvisioningRequest)
+            if (submitProvisioningRequest)
             {
-                var streamProvisioningRequestResult = await this.streamProvisioningRequestStorageService.CreateAsync(
-                   new StreamProvisioningRequestModel
+                var provisioningRequestResult = await this.provisioningRequestStorageService.CreateAsync(
+                   new ProvisioningRequestModel
                    {
                        Id = Guid.NewGuid().ToString(),
                        EncodedAssetMediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
@@ -123,7 +123,7 @@
                        StreamingLocatorName = $"streaming-{jobVerificationRequestModel.OriginalJobRequestModel.OutputAssetName}"
                    }, logger).ConfigureAwait(false);
 
-                logger.LogInformation($"JobVerificationService::ProcessFinishedJob stream provisioning request submitted for completed job: streamProvisioningRequestResult={LogHelper.FormatObjectForLog(streamProvisioningRequestResult)}");
+                logger.LogInformation($"JobVerificationService::ProcessFinishedJob stream provisioning request submitted for completed job: provisioningRequestResult={LogHelper.FormatObjectForLog(provisioningRequestResult)}");
             }
 
             await this.DeleteJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);

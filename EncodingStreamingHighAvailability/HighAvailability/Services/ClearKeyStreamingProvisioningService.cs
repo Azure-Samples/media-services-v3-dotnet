@@ -18,22 +18,22 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
-        public async Task ProvisionAsync(StreamProvisioningRequestModel streamProvisioningRequest, ILogger logger)
+        public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
         {
-            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync started: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
+            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
-            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(streamProvisioningRequest.EncodedAssetMediaServiceAccountName))
+            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.EncodedAssetMediaServiceAccountName))
             {
-                throw new Exception($"ClearKeyStreamingProvisioningService::ProvisionAsync does not have configuration for account={streamProvisioningRequest.EncodedAssetMediaServiceAccountName}");
+                throw new Exception($"ClearKeyStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.EncodedAssetMediaServiceAccountName}");
             }
-            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[streamProvisioningRequest.EncodedAssetMediaServiceAccountName];
+            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
 
-            var streamingLocatorName = $"{streamProvisioningRequest.StreamingLocatorName}-encrypted";
+            var streamingLocatorName = $"{provisioningRequest.StreamingLocatorName}-encrypted";
 
             using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
             {
-                var sourceLocator = new StreamingLocator(assetName: streamProvisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearKey, defaultContentKeyPolicyName: configService.ContentKeyPolicyName);
-                sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, streamProvisioningRequest.EncodedAssetName, streamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
+                var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearKey, defaultContentKeyPolicyName: configService.ContentKeyPolicyName);
+                sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, provisioningRequest.EncodedAssetName, streamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
 
                 var sourceContentKeysResponse = await sourceClient.StreamingLocators.ListContentKeysAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, streamingLocatorName).ConfigureAwait(false);
                 string keyIdentifier = sourceContentKeysResponse.ContentKeys.First().Id.ToString();
@@ -41,7 +41,7 @@
                 //  var sourceContentKeyPolicyProperties = await sourceClient.ContentKeyPolicies.GetPolicyPropertiesWithSecretsAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, sourceLocator.DefaultContentKeyPolicyName).ConfigureAwait(false);
                 var streamUrl = await this.GenerateStreamingUrl(sourceClient, sourceClientConfiguration, streamingLocatorName, keyIdentifier).ConfigureAwait(false);
 
-                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(streamProvisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
                 foreach (var target in targetInstances)
                 {
@@ -49,12 +49,12 @@
                     using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
                     {
                         var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId, defaultContentKeyPolicyName: sourceLocator.DefaultContentKeyPolicyName, contentKeys: sourceContentKeysResponse.ContentKeys);
-                        targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, streamProvisioningRequest.EncodedAssetName, streamingLocatorName, targetLocator, logger).ConfigureAwait(false);
+                        targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, provisioningRequest.EncodedAssetName, streamingLocatorName, targetLocator, logger).ConfigureAwait(false);
                     }
                 }
             }
 
-            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync completed: streamProvisioningRequest={LogHelper.FormatObjectForLog(streamProvisioningRequest)}");
+            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
         }        
 
         private async Task<string> GenerateStreamingUrl(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, string locatorName, string keyIdentifier)

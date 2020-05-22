@@ -20,14 +20,14 @@ namespace HighAvailability.Tests
         private static ITableStorageService jobOutputStatusTableStorageService;
         private static QueueClient jobRequestQueue;
         private static QueueClient jobVerificationRequestQueue;
-        private static QueueClient streamProvisioningRequestQueue;
-        private static QueueClient streamProvisioningEventQueue;
+        private static QueueClient provisioningRequestQueue;
+        private static QueueClient provisioningCompletedEventQueue;
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
         private const string jobOutputStatusTableName = "JobOutputStatusTest";
         private const string jobRequestQueueName = "jobrequests-test";
         private const string jobVerificationRequestQueueName = "jobverificationrequests-test";
-        private const string streamProvisioningRequestQueueName = "streamprovisioningrequests-test";
-        private const string streamProvisioningEventQueueName = "streamprovisioningevents-test";
+        private const string provisioningRequestQueueName = "provisioningrequests-test";
+        private const string provisioningCompletedEventQueueName = "provisioningcompletedevents-test";
         private static IConfigService configService;
 
         [ClassInitialize]
@@ -57,14 +57,14 @@ namespace HighAvailability.Tests
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, jobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-            streamProvisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, streamProvisioningRequestQueueName);
-            await streamProvisioningRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
+            provisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, provisioningRequestQueueName);
+            await provisioningRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
 
             jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, jobVerificationRequestQueueName);
             await jobVerificationRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-            streamProvisioningEventQueue = new QueueClient(configService.StorageAccountConnectionString, streamProvisioningEventQueueName);
-            await streamProvisioningEventQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
+            provisioningCompletedEventQueue = new QueueClient(configService.StorageAccountConnectionString, provisioningCompletedEventQueueName);
+            await provisioningCompletedEventQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -233,33 +233,13 @@ namespace HighAvailability.Tests
         }
 
         [TestMethod]
-        public async Task TestStreamProvisioningService()
-        {
-            var streamProvisioningEventStorageService = new StreamProvisioningEventStorageService(streamProvisioningEventQueue);
-            var target = new StreamProvisioningService(streamProvisioningEventStorageService, configService);
-
-            var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-
-            // TBD need to update this test not to reference specific item
-            var request = new StreamProvisioningRequestModel
-            {
-                Id = $"Id-{uniqueness}",
-                EncodedAssetMediaServiceAccountName = "sipetriktestmain",
-                EncodedAssetName = "output-f861dc5c-d7b3",
-                StreamingLocatorName = "sipetrik-test-locator"
-            };
-
-            await target.ProvisionStreamAsync(request, Mock.Of<ILogger>()).ConfigureAwait(false);
-        }
-
-        [TestMethod]
-        public async Task TestStreamProvisioningRequestStorageService()
+        public async Task TestProvisioningRequestStorageService()
         {
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            var target = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
+            var target = new ProvisioningRequestStorageService(provisioningRequestQueue);
 
-            var streamProvisioningRequest = new StreamProvisioningRequestModel
+            var provisioningRequest = new ProvisioningRequestModel
             {
                 Id = Guid.NewGuid().ToString(),
                 EncodedAssetMediaServiceAccountName = $"AccountName-{uniqueness}",
@@ -267,7 +247,7 @@ namespace HighAvailability.Tests
                 StreamingLocatorName = $"StreamLocator-{uniqueness}"
             };
 
-            Assert.IsNotNull(await target.CreateAsync(streamProvisioningRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
+            Assert.IsNotNull(await target.CreateAsync(provisioningRequest, Mock.Of<ILogger>()).ConfigureAwait(false));
 
             var result = await target.GetNextAsync(Mock.Of<ILogger>()).ConfigureAwait(false);
 
@@ -276,10 +256,10 @@ namespace HighAvailability.Tests
                 throw new Exception("Got null from the queue");
             }
 
-            Assert.AreEqual(streamProvisioningRequest.Id, result.Id);
-            Assert.AreEqual(streamProvisioningRequest.EncodedAssetMediaServiceAccountName, result.EncodedAssetMediaServiceAccountName);
-            Assert.AreEqual(streamProvisioningRequest.EncodedAssetName, result.EncodedAssetName);
-            Assert.AreEqual(streamProvisioningRequest.StreamingLocatorName, result.StreamingLocatorName);
+            Assert.AreEqual(provisioningRequest.Id, result.Id);
+            Assert.AreEqual(provisioningRequest.EncodedAssetMediaServiceAccountName, result.EncodedAssetMediaServiceAccountName);
+            Assert.AreEqual(provisioningRequest.EncodedAssetName, result.EncodedAssetName);
+            Assert.AreEqual(provisioningRequest.StreamingLocatorName, result.StreamingLocatorName);
         }
 
         [TestMethod]
@@ -365,12 +345,12 @@ namespace HighAvailability.Tests
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
-            var streamProvisioningRequestStorageService = new StreamProvisioningRequestStorageService(streamProvisioningRequestQueue);
+            var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
 
             var target = new JobVerificationService(mediaServiceInstanceHealthService,
                                                     jobOutputStatusStorageService,
-                                                    streamProvisioningRequestStorageService,
+                                                    provisioningRequestStorageService,
                                                     jobVerificationRequestStorageService,
                                                     configService);
 
