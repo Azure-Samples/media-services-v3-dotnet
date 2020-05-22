@@ -1,6 +1,5 @@
 ﻿namespace HighAvailability.Tests
 {
-    using HighAvailability.Helpers;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.KeyVault;
@@ -110,7 +109,7 @@
                     this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
                 }
 
-                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+                using (var rng = new RNGCryptoServiceProvider())
                 {
                     this.clearKeyStreamingKey = new byte[40];
                     rng.GetBytes(this.clearKeyStreamingKey);

@@ -74,21 +74,21 @@ namespace HighAvailability.Tests
                         new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
 
                     await mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
-                        {
-                            MediaServiceAccountName = config.Value.AccountName,
-                            HealthState = InstanceHealthState.Healthy,
-                            LastUpdated = DateTime.UtcNow,
-                            IsEnabled = true
-                        },
+                    {
+                        MediaServiceAccountName = config.Value.AccountName,
+                        HealthState = InstanceHealthState.Healthy,
+                        LastUpdated = DateTime.UtcNow,
+                        IsEnabled = true
+                    },
                         Mock.Of<ILogger>()).ConfigureAwait(false);
 
                     await MediaServicesHelper.EnsureContentKeyPolicyExists(
                         client,
                         config.Value.ResourceGroup,
                         config.Value.AccountName,
-                        configService.ContentKeyPolicyName, 
-                        configService.GetClearKeyStreamingKey(), 
-                        configService.TokenIssuer, 
+                        configService.ContentKeyPolicyName,
+                        configService.GetClearKeyStreamingKey(),
+                        configService.TokenIssuer,
                         configService.TokenAudience).ConfigureAwait(false);
                 }
             }
@@ -96,7 +96,7 @@ namespace HighAvailability.Tests
             var target = new JobRequestStorageService(jobRequestQueue);
             var uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < 10; i++)
             {
                 Assert.IsNotNull(await target.CreateAsync(GenerateJobRequestModel(i, uniqueness), Mock.Of<ILogger>()).ConfigureAwait(false));
             }

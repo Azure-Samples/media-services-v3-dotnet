@@ -6,7 +6,6 @@
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -120,7 +119,7 @@
                 {
                     secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
                     this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
-                }                
+                }
 
                 secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/ClearKeyStreamingKey").ConfigureAwait(false);
                 this.clearKeyStreamingKey = Convert.FromBase64String(secret.Value);
