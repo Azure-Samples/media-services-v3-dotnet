@@ -14,17 +14,20 @@
         private readonly TimeSpan verificationDelay;
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
         private readonly IConfigService configService;
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         public JobSchedulingService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
+                                    IMediaServiceInstanceFactory mediaServiceInstanceFactory,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
         }
@@ -39,85 +42,83 @@
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
 
             // AzureMediaServicesClient is not thread safe, creating new one every time for now
-            using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
-            {
-                var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
-                    clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    jobRequestModel.OutputAssetName,
-                    new Asset()).ConfigureAwait(false);
+            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName).ConfigureAwait(false);
+            var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
+                clientConfiguration.ResourceGroup,
+                clientConfiguration.AccountName,
+                jobRequestModel.OutputAssetName,
+                new Asset()).ConfigureAwait(false);
 
-                JobOutput[] jobOutputs =
-                {
+            JobOutput[] jobOutputs =
+            {
                     new JobOutputAsset(jobRequestModel.OutputAssetName)
                 };
 
-                var job = await clientInstance.Jobs.CreateAsync(
-                    clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    jobRequestModel.TransformName,
-                    jobRequestModel.JobName,
-                    new Job
-                    {
-                        Input = jobRequestModel.JobInputs,
-                        Outputs = jobOutputs,
-                    }).ConfigureAwait(false);
-
-                logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully created job: job={LogHelper.FormatObjectForLog(job)}");
-
-                var jobVerificationRequestModel = new JobVerificationRequestModel
+            var job = await clientInstance.Jobs.CreateAsync(
+                clientConfiguration.ResourceGroup,
+                clientConfiguration.AccountName,
+                jobRequestModel.TransformName,
+                jobRequestModel.JobName,
+                new Job
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    JobId = job.Id,
-                    OriginalJobRequestModel = jobRequestModel,
-                    MediaServiceAccountName = selectedInstanceName,
-                    JobOutputAssetName = jobRequestModel.OutputAssetName,
-                    JobName = job.Name,
-                    RetryCount = 0
-                };
+                    Input = jobRequestModel.JobInputs,
+                    Outputs = jobOutputs,
+                }).ConfigureAwait(false);
 
-                var jobOutputStatusModel = new JobOutputStatusModel
+            logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully created job: job={LogHelper.FormatObjectForLog(job)}");
+
+            var jobVerificationRequestModel = new JobVerificationRequestModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                JobId = job.Id,
+                OriginalJobRequestModel = jobRequestModel,
+                MediaServiceAccountName = selectedInstanceName,
+                JobOutputAssetName = jobRequestModel.OutputAssetName,
+                JobName = job.Name,
+                RetryCount = 0
+            };
+
+            var jobOutputStatusModel = new JobOutputStatusModel
+            {
+                Id = Guid.NewGuid().ToString(),
+                EventTime = job.LastModified,
+                JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobRequestModel.OutputAssetName),
+                JobName = job.Name,
+                MediaServiceAccountName = selectedInstanceName,
+                JobOutputAssetName = jobRequestModel.OutputAssetName,
+                TransformName = jobRequestModel.TransformName
+            };
+
+            this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
+
+            var retryCount = 3;
+            var retryTimeOut = 1000;
+            // We do not want to fail whole method here, this is just status update, it is ok to retry and igonre exception at the end
+            // we do not want to retry this, that will result in duplicate job submission
+            do
+            {
+                try
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    EventTime = job.LastModified,
-                    JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobRequestModel.OutputAssetName),
-                    JobName = job.Name,
-                    MediaServiceAccountName = selectedInstanceName,
-                    JobOutputAssetName = jobRequestModel.OutputAssetName,
-                    TransformName = jobRequestModel.TransformName
-                };
+                    await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModel, logger).ConfigureAwait(false);
 
-                this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
-
-                var retryCount = 3;
-                var retryTimeOut = 1000;
-                // We do not want to fail whole method here, this is just status update, it is ok to retry and igonre exception at the end
-                // we do not want to retry this, that will result in duplicate job submission
-                do
-                {
-                    try
-                    {
-                        await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModel, logger).ConfigureAwait(false);
-
-                        var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
-                        logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
-                        break;
-                    }
-#pragma warning disable CA1031 // Do not catch general exception types
-                    catch (Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
-                    {
-                        logger.LogError($"JobSchedulerService::SubmitJobAsync got exception calling jobVerificationRequestStorageService.CreateAsync: retryCount={retryCount} message={e.Message} job={LogHelper.FormatObjectForLog(job)}");
-                        retryCount--;
-                        await Task.Delay(retryTimeOut).ConfigureAwait(false);
-                    }
+                    var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
+                    logger.LogInformation($"JobSchedulerService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
+                    break;
                 }
-                while (retryCount > 0);
-
-                logger.LogInformation($"JobSchedulerService::SubmitJobAsync completed: job={LogHelper.FormatObjectForLog(job)}");
-
-                return job;
+#pragma warning disable CA1031 // Do not catch general exception types
+                catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+                {
+                    logger.LogError($"JobSchedulerService::SubmitJobAsync got exception calling jobVerificationRequestStorageService.CreateAsync: retryCount={retryCount} message={e.Message} job={LogHelper.FormatObjectForLog(job)}");
+                    retryCount--;
+                    await Task.Delay(retryTimeOut).ConfigureAwait(false);
+                }
             }
+            while (retryCount > 0);
+
+            logger.LogInformation($"JobSchedulerService::SubmitJobAsync completed: job={LogHelper.FormatObjectForLog(job)}");
+
+            return job;
         }
     }
 }

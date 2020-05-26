@@ -1,6 +1,5 @@
 ﻿using Microsoft.Azure.Management.Media.Models;
 using System.Collections.Generic;
-using System.Dynamic;
 
 namespace HighAvailability.Models
 {

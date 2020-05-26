@@ -22,9 +22,10 @@ namespace HighAvailability.Tests
         public async Task CleanupAssets()
         {
             var configuration = configService.MediaServiceInstanceConfiguration;
+            var mediaServiceInstanceFactory = new MediaServiceInstanceFactory(configService);
             foreach (var config in configuration.Values)
             {
-                var client = await MediaServicesHelper.CreateMediaServicesClientAsync(config).ConfigureAwait(false);
+                var client = await mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(config.AccountName).ConfigureAwait(false);
                 var assets = await client.Assets.ListAsync(config.ResourceGroup, config.AccountName).ConfigureAwait(false);
                 foreach (var asset in assets)
                 {

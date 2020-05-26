@@ -41,7 +41,7 @@ namespace HighAvailability.JobVerification
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, provisioningRequestStorageService, jobVerificationRequestStorageService, configService);
+            var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, provisioningRequestStorageService, jobVerificationRequestStorageService, new MediaServiceInstanceFactory(configService), configService);
 
             builder.Services.AddSingleton<IJobVerificationService>(jobVerificationService);
         }

@@ -11,10 +11,12 @@
 
     public class ClearStreamingProvisioningService : StreamingProvisioningService, IProvisioningService
     {
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
         private readonly IConfigService configService;
 
-        public ClearStreamingProvisioningService(IConfigService configService)
+        public ClearStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory, IConfigService configService)
         {
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -27,25 +29,20 @@
                 throw new Exception($"ClearStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.EncodedAssetMediaServiceAccountName}");
             }
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.EncodedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
+            sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
+            provisioningCompletedEventModel.AddClearStreamingLocators(sourceLocator);
 
-            using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
+            var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+
+            foreach (var target in targetInstances)
             {
-                var sourceLocator = new StreamingLocator(assetName: provisioningRequest.EncodedAssetName, streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
-                sourceLocator = await ProvisionLocatorAsync(sourceClient, sourceClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, sourceLocator, logger).ConfigureAwait(false);
-                provisioningCompletedEventModel.AddClearStreamingLocators(sourceLocator);
-
-                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
-
-                foreach (var target in targetInstances)
-                {
-                    var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
-                    using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
-                    {
-                        var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId);
-                        targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, targetLocator, logger).ConfigureAwait(false);
-                        provisioningCompletedEventModel.AddClearStreamingLocators(targetLocator);
-                    }
-                }
+                var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
+                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
+                var targetLocator = new StreamingLocator(assetName: sourceLocator.AssetName, streamingPolicyName: sourceLocator.StreamingPolicyName, id: sourceLocator.Id, name: sourceLocator.Name, type: sourceLocator.Type, streamingLocatorId: sourceLocator.StreamingLocatorId);
+                targetLocator = await ProvisionLocatorAsync(targetClient, targetClientConfiguration, provisioningRequest.EncodedAssetName, provisioningRequest.StreamingLocatorName, targetLocator, logger).ConfigureAwait(false);
+                provisioningCompletedEventModel.AddClearStreamingLocators(targetLocator);
             }
 
             logger.LogInformation($"ClearStreamingProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");

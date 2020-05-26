@@ -220,7 +220,7 @@ namespace HighAvailability.Tests
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOOutputStatusStorageService, configService);
             var jobVerificationRequesetStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var target = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOOutputStatusStorageService, configService);
+            var target = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequesetStorageService, jobOOutputStatusStorageService, new MediaServiceInstanceFactory(configService), configService);
 
             //await target.Initialize(Mock.Of<ILogger>()).ConfigureAwait(false);
             //TBD to fix initialization
@@ -352,6 +352,7 @@ namespace HighAvailability.Tests
                                                     jobOutputStatusStorageService,
                                                     provisioningRequestStorageService,
                                                     jobVerificationRequestStorageService,
+                                                    new MediaServiceInstanceFactory(configService),
                                                     configService);
 
             var jobRequest = new JobRequestModel
