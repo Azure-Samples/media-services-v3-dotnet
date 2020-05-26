@@ -1,5 +1,6 @@
 ﻿namespace HighAvailability.Tests
 {
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.Management.Media.Models;

@@ -4,6 +4,9 @@
 
 namespace HighAvailability.InstanceHealth
 {
+    using HighAvailability.AzureStorage.Services;
+    using HighAvailability.Factories;
+    using HighAvailability.Interfaces;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;

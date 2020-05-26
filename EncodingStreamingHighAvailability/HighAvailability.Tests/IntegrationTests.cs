@@ -1,6 +1,10 @@
 namespace HighAvailability.Tests
 {
     using Azure.Storage.Queues;
+    using HighAvailability.AzureStorage.Models;
+    using HighAvailability.AzureStorage.Services;
+    using HighAvailability.Factories;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;

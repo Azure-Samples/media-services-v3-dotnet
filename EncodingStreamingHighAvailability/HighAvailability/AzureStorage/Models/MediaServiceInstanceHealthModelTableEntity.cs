@@ -1,5 +1,6 @@
-﻿namespace HighAvailability.Models
+﻿namespace HighAvailability.AzureStorage.Models
 {
+    using HighAvailability.Models;
     using Microsoft.Azure.Cosmos.Table;
     using System;
 

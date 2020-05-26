@@ -1,8 +1,8 @@
 namespace HighAvailability.JobVerification
 {
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
-    using HighAvailability.Services;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
