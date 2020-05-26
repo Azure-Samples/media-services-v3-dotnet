@@ -116,7 +116,7 @@
         byte[] GetClearKeyStreamingKey();
 
         /// <summary>
-        /// This method is used to load configuration data
+        /// Loads configuration data.
         /// </summary>
         /// <returns></returns>
         Task LoadConfigurationAsync();
