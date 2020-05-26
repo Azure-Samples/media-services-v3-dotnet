@@ -1,12 +1,16 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Extensions.Logging;
     using System.Text.RegularExpressions;
 
+    /// <summary>
+    /// This class implements EventGrid specific logic
+    /// </summary>
     public class EventGridService : IEventGridService
     {
         public JobOutputStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
@@ -16,6 +20,8 @@
             var jobId = eventGridEvent.Subject;
             var eventTime = eventGridEvent.EventTime;
 
+            // jobName is parsed out of event subject.
+            // Event subject example "transforms/TestTransform/jobs/jobName-5-691d0385-cfe3
             var jobName = string.Empty;
             var match = Regex.Match(jobId, @".+/(?<jobname>.+)");
             if (match.Success)
@@ -28,6 +34,8 @@
                 return null;
             }
 
+            // account name is parsed from topic
+            // topic example /subscriptions/<subscriptionId>/resourceGroups/<groupName>/providers/Microsoft.Media/mediaservices/<accountName>
             var amsAccountName = "";
             var matchAccount = Regex.Match(amsAccountResourceId, @".+/(?<accountname>.+)");
             if (matchAccount.Success)
@@ -45,7 +53,7 @@
 
             if (asset == null)
             {
-                logger.LogInformation($"EventGridService::ParseEventData eventType is not {EventTypes.MediaJobOutputFinishedEvent} or {EventTypes.MediaJobOutputErroredEvent} or {EventTypes.MediaJobOutputCanceledEvent} , eventGridEvent={LogHelper.FormatObjectForLog(eventGridEvent)}");
+                logger.LogInformation($"EventGridService::ParseEventData asset is null");
                 return null;
             }
 

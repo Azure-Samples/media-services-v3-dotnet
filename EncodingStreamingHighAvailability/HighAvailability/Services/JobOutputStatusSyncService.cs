@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
@@ -151,12 +152,12 @@
 
             var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(mediaServiceAccountName).ConfigureAwait(false);
             logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}");
-            
+
             var dateFilter = DateTime.UtcNow.AddMinutes(-this.timeWindowToLoadJobsInMinutes).ToString("O", DateTimeFormatInfo.InvariantInfo);
             var odataQuery = new ODataQuery<Job>($"properties/created gt {dateFilter}");
-            var firstPage = await clientInstance.Jobs.ListAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);            
+            var firstPage = await clientInstance.Jobs.ListAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);
             logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded first page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={firstPage.Count()}");
-            
+
             var currentPage = firstPage;
             var everythingProcessed = false;
             while (!everythingProcessed)

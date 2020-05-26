@@ -1,7 +1,7 @@
 ﻿namespace HighAvailability.Tests
 {
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
-    using HighAvailability.Services;
     using Microsoft.Azure.KeyVault;
     using Microsoft.Azure.Services.AppAuthentication;
     using Newtonsoft.Json;

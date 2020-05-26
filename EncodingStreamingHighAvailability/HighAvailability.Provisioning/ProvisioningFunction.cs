@@ -1,7 +1,7 @@
 namespace HighAvailabikity.Provisioner
 {
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
-    using HighAvailability.Services;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;

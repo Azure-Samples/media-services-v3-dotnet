@@ -1,5 +1,6 @@
 ﻿namespace HighAvailability.Services
 {
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.KeyVault;
     using Microsoft.Azure.Services.AppAuthentication;
@@ -9,14 +10,35 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Configuration container implementation.
+    /// </summary>
     public class ConfigService : IConfigService
     {
+        /// <summary>
+        /// KeyVault name to load configuration
+        /// </summary>
         private readonly string keyVaultName;
+
+        /// <summary>
+        /// Environment property name to load Azure Media Service configuration data.
+        /// </summary>
         private readonly string AMSConfigurationKeyName = "AMSConfiguration";
+
+        /// <summary>
+        /// Environment property name to load Azure Front Door host name.
+        /// </summary>
         private readonly string FrontDoorHostNameKeyName = "FrontDoorHostName";
 
+        /// <summary>
+        /// Binary sreaming key used for clear key streaming.
+        /// </summary>
         private byte[] clearKeyStreamingKey;
 
+        /// <summary>
+        /// Construct config container and load default settings.
+        /// </summary>
+        /// <param name="keyVaultName"></param>
         public ConfigService(string keyVaultName)
         {
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
@@ -87,8 +109,13 @@
             return this.clearKeyStreamingKey;
         }
 
+        /// <summary>
+        /// Load configuration from environment properties and keyvault
+        /// </summary>
+        /// <returns></returns>
         public async Task LoadConfigurationAsync()
         {
+            // this value is set by ARM deployment script
             var amsConfigurationString = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
 
             if (amsConfigurationString == null)
@@ -99,6 +126,7 @@
             var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
             this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
 
+            // this value is set by ARM deployment script
             this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.FrontDoorHostNameKeyName);
 
             if (this.FrontDoorHostName == null)
@@ -106,6 +134,7 @@
                 throw new Exception($"Function confo does not have {this.FrontDoorHostNameKeyName} value");
             }
 
+            // All keyvault secrets are set by ARM deployment script
             var azureServiceTokenProvider = new AzureServiceTokenProvider();
             using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
             {

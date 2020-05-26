@@ -1,4 +1,4 @@
-﻿namespace HighAvailability.Services
+﻿namespace HighAvailability.AzureStorage.Services
 {
     using Microsoft.Azure.Cosmos.Table;
     using System.Collections.Generic;

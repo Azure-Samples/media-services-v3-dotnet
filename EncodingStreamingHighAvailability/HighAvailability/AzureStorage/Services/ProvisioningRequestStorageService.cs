@@ -1,7 +1,8 @@
-﻿namespace HighAvailability.Services
+﻿namespace HighAvailability.AzureStorage.Services
 {
     using Azure.Storage.Queues;
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;

@@ -1,4 +1,4 @@
-﻿namespace HighAvailability.Services
+﻿namespace HighAvailability.Interfaces
 {
     using Microsoft.Azure.Management.Media;
     using System.Threading.Tasks;
