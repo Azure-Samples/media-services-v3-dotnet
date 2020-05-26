@@ -24,9 +24,9 @@ namespace HighAvailability.Provisioner
 
             var provisioningCompletedEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
 
-            var assetDataProvisioningService = new AssetDataProvisioningService(configService);
-            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(configService);
-            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(configService);
+            var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(configService), configService);
+            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
+            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
 
             var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService }, provisioningCompletedEventStorageService);
 

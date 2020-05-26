@@ -32,7 +32,7 @@ namespace HighAvailability.InstanceHealth
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
-            var jobOutputStatusSyncService = new JobOutputStatusSyncService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, configService);
+            var jobOutputStatusSyncService = new JobOutputStatusSyncService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);
             builder.Services.AddSingleton<IJobOutputStatusSyncService>(jobOutputStatusSyncService);

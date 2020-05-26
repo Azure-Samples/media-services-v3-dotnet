@@ -16,6 +16,7 @@
     {
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
         private readonly IConfigService configService;
         private int timeWindowToLoadJobsInMinutes = 480;
         private int timeSinceLastUpdateToForceJobResyncInMinutes = 60;
@@ -23,10 +24,12 @@
 
         public JobOutputStatusSyncService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
+                                    IMediaServiceInstanceFactory mediaServiceInstanceFactory,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.timeWindowToLoadJobsInMinutes = this.configService.TimeWindowToLoadJobsInMinutes;
             this.timeSinceLastUpdateToForceJobResyncInMinutes = this.configService.TimeSinceLastUpdateToForceJobResyncInMinutes;
@@ -107,21 +110,19 @@
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
 
-            using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
+            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(mediaServiceAccountName).ConfigureAwait(false);
+            foreach (var jobOutputStatusModel in jobOutputStatusModels)
             {
-                foreach (var jobOutputStatusModel in jobOutputStatusModels)
-                {
-                    logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync reloading job status using API: mediaServiceInstanceName={mediaServiceAccountName} oldJobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
+                logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync reloading job status using API: mediaServiceInstanceName={mediaServiceAccountName} oldJobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
 
-                    var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
-                        clientConfiguration.AccountName,
-                        transformName,
-                        jobOutputStatusModel.JobName).ConfigureAwait(false);
+                var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
+                    clientConfiguration.AccountName,
+                    transformName,
+                    jobOutputStatusModel.JobName).ConfigureAwait(false);
 
-                    logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
+                logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
 
-                    await this.UpdateJobOutputStatusAsync(mediaServiceAccountName, jobOutputStatusModel, job, logger).ConfigureAwait(false);
-                }
+                await this.UpdateJobOutputStatusAsync(mediaServiceAccountName, jobOutputStatusModel, job, logger).ConfigureAwait(false);
             }
         }
 
@@ -148,31 +149,31 @@
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
 
-            using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
+            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(mediaServiceAccountName).ConfigureAwait(false);
+            logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}");
+            
+            var dateFilter = DateTime.UtcNow.AddMinutes(-this.timeWindowToLoadJobsInMinutes).ToString("O", DateTimeFormatInfo.InvariantInfo);
+            var odataQuery = new ODataQuery<Job>($"properties/created gt {dateFilter}");
+            var firstPage = await clientInstance.Jobs.ListAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);            
+            logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded first page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={firstPage.Count()}");
+            
+            var currentPage = firstPage;
+            var everythingProcessed = false;
+            while (!everythingProcessed)
             {
-                logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}");
-                var dateFilter = DateTime.UtcNow.AddMinutes(-this.timeWindowToLoadJobsInMinutes).ToString("O", DateTimeFormatInfo.InvariantInfo);
-                var odataQuery = new ODataQuery<Job>($"properties/created gt {dateFilter}");
-                var firstPage = await clientInstance.Jobs.ListAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);
-                logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded first page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={firstPage.Count()}");
-                var currentPage = firstPage;
-                var everythingProcessed = false;
-                while (!everythingProcessed)
+                var matchedPairList = currentPage.Join(jobOutputStatusModels, (job) => job.Name, (jobOutputStatusModel) => jobOutputStatusModel.JobName, (jobOutputStatusModel, job) => (jobOutputStatusModel, job));
+
+                foreach (var matchedPair in matchedPairList)
                 {
-                    var matchedPairList = currentPage.Join(jobOutputStatusModels, (job) => job.Name, (jobOutputStatusModel) => jobOutputStatusModel.JobName, (jobOutputStatusModel, job) => (jobOutputStatusModel, job));
+                    await this.UpdateJobOutputStatusAsync(mediaServiceAccountName, matchedPair.job, matchedPair.jobOutputStatusModel, logger).ConfigureAwait(false);
+                }
 
-                    foreach (var matchedPair in matchedPairList)
-                    {
-                        await this.UpdateJobOutputStatusAsync(mediaServiceAccountName, matchedPair.job, matchedPair.jobOutputStatusModel, logger).ConfigureAwait(false);
-                    }
-
-                    everythingProcessed = true;
-                    if (currentPage.NextPageLink != null)
-                    {
-                        currentPage = await clientInstance.Jobs.ListNextAsync(currentPage.NextPageLink).ConfigureAwait(false);
-                        logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded next page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={currentPage.Count()}");
-                        everythingProcessed = false;
-                    }
+                everythingProcessed = true;
+                if (currentPage.NextPageLink != null)
+                {
+                    currentPage = await clientInstance.Jobs.ListNextAsync(currentPage.NextPageLink).ConfigureAwait(false);
+                    logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded next page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={currentPage.Count()}");
+                    everythingProcessed = false;
                 }
             }
         }

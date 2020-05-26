@@ -14,10 +14,12 @@
 
     public class AssetDataProvisioningService : IProvisioningService
     {
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
         private readonly IConfigService configService;
 
-        public AssetDataProvisioningService(IConfigService configService)
+        public AssetDataProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory, IConfigService configService)
         {
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -33,19 +35,15 @@
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
             provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.EncodedAssetMediaServiceAccountName);
 
-            using (var sourceClient = await MediaServicesHelper.CreateMediaServicesClientAsync(sourceClientConfiguration).ConfigureAwait(false))
-            {
-                var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.EncodedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
-                foreach (var target in targetInstances)
-                {
-                    var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
-                    using (var targetClient = await MediaServicesHelper.CreateMediaServicesClientAsync(targetClientConfiguration).ConfigureAwait(false))
-                    {
-                        var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
-                        provisioningCompletedEventModel.AddMediaServiceAccountName(target);
-                    }
-                }
+            foreach (var target in targetInstances)
+            {
+                var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
+                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
+                var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
+                provisioningCompletedEventModel.AddMediaServiceAccountName(target);
             }
 
             logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
