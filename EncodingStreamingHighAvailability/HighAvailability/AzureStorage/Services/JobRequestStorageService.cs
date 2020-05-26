@@ -10,9 +10,19 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Implements methods to store and get job requests from Azure Queue
+    /// </summary>
     public class JobRequestStorageService : IJobRequestStorageService
     {
+        /// <summary>
+        /// Azure Queue client
+        /// </summary>
         private readonly QueueClient queue;
+
+        /// <summary>
+        /// Need to include full type names in serialization/deserialization since some of the types are derived
+        /// </summary>
         private readonly JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
         public JobRequestStorageService(QueueClient queue)
@@ -23,6 +33,7 @@
         public async Task<JobRequestModel> CreateAsync(JobRequestModel jobRequestModel, ILogger logger)
         {
             var message = JsonConvert.SerializeObject(jobRequestModel, this.settings);
+            // Encode message to Base64 before sending to the queue
             await this.queue.SendMessageAsync(QueueServiceHelper.EncodeToBase64(message)).ConfigureAwait(false);
             logger.LogInformation($"JobRequestStorageService::CreateAsync successfully added request to the queue: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
             return jobRequestModel;
@@ -35,8 +46,10 @@
 
             if (message != null)
             {
+                // All message are encoded base64 on Azure Queue, decode first
                 var decodedMessage = QueueServiceHelper.DecodeFromBase64(message.MessageText);
                 var jobRequestModel = JsonConvert.DeserializeObject<JobRequestModel>(decodedMessage, this.settings);
+                // delete message from the queue
                 await this.queue.DeleteMessageAsync(message.MessageId, message.PopReceipt).ConfigureAwait(false);
                 logger.LogInformation($"JobRequestStorageService::GetNextAsync request successfully dequeued from the queue: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");
                 return jobRequestModel;
