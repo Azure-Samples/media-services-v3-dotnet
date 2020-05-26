@@ -14,6 +14,7 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
         private readonly IProvisioningRequestStorageService provisioningRequestStorageService;
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
         private readonly IConfigService configService;
         private readonly int maxNumberOfRetries = 2;
 
@@ -21,12 +22,14 @@
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IProvisioningRequestStorageService provisioningRequestStorageService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
+                                    IMediaServiceInstanceFactory mediaServiceInstanceFactory,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -41,36 +44,33 @@
             {
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
 
-                // AzureMediaServicesClient is not thread safe, creating new one every time for now
-                using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
+                var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(jobVerificationRequestModel.MediaServiceAccountName).ConfigureAwait(false);
+                logger.LogInformation($"JobVerificationService::VerifyJobAsync checking job status using API: mediaServiceInstanceName={jobVerificationRequestModel.MediaServiceAccountName}");
+
+                var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
+                    clientConfiguration.AccountName,
+                    jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
+                    jobVerificationRequestModel.JobName).ConfigureAwait(false);
+
+                logger.LogInformation($"JobVerificationService::VerifyJobAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
+
+                if (job != null)
                 {
-                    logger.LogInformation($"JobVerificationService::VerifyJobAsync checking job status using API: mediaServiceInstanceName={jobVerificationRequestModel.MediaServiceAccountName}");
-
-                    var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
-                        clientConfiguration.AccountName,
-                        jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                        jobVerificationRequestModel.JobName).ConfigureAwait(false);
-
-                    logger.LogInformation($"JobVerificationService::VerifyJobAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
-
-                    if (job != null)
+                    jobOutputStatus = new JobOutputStatusModel
                     {
-                        jobOutputStatus = new JobOutputStatusModel
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            EventTime = job.LastModified,
-                            JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobVerificationRequestModel.JobOutputAssetName),
-                            JobName = job.Name,
-                            MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
-                            JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
-                            TransformName = jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                            IsSystemError = MediaServicesHelper.IsSystemError(job, jobVerificationRequestModel.JobOutputAssetName)
-                        };
+                        Id = Guid.NewGuid().ToString(),
+                        EventTime = job.LastModified,
+                        JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobVerificationRequestModel.JobOutputAssetName),
+                        JobName = job.Name,
+                        MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
+                        JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
+                        TransformName = jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
+                        IsSystemError = MediaServicesHelper.IsSystemError(job, jobVerificationRequestModel.JobOutputAssetName)
+                    };
 
-                        jobOutputStatusLoadedFromAPI = true;
+                    jobOutputStatusLoadedFromAPI = true;
 
-                        await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatus, logger).ConfigureAwait(false);
-                    }
+                    await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatus, logger).ConfigureAwait(false);
                 }
             }
 
@@ -172,10 +172,8 @@
             logger.LogInformation($"JobVerificationService::DeleteJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
-            using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
-            {
-                await clientInstance.Jobs.DeleteAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
-            }
+            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(jobVerificationRequestModel.MediaServiceAccountName).ConfigureAwait(false);
+            await clientInstance.Jobs.DeleteAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::DeleteJobAsync completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
@@ -186,43 +184,41 @@
             {
                 var selectedInstanceName = await this.mediaServiceInstanceHealthService.GetNextAvailableInstanceAsync(logger).ConfigureAwait(false);
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
-                using (var clientInstance = await MediaServicesHelper.CreateMediaServicesClientAsync(clientConfiguration).ConfigureAwait(false))
+                var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName).ConfigureAwait(false);
+                jobVerificationRequestModel.RetryCount++;
+
+                var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
+                    clientConfiguration.ResourceGroup,
+                    clientConfiguration.AccountName,
+                    jobVerificationRequestModel.JobOutputAssetName,
+                    new Asset()).ConfigureAwait(false);
+
+                JobOutput[] jobOutputs =
                 {
-                    jobVerificationRequestModel.RetryCount++;
-
-                    var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
-                        clientConfiguration.ResourceGroup,
-                        clientConfiguration.AccountName,
-                        jobVerificationRequestModel.JobOutputAssetName,
-                        new Asset()).ConfigureAwait(false);
-
-                    JobOutput[] jobOutputs =
-                    {
                         new JobOutputAsset(outputAsset.Name)
                     };
 
-                    var job = await clientInstance.Jobs.CreateAsync(
-                       clientConfiguration.ResourceGroup,
-                       clientConfiguration.AccountName,
-                       jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                       jobVerificationRequestModel.JobName,
-                       new Job
-                       {
-                           Input = jobVerificationRequestModel.OriginalJobRequestModel.JobInputs,
-                           Outputs = jobOutputs,
-                       }).ConfigureAwait(false);
+                var job = await clientInstance.Jobs.CreateAsync(
+                   clientConfiguration.ResourceGroup,
+                   clientConfiguration.AccountName,
+                   jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
+                   jobVerificationRequestModel.JobName,
+                   new Job
+                   {
+                       Input = jobVerificationRequestModel.OriginalJobRequestModel.JobInputs,
+                       Outputs = jobOutputs,
+                   }).ConfigureAwait(false);
 
-                    logger.LogInformation($"JobVerificationService::ResubmitJob successfully re-submitted job: job={LogHelper.FormatObjectForLog(job)}");
+                logger.LogInformation($"JobVerificationService::ResubmitJob successfully re-submitted job: job={LogHelper.FormatObjectForLog(job)}");
 
-                    jobVerificationRequestModel.JobId = job.Id;
-                    jobVerificationRequestModel.MediaServiceAccountName = selectedInstanceName;
-                    jobVerificationRequestModel.JobName = job.Name;
-                    jobVerificationRequestModel.JobOutputAssetName = outputAsset.Name;
+                jobVerificationRequestModel.JobId = job.Id;
+                jobVerificationRequestModel.MediaServiceAccountName = selectedInstanceName;
+                jobVerificationRequestModel.JobName = job.Name;
+                jobVerificationRequestModel.JobOutputAssetName = outputAsset.Name;
 
-                    await this.SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
+                await this.SubmitVerificationRequestAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
-                    this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
-                }
+                this.mediaServiceInstanceHealthService.RecordInstanceUsage(selectedInstanceName, logger);
             }
             else
             {

@@ -37,7 +37,7 @@ namespace HighAvailability.JobScheduling
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, configService);
+            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), configService);
 
             builder.Services.AddSingleton<IJobSchedulingService>(jobSchedulerService);
         }

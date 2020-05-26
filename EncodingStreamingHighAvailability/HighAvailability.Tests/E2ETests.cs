@@ -59,38 +59,37 @@ namespace HighAvailability.Tests
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
+            var mediaServiceInstanceFactory = new MediaServiceInstanceFactory(configService);
 
             foreach (var config in configService.MediaServiceInstanceConfiguration)
             {
-                using (var client = await MediaServicesHelper.CreateMediaServicesClientAsync(config.Value).ConfigureAwait(false))
+                var client = await mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(config.Value.AccountName).ConfigureAwait(false);
+                client.LongRunningOperationRetryTimeout = 2;
+
+                await MediaServicesHelper.EnsureTransformExists(
+                    client,
+                    config.Value.ResourceGroup,
+                    config.Value.AccountName,
+                    transformName,
+                    new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
+
+                await mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
                 {
-                    client.LongRunningOperationRetryTimeout = 2;
+                    MediaServiceAccountName = config.Value.AccountName,
+                    HealthState = InstanceHealthState.Healthy,
+                    LastUpdated = DateTime.UtcNow,
+                    IsEnabled = true
+                },
+                    Mock.Of<ILogger>()).ConfigureAwait(false);
 
-                    await MediaServicesHelper.EnsureTransformExists(
-                        client,
-                        config.Value.ResourceGroup,
-                        config.Value.AccountName,
-                        transformName,
-                        new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming)).ConfigureAwait(false);
-
-                    await mediaServiceInstanceHealthService.CreateOrUpdateAsync(new MediaServiceInstanceHealthModel
-                    {
-                        MediaServiceAccountName = config.Value.AccountName,
-                        HealthState = InstanceHealthState.Healthy,
-                        LastUpdated = DateTime.UtcNow,
-                        IsEnabled = true
-                    },
-                        Mock.Of<ILogger>()).ConfigureAwait(false);
-
-                    await MediaServicesHelper.EnsureContentKeyPolicyExists(
-                        client,
-                        config.Value.ResourceGroup,
-                        config.Value.AccountName,
-                        configService.ContentKeyPolicyName,
-                        configService.GetClearKeyStreamingKey(),
-                        configService.TokenIssuer,
-                        configService.TokenAudience).ConfigureAwait(false);
-                }
+                await MediaServicesHelper.EnsureContentKeyPolicyExists(
+                    client,
+                    config.Value.ResourceGroup,
+                    config.Value.AccountName,
+                    configService.ContentKeyPolicyName,
+                    configService.GetClearKeyStreamingKey(),
+                    configService.TokenIssuer,
+                    configService.TokenAudience).ConfigureAwait(false);
             }
 
             var target = new JobRequestStorageService(jobRequestQueue);
