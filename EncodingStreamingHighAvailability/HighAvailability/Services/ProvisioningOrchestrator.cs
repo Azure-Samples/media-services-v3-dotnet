@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Extensions.Logging;
     using System;

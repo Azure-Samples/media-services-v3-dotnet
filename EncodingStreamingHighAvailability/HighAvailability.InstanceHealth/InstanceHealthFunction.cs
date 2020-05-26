@@ -1,7 +1,7 @@
 namespace HighAvailability.InstanceHealth
 {
     using HighAvailability.Helpers;
-    using HighAvailability.Services;
+    using HighAvailability.Interfaces;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
     using System;

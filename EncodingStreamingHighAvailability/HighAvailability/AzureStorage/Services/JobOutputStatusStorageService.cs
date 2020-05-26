@@ -1,6 +1,8 @@
-﻿namespace HighAvailability.Services
+﻿namespace HighAvailability.AzureStorage.Services
 {
+    using HighAvailability.AzureStorage.Models;
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Extensions.Logging;

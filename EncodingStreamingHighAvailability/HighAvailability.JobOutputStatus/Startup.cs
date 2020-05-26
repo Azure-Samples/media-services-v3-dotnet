@@ -5,6 +5,8 @@
 namespace HighAvailability.JobOutputStatus
 {
     using Azure.Storage.Queues;
+    using HighAvailability.AzureStorage.Services;
+    using HighAvailability.Interfaces;
     using HighAvailability.Services;
     using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;

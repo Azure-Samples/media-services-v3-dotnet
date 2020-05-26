@@ -1,7 +1,7 @@
 namespace HighAvailability.JobOutputStatus
 {
     using HighAvailability.Helpers;
-    using HighAvailability.Services;
+    using HighAvailability.Interfaces;
     using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.EventGrid;

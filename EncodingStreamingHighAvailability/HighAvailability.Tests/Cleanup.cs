@@ -1,7 +1,7 @@
 namespace HighAvailability.Tests
 {
-    using HighAvailability.Helpers;
-    using HighAvailability.Services;
+    using HighAvailability.Factories;
+    using HighAvailability.Interfaces;
     using Microsoft.Azure.Management.Media;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System.Threading.Tasks;

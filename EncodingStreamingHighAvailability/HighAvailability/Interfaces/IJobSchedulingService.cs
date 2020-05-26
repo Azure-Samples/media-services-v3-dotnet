@@ -1,4 +1,4 @@
-﻿namespace HighAvailability.Services
+﻿namespace HighAvailability.Interfaces
 {
     using HighAvailability.Models;
     using Microsoft.Azure.Management.Media.Models;

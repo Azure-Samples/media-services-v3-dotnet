@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Services
 {
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;

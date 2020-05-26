@@ -3,6 +3,7 @@
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Specialized;
     using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
     using HighAvailability.Models;
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
