@@ -14,6 +14,11 @@ namespace HighAvailability.Provisioner
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// Implements startup logic for provisioning Azure function.
+    /// See for more details about dependency injection for Azure Functions
+    /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
+    /// </summary>
     public class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
@@ -31,7 +36,16 @@ namespace HighAvailability.Provisioner
             var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
             var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
 
-            var provisioningOrchestrator = new ProvisioningOrchestrator(new List<IProvisioningService> { assetDataProvisioningService, clearStreamingProvisioningService, clearKeyStreamingProvisioningService }, provisioningCompletedEventStorageService);
+            // Instantiate the list of provisioning services to run for each provisioning request
+            // These services run in the same order as in this list
+            var provisioningOrchestrator = new ProvisioningOrchestrator(
+                new List<IProvisioningService> 
+                { 
+                    assetDataProvisioningService, 
+                    clearStreamingProvisioningService, 
+                    clearKeyStreamingProvisioningService 
+                }, 
+                provisioningCompletedEventStorageService);
 
             builder.Services.AddSingleton<IProvisioningOrchestrator>(provisioningOrchestrator);
         }

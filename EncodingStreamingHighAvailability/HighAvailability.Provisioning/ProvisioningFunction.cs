@@ -8,15 +8,33 @@ namespace HighAvailabikity.Provisioner
     using System;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Implements provisioning Azure function. It is triggered by messages in provisioning-requests Azure queue
+    /// </summary>
     public class ProvisioningFunction
     {
+        /// <summary>
+        /// Service to orchestrate provisioning
+        /// </summary>
         private IProvisioningOrchestrator provisioningOrchestrator { get; set; }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="provisioningOrchestrator">Service to orchestrate provisioning</param>
         public ProvisioningFunction(IProvisioningOrchestrator provisioningOrchestrator)
         {
             this.provisioningOrchestrator = provisioningOrchestrator ?? throw new ArgumentNullException(nameof(provisioningOrchestrator));
         }
 
+        /// <summary>
+        /// This function is triggered by messages in provisioning-requests Azure queue.
+        /// It runs provisioning logic for encoded assets.
+        /// If function fails, exception is thrown and message is automatically reprocessed up to 5 times by default.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
         [FunctionName("ProvisioningFunction")]
         public async Task Run([QueueTrigger("provisioning-requests", Connection = "StorageAccountConnectionString")] string message, ILogger logger)
         {

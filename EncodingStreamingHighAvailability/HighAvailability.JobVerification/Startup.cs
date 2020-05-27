@@ -14,6 +14,11 @@ namespace HighAvailability.JobVerification
     using Microsoft.Extensions.DependencyInjection;
     using System;
 
+    /// <summary>
+    /// Implements startup logic for job verification Azure function.
+    /// See for more details about dependency injection for Azure Functions
+    /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
+    /// </summary>
     public class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
@@ -44,7 +49,14 @@ namespace HighAvailability.JobVerification
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobVerificationService = new JobVerificationService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, provisioningRequestStorageService, jobVerificationRequestStorageService, new MediaServiceInstanceFactory(configService), configService);
+
+            var jobVerificationService = new JobVerificationService(
+                mediaServiceInstanceHealthService, 
+                jobOutputStatusStorageService, 
+                provisioningRequestStorageService, 
+                jobVerificationRequestStorageService, 
+                new MediaServiceInstanceFactory(configService), 
+                configService);
 
             builder.Services.AddSingleton<IJobVerificationService>(jobVerificationService);
         }

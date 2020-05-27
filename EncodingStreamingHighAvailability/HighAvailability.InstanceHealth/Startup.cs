@@ -13,6 +13,11 @@ namespace HighAvailability.InstanceHealth
     using Microsoft.Extensions.DependencyInjection;
     using System;
 
+    /// <summary>
+    /// Implements startup logic for instance health Azure function.
+    /// See for more details about dependency injection for Azure Functions
+    /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
+    /// </summary>
     public class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
@@ -34,8 +39,17 @@ namespace HighAvailability.InstanceHealth
 
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
-            var jobOutputStatusSyncService = new JobOutputStatusSyncService(mediaServiceInstanceHealthService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), configService);
+
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(
+                mediaServiceInstanceHealthStorageService, 
+                jobOutputStatusStorageService, 
+                configService);
+
+            var jobOutputStatusSyncService = new JobOutputStatusSyncService(
+                mediaServiceInstanceHealthService, 
+                jobOutputStatusStorageService, 
+                new MediaServiceInstanceFactory(configService), 
+                configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);
             builder.Services.AddSingleton<IJobOutputStatusSyncService>(jobOutputStatusSyncService);
