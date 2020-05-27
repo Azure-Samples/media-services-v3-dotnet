@@ -11,7 +11,7 @@
     public interface IJobVerificationRequestStorageService
     {
         /// <summary>
-        /// Create new job verification request. This requests is used to verify that job was successfully completed.
+        /// Creates new job verification request. This requests is used to verify that job was successfully completed.
         /// </summary>
         /// <param name="jobVerificationRequestModel">Job verification request</param>
         /// <param name="verificationDelay">How far in future to run verification logic</param>
@@ -20,7 +20,7 @@
         Task<JobVerificationRequestModel> CreateAsync(JobVerificationRequestModel jobVerificationRequestModel, TimeSpan verificationDelay, ILogger logger);
 
         /// <summary>
-        /// Get next job verification request from the storage
+        /// Gets next job verification request from the storage
         /// </summary>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Loaded job verification request</returns>

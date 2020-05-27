@@ -21,10 +21,6 @@
         /// </summary>
         private readonly ITableStorageService tableStorageService;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="tableStorageService">Table storage service</param>
         public JobOutputStatusStorageService(ITableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));

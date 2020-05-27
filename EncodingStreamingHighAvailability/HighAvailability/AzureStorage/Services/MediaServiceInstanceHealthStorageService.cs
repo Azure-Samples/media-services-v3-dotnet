@@ -10,9 +10,19 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Implements class to write and read Azure Media Services instance health data using Azure Table Storage
+    /// </summary>
     public class MediaServiceInstanceHealthStorageService : IMediaServiceInstanceHealthStorageService
     {
+        /// <summary>
+        /// Azure Table Storage does not support DateTime.MinValue, this date is used as min date for data stored
+        /// </summary>
         private static DateTimeOffset minDateTimeForTableStorage = new DateTimeOffset(1900, 1, 1, 0, 0, 0, TimeSpan.FromSeconds(0));
+
+        /// <summary>
+        /// Table storage service
+        /// </summary>
         private readonly ITableStorageService tableStorageService;
 
         public MediaServiceInstanceHealthStorageService(ITableStorageService tableStorageService)
@@ -22,6 +32,7 @@
 
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
+            // update all date fields to be at least minDateTimeForTableStorage
             var verifiedModel = new MediaServiceInstanceHealthModel
             {
                 HealthState = mediaServiceInstanceHealthModel.HealthState,
@@ -51,8 +62,10 @@
 
         public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime)
         {
+            // Get the current record
             var getResult = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
 
+            // update datetime field to meet min requirements for dates
             eventDateTime = VerifyMinValue(eventDateTime);
             getResult.LastUpdated = eventDateTime;
             getResult.HealthState = instanceHealthState.ToString();
@@ -61,6 +74,11 @@
             return mergeResult.GetMediaServiceInstanceHealthModel();
         }
 
+        /// <summary>
+        /// Ensures that DateTime fields are at least minDateTimeForTableStorage or later
+        /// </summary>
+        /// <param name="dateTime">DateTime field to check</param>
+        /// <returns>Updated DateTime field</returns>
         private static DateTimeOffset VerifyMinValue(DateTimeOffset dateTime)
         {
             return dateTime > minDateTimeForTableStorage ? dateTime : minDateTimeForTableStorage;
