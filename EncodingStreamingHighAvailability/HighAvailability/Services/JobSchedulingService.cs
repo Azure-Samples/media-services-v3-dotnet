@@ -44,6 +44,14 @@
         /// </summary>
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthService">Media services instance health service</param>
+        /// <param name="jobVerificationRequestStorageService">Job verification requets storage service </param>
+        /// <param name="jobOutputStatusStorageService">Job output status service to persist job output status after initial job submission</param>
+        /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
+        /// <param name="configService">Configuration container</param>
         public JobSchedulingService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
@@ -58,6 +66,12 @@
             this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
         }
 
+        /// <summary>
+        /// Submits job to Azure Media Services.
+        /// </summary>
+        /// <param name="jobRequestModel">Job to submit.</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Submitted job</returns>
         public async Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger)
         {
             logger.LogInformation($"JobSchedulingService::SubmitJobAsync started: jobRequestModel={LogHelper.FormatObjectForLog(jobRequestModel)}");

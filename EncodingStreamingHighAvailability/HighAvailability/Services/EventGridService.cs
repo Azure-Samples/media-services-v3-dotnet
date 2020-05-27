@@ -13,6 +13,12 @@
     /// </summary>
     public class EventGridService : IEventGridService
     {
+        /// <summary>
+        /// Parses data from EventGridEvent and creates JobOutputStatusModel.
+        /// </summary>
+        /// <param name="eventGridEvent">Data to parse</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Parsed job outpout status model</returns>
         public JobOutputStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             var eventId = eventGridEvent.Id;

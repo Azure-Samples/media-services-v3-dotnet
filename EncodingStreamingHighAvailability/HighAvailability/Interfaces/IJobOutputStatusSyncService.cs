@@ -15,7 +15,7 @@
         /// </summary>
         /// <param name="currentTime">Current time, it is used to build time base criteria to load job status data.</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         Task SyncJobOutputStatusAsync(DateTime currentTime, ILogger logger);
     }
 }

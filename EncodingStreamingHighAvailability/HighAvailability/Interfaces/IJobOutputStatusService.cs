@@ -14,7 +14,7 @@
         /// </summary>
         /// <param name="jobOutputStatusModel">Input data model</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Processed job output status model</returns>
         Task<JobOutputStatusModel> ProcessJobOutputStatusAsync(JobOutputStatusModel jobOutputStatusModel, ILogger logger);
     }
 }

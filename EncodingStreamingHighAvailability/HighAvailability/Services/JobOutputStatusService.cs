@@ -36,6 +36,12 @@
             this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
         }
 
+        /// <summary>
+        /// Stores job output status record and submits request to provision encoded assets.
+        /// </summary>
+        /// <param name="jobOutputStatusModel">Input data model</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Processed job output status model</returns>
         public async Task<JobOutputStatusModel> ProcessJobOutputStatusAsync(JobOutputStatusModel jobOutputStatusModel, ILogger logger)
         {
             logger.LogInformation($"JobOutputStatusService::ProcessJobOutputStatusAsync started: jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");

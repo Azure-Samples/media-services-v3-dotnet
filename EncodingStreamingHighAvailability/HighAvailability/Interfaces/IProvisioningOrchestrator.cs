@@ -14,7 +14,7 @@
         /// </summary>
         /// <param name="provisioningRequestModel">Request to process</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ILogger logger);
     }
 }

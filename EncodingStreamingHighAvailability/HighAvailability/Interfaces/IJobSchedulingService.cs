@@ -15,7 +15,7 @@
         /// </summary>
         /// <param name="jobRequestModel">Job to submit.</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Submitted job</returns>
         Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger);
     }
 }

@@ -18,7 +18,7 @@
         void RecordInstanceUsage(string mediaServiceName, ILogger logger);
 
         /// <summary>
-        /// Gets next available  Azure Media Services instance to process job.
+        /// Gets next available Azure Media Services instance to process job.
         /// </summary>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Azure Media Services instance account name</returns>
@@ -29,7 +29,7 @@
         /// </summary>
         /// <param name="mediaServiceInstanceHealthModel">Record to store</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Stored Azure Media Services instance health record</returns>
         Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger);
 
         /// <summary>
@@ -42,7 +42,7 @@
         /// Recalculates health rating for each Azure Media Services instance health record
         /// </summary>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Updated list of Azure Media Services instance health records</returns>
         Task<IEnumerable<MediaServiceInstanceHealthModel>> ReEvaluateMediaServicesHealthAsync(ILogger logger);
     }
 }

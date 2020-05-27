@@ -14,14 +14,14 @@
         /// </summary>
         /// <param name="provisioningRequest">Request to store</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Stored provisioning request</returns>
         Task<ProvisioningRequestModel> CreateAsync(ProvisioningRequestModel provisioningRequest, ILogger logger);
 
         /// <summary>
         /// Gets next provisioning request from the storage
         /// </summary>
         /// <param name="logger"></param>
-        /// <returns></returns>
+        /// <returns>Provisioning request</returns>
         Task<ProvisioningRequestModel> GetNextAsync(ILogger logger);
     }
 }

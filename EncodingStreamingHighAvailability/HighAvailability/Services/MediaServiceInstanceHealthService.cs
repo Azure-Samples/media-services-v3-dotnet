@@ -51,6 +51,12 @@
         /// </summary>
         private ConcurrentDictionary<string, ulong> mediaServiceInstanceUsage = new ConcurrentDictionary<string, ulong>();
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthStorageService">Storate service to persist Azure Media Services instance health records</param>
+        /// <param name="jobOutputStatusStorageService">Job output status storage service is used to recalculate Azure Media Services instance health</param>
+        /// <param name="configService">Configuration container</param>
         public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
                                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                                     IConfigService configService)
@@ -63,16 +69,31 @@
             this.successRateForUnHealthyState = configService.SuccessRateForUnHealthyState;
         }
 
+        /// <summary>
+        /// Stores Azure Media Services instance health record
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthModel">Record to store</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Stored Azure Media Services instance health record</returns>
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
             return await this.mediaServiceInstanceHealthStorageService.CreateOrUpdateAsync(mediaServiceInstanceHealthModel, logger).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Lists all the media services instances with associated health status 
+        /// </summary>
+        /// <returns>List of Azure Media Services instance health records</returns>
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync()
         {
             return await this.mediaServiceInstanceHealthStorageService.ListAsync().ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Gets next available Azure Media Services instance to process job.
+        /// </summary>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Azure Media Services instance account name</returns>
         public async Task<string> GetNextAvailableInstanceAsync(ILogger logger)
         {
             var instance = string.Empty;
@@ -116,6 +137,11 @@
             return instance;
         }
 
+        /// <summary>
+        /// Records the fact that new job was submitted to a given Azure Media Services instance. 
+        /// </summary>
+        /// <param name="mediaServiceName">Azure Media Services instance account name.</param>
+        /// <param name="logger">Logger to log data</param>
         public void RecordInstanceUsage(string mediaServiceName, ILogger logger)
         {
             // update usage, if new record, store 1, if existing record, increment value
@@ -123,6 +149,11 @@
             logger.LogInformation($"MediaServiceInstanceHealthService::RecordInstanceUsage: mediaServiceInstanceUsage={LogHelper.FormatObjectForLog(this.mediaServiceInstanceUsage)}");
         }
 
+        /// <summary>
+        /// Recalculates health rating for each Azure Media Services instance health record
+        /// </summary>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Updated list of Azure Media Services instance health records</returns>
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ReEvaluateMediaServicesHealthAsync(ILogger logger)
         {
             // Get all available Azure Media Service instances.
@@ -206,7 +237,10 @@
                 logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync setting health state: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} state={state}");
 
                 // update newly calcualte health rating
-                var updatedMediaServiceInstanceHealthModel = this.UpdateHealthStateAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, state, DateTime.UtcNow).GetAwaiter().GetResult();
+                var updatedMediaServiceInstanceHealthModel = this.mediaServiceInstanceHealthStorageService.UpdateHealthStateAsync(
+                                                                mediaServiceInstanceHealthModel.MediaServiceAccountName, 
+                                                                state, 
+                                                                DateTime.UtcNow).GetAwaiter().GetResult();
 
                 // since this is processed in parallel for all available Azure Media Service instances, need to sync on updating final list
                 // this should not cause any perf issue, since it is simple update and rest of the method is significant more expensive to run.
@@ -217,11 +251,6 @@
             });
 
             return updatedInstances;
-        }
-
-        public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime)
-        {
-            return await this.mediaServiceInstanceHealthStorageService.UpdateHealthStateAsync(mediaServiceName, instanceHealthState, eventDateTime).ConfigureAwait(false);
         }
     }
 }
