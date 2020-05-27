@@ -14,7 +14,7 @@
         /// </summary>
         /// <param name="jobVerificationRequestModel">Job verification request</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Processed job verification request</returns>
         Task<JobVerificationRequestModel> VerifyJobAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger);
     }
 }

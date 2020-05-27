@@ -64,6 +64,12 @@
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
+        /// <summary>
+        /// Verifies the status of given job, implements business logic to resubmit jobs if needed
+        /// </summary>
+        /// <param name="jobVerificationRequestModel">Job verification request</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Processed job verification request</returns>
         public async Task<JobVerificationRequestModel> VerifyJobAsync(JobVerificationRequestModel jobVerificationRequestModel, ILogger logger)
         {
             logger.LogInformation($"JobVerificationService::VerifyJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");

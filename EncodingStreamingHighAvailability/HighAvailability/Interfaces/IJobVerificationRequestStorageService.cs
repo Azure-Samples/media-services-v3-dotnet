@@ -16,7 +16,7 @@
         /// <param name="jobVerificationRequestModel">Job verification request</param>
         /// <param name="verificationDelay">How far in future to run verification logic</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Stored job verification request</returns>
         Task<JobVerificationRequestModel> CreateAsync(JobVerificationRequestModel jobVerificationRequestModel, TimeSpan verificationDelay, ILogger logger);
 
         /// <summary>

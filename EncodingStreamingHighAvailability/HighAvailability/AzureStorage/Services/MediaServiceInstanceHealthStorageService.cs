@@ -25,11 +25,21 @@
         /// </summary>
         private readonly ITableStorageService tableStorageService;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="tableStorageService">Table storage service</param>
         public MediaServiceInstanceHealthStorageService(ITableStorageService tableStorageService)
         {
             this.tableStorageService = tableStorageService ?? throw new ArgumentNullException(nameof(tableStorageService));
         }
 
+        /// <summary>
+        /// Stores Azure Media Services instance health data.
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthModel">Data to store</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Created Azure Media Services instance health data record</returns>
         public async Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger)
         {
             // update all date fields to be at least minDateTimeForTableStorage
@@ -49,17 +59,33 @@
             return mediaServiceInstanceHealthModelResult;
         }
 
+        /// <summary>
+        /// Gets specific Azure Media Services instance health data record.
+        /// </summary>
+        /// <param name="mediaServiceName">Azure Media Services instance account name</param>
+        /// <returns>Azure Media Services instance health data record</returns>
         public async Task<MediaServiceInstanceHealthModel> GetAsync(string mediaServiceName)
         {
             var model = await this.tableStorageService.GetAsync<MediaServiceInstanceHealthModelTableEntity>(mediaServiceName, MediaServiceInstanceHealthModelTableEntity.DefaultRowKeyValue).ConfigureAwait(false);
             return model.GetMediaServiceInstanceHealthModel();
         }
 
+        /// <summary>
+        /// Lists all available Azure Media Services instance health data records
+        /// </summary>
+        /// <returns>List of Azure Media Services instance health data records</returns>
         public async Task<IEnumerable<MediaServiceInstanceHealthModel>> ListAsync()
         {
             return (await this.tableStorageService.ListAsync<MediaServiceInstanceHealthModelTableEntity>().ConfigureAwait(false)).Select(i => i.GetMediaServiceInstanceHealthModel());
         }
 
+        /// <summary>
+        /// Updates health state for the specific Azure Media Services instance health data record
+        /// </summary>
+        /// <param name="mediaServiceName">Azure Media Services instance account name</param>
+        /// <param name="instanceHealthState">health state</param>
+        /// <param name="eventDateTime">update record timestamp</param>
+        /// <returns>Azure Media Services instance health data record</returns>
         public async Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime)
         {
             // Get the current record

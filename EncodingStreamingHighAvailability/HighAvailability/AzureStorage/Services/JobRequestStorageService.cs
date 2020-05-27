@@ -25,11 +25,21 @@
         /// </summary>
         private readonly JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="queue">Azure Queue client</param>
         public JobRequestStorageService(QueueClient queue)
         {
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
+        /// <summary>
+        /// Stores a new job request
+        /// </summary>
+        /// <param name="jobRequestModel">Job request to store</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns></returns>
         public async Task<JobRequestModel> CreateAsync(JobRequestModel jobRequestModel, ILogger logger)
         {
             var message = JsonConvert.SerializeObject(jobRequestModel, this.settings);
@@ -39,6 +49,11 @@
             return jobRequestModel;
         }
 
+        /// <summary>
+        /// Gets next available job request.
+        /// </summary>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Job request from the storage</returns>
         public async Task<JobRequestModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);

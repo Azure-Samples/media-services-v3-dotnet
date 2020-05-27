@@ -53,6 +53,13 @@
         /// </summary>
         private readonly int pageSize = 100;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthService">Service to load Azure Media Service instance health information</param>
+        /// <param name="jobOutputStatusStorageService">Storage service for job output status records</param>
+        /// <param name="mediaServiceInstanceFactory">Factory to create Azure Media Services instance</param>
+        /// <param name="configService">Configuration container</param>
         public JobOutputStatusSyncService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IMediaServiceInstanceFactory mediaServiceInstanceFactory,
@@ -66,6 +73,13 @@
             this.timeSinceLastUpdateToForceJobResyncInMinutes = this.configService.TimeSinceLastUpdateToForceJobResyncInMinutes;
         }
 
+        // <summary>
+        /// EventGrid events sometimes are lost and manual resync is required. This method syncs job output status records between 
+        /// job output status storage and Azure Media Services APIs. 
+        /// </summary>
+        /// <param name="currentTime">Current time, it is used to build time base criteria to load job status data.</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Task for async operation</returns>
         public async Task SyncJobOutputStatusAsync(DateTime currentTime, ILogger logger)
         {
             // Load list of all instance to sync data for
@@ -127,7 +141,7 @@
         /// <param name="jobOutputStatusModels">List of job output status records to resync</param>
         /// <param name="totalNumberOfJobs">Total number of jobs available for a given instance</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         private async Task RefreshJobOutputStatusAsync(string mediaServiceAccountName, IList<JobOutputStatusModel> jobOutputStatusModels, int totalNumberOfJobs, ILogger logger)
         {
             if (jobOutputStatusModels.Any())
@@ -168,7 +182,7 @@
         /// <param name="jobOutputStatusModels">List of job output status records to resync</param>
         /// <param name="transformName">transform name</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         private async Task RefreshJobOutputStatusUsingGetAsync(string mediaServiceAccountName, IList<JobOutputStatusModel> jobOutputStatusModels, string transformName, ILogger logger)
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
@@ -197,7 +211,7 @@
         /// <param name="jobOutputStatusModels">List of job output status to resync</param>
         /// <param name="transformName">Transform name</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         private async Task RefreshJobOutputStatusUsingListAsync(string mediaServiceAccountName, IList<JobOutputStatusModel> jobOutputStatusModels, string transformName, ILogger logger)
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
@@ -244,7 +258,7 @@
         /// <param name="jobOutputStatusModel">Job output status to update</param>
         /// <param name="job">Job data loaded from API</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Task for async operation</returns>
         private async Task UpdateJobOutputStatusAsync(string mediaServiceAccountName, JobOutputStatusModel jobOutputStatusModel, Job job, ILogger logger)
         {
             if (job != null)

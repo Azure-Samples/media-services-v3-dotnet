@@ -20,11 +20,21 @@
         /// </summary>
         private readonly QueueClient queue;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="queue">Azure Queue client</param>
         public ProvisioningCompletedEventStorageService(QueueClient queue)
         {
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
+        /// <summary>
+        /// Stores provisioning completed event.
+        /// </summary>
+        /// <param name="provisioningCompletedEventModel">Event to store</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Stored provisioning completed event</returns>
         public async Task<ProvisioningCompletedEventModel> CreateAsync(ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger)
         {
             var message = JsonConvert.SerializeObject(provisioningCompletedEventModel);
@@ -35,6 +45,11 @@
             return provisioningCompletedEventModel;
         }
 
+        /// <summary>
+        /// Gets next provisioning completed event from storage
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <returns>Provisioning completed event</returns>
         public async Task<ProvisioningCompletedEventModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);
