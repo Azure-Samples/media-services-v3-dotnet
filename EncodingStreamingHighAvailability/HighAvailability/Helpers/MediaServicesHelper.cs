@@ -13,15 +13,16 @@
     using System.Security.Claims;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Implements helper methods for Azure Media Services instance client
+    /// </summary>
     public static class MediaServicesHelper
     {
         /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
+        /// Creates the AzureMediaServicesClient object
         /// </summary>
-        /// <param name="config">The parm is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <CreateMediaServicesClient>
+        /// <param name="config">configuration data </param>
+        /// <returns>Azure Media Services instance client</returns>
         public static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(MediaServiceConfigurationModel config)
         {
             if (config == null)
@@ -41,6 +42,15 @@
             };
         }
 
+        /// <summary>
+        /// Checks if transform exists, if not, creates transform
+        /// </summary>
+        /// <param name="client">Azure Media Services instance client</param>
+        /// <param name="resourceGroupName">Azure resource group</param>
+        /// <param name="accountName">Azure Media Services instance account name</param>
+        /// <param name="transformName">Transform name</param>
+        /// <param name="preset">transform preset object</param>
+        /// <returns></returns>
         public static async Task<Transform> EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, Preset preset)
         {
             if (client == null)
@@ -48,21 +58,37 @@
                 throw new ArgumentNullException(nameof(client));
             }
 
+            // try to get existing transform
             var transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
+            // if transform does not exist
             if (transform == null)
             {
+                // create output with given preset
                 var outputs = new TransformOutput[]
                 {
                     new TransformOutput(preset),
                 };
 
+                // create new transform
                 transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs).ConfigureAwait(false);
             }
 
             return transform;
         }
 
+        /// <summary>
+        /// Checks if content key policy exists, if not, creates new one
+        /// This code is based on https://github.com/Azure-Samples/media-services-v3-dotnet-core-tutorials/tree/master/NETCore/EncodeHTTPAndPublishAESEncrypted
+        /// </summary>
+        /// <param name="client">Azure Media Services instance client</param>
+        /// <param name="resourceGroup">Azure resource group</param>
+        /// <param name="accountName">Azure Media Services instance account name</param>
+        /// <param name="contentKeyPolicyName">Content key policy name</param>
+        /// <param name="tokenSigningKey">Token signing key</param>
+        /// <param name="issuer">Token issuer</param>
+        /// <param name="audience">Token audience</param>
+        /// <returns></returns>
         public static async Task<ContentKeyPolicy> EnsureContentKeyPolicyExists(IAzureMediaServicesClient client, string resourceGroup, string accountName, string contentKeyPolicyName, byte[] tokenSigningKey, string issuer, string audience)
         {
             var primaryKey = new ContentKeyPolicySymmetricTokenKey(tokenSigningKey);
@@ -80,14 +106,20 @@
                         ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims))
             };
 
-            // since we are randomly generating the signing key each time, make sure to create or update the policy each time.
-            // Normally you would use a long lived key so you would just check for the policies existence with Get instead of
-            // ensuring to create or update it each time.
             var policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(resourceGroup, accountName, contentKeyPolicyName, options).ConfigureAwait(false);
 
             return policy;
         }
 
+        /// <summary>
+        /// Gets token to for a given key identifier and key
+        /// This code is based on https://github.com/Azure-Samples/media-services-v3-dotnet-core-tutorials/tree/master/NETCore/EncodeHTTPAndPublishAESEncrypted
+        /// </summary>
+        /// <param name="issuer">Token issuer</param>
+        /// <param name="audience">Token audience</param>
+        /// <param name="keyIdentifier">key identifier</param>
+        /// <param name="tokenVerificationKey">binary key</param>
+        /// <returns></returns>
         public static string GetToken(string issuer, string audience, string keyIdentifier, byte[] tokenVerificationKey)
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
@@ -116,10 +148,18 @@
             return handler.WriteToken(token);
         }
 
+        /// <summary>
+        /// Determines if failed job should be resubmitted
+        /// </summary>
+        /// <param name="job">Azure Media Services job</param>
+        /// <param name="jobOutputAssetName">Output asset name</param>
+        /// <returns>true if job should be resubmitted</returns>
         public static bool IsSystemError(Job job, string jobOutputAssetName)
         {
+            // if overall job has failed
             if (job.State == JobState.Error)
             {
+                // find job output associated with specific asset name
                 foreach (var jobOutput in job.Outputs)
                 {
                     if (jobOutput is JobOutputAsset)
@@ -127,6 +167,7 @@
                         var jobOutputAsset = (JobOutputAsset)jobOutput;
                         if (jobOutputAsset.State == JobState.Error && jobOutputAsset.AssetName.Equals(jobOutputAssetName, StringComparison.InvariantCultureIgnoreCase))
                         {
+                            // check if job should be retried
                             if (jobOutputAsset.Error.Retry == JobRetry.MayRetry)
                             {
                                 return true;
@@ -139,6 +180,12 @@
             return false;
         }
 
+        /// <summary>
+        /// Returns job state for specific asset
+        /// </summary>
+        /// <param name="job">Azure Media Services job</param>
+        /// <param name="jobOutputAssetName">asset name</param>
+        /// <returns>JobState for a given asset name</returns>
         public static JobState GetJobOutputState(Job job, string jobOutputAssetName)
         {
             foreach (var jobOutput in job.Outputs)
@@ -156,6 +203,11 @@
             return null;
         }
 
+        /// <summary>
+        /// Determines if failed job should be resubmitted using EventGrid event data
+        /// </summary>
+        /// <param name="jobOutput">Job output from EventGrid event</param>
+        /// <returns>true if job should be resubmitted</returns>
         public static bool IsSystemError(MediaJobOutputAsset jobOutput)
         {
             if (jobOutput.State == MediaJobState.Error)

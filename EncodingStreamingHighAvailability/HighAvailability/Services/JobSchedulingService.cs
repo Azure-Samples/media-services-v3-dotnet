@@ -20,7 +20,7 @@
         private readonly TimeSpan verificationDelay;
 
         /// <summary>
-        /// Media Services Instance Health Service is used to determine next healthy Azure Media Services instance to submit new job.
+        /// Media Services Instance Health Service is used to determine next healthy Azure Media Services instance to submit a new job.
         /// </summary>
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
 
