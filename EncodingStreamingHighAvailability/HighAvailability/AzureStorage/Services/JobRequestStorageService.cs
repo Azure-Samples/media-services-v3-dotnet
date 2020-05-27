@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Implements methods to store and get job requests from Azure Queue
+    /// Implements methods to store and get job requests using Azure Queue
     /// </summary>
     public class JobRequestStorageService : IJobRequestStorageService
     {
