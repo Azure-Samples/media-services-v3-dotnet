@@ -55,7 +55,7 @@
         string FrontDoorHostName { get; }
 
         /// <summary>
-        /// Expected max number of minutes requried to complete encoding job. If job stays in process longer, it is marked as "stuck" and this information is used to determine instance health.
+        /// Expected max number of minutes required to complete encoding job. If job stays in process longer, it is marked as "stuck" and this information is used to determine instance health.
         /// </summary>
         int NumberOfMinutesInProcessToMarkJobStuck { get; }
 

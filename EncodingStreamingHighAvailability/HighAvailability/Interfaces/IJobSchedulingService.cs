@@ -5,11 +5,17 @@
     using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Interface to define methods to submit jobs to Azure Media Service
+    /// </summary>
     public interface IJobSchedulingService
     {
-        // This is the main function to submit jobs
-        // It should use IMediaServiceInstanceHealthService to determine what media service account to use to submit this job. 
-        // It could also use IJobOutputStatusStorageService to determine number of outstanding jobs before submitting new one
+        /// <summary>
+        /// Submits job to Azure Media Services.
+        /// </summary>
+        /// <param name="jobRequestModel">Job to submit.</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns></returns>
         Task<Job> SubmitJobAsync(JobRequestModel jobRequestModel, ILogger logger);
     }
 }
