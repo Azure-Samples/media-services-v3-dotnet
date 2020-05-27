@@ -2,16 +2,50 @@
 {
     using System;
 
+    /// <summary>
+    /// Implements data model to store Azure Media Services intstance health data
+    /// </summary>
     public class MediaServiceInstanceHealthModel
     {
+        /// <summary>
+        /// Azure Media Services intstance account name
+        /// </summary>
         public string MediaServiceAccountName { get; set; }
+
+        /// <summary>
+        /// Azure Media Services intstance health state
+        /// </summary>
         public InstanceHealthState HealthState { get; set; }
+
+        /// <summary>
+        /// Data record update time 
+        /// </summary>
         public DateTimeOffset LastUpdated { get; set; }
+
+        /// <summary>
+        /// Indicator if Azure Media Services intstance is enabled and should accept new requests
+        /// </summary>
         public bool IsEnabled { get; set; }
     }
 
+    /// <summary>
+    /// Enum to indicate Azure Media Services intstance health
+    /// </summary>
     public enum InstanceHealthState
     {
-        Healthy, Degraded, Unhealthy
+        /// <summary>
+        /// Instance is healthy, accepts new requests
+        /// </summary>
+        Healthy,
+
+        /// <summary>
+        /// Instance is degraded, accepts new requests only if there are no other healthy instance
+        /// </summary>
+        Degraded,
+
+        /// <summary>
+        /// Instance is unhealthy, does not accept new requests
+        /// </summary>
+        Unhealthy
     }
 }

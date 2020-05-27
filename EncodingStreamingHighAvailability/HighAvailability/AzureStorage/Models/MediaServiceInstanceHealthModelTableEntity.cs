@@ -4,14 +4,27 @@
     using Microsoft.Azure.Cosmos.Table;
     using System;
 
+    /// <summary>
+    /// Implements table storage specific model for MediaServiceInstanceHealthModel class
+    /// </summary>
     public class MediaServiceInstanceHealthModelTableEntity : TableEntity
     {
+        /// <summary>
+        /// Default value for row key
+        /// </summary>
         public static readonly string DefaultRowKeyValue = "0";
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public MediaServiceInstanceHealthModelTableEntity() : this(new MediaServiceInstanceHealthModel())
         {
         }
 
+        /// <summary>
+        /// Constructor to create object from MediaServiceInstanceHealthModel object
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthModel"></param>
         public MediaServiceInstanceHealthModelTableEntity(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel)
         {
             this.PartitionKey = mediaServiceInstanceHealthModel.MediaServiceAccountName;
@@ -23,13 +36,29 @@
         }
 
         /// <summary>
-        /// TBD need to decide if we want to duplicate PartitionKey field in table storage, for now, we are duplicating
+        /// Azure Media Services intstance account name
         /// </summary>
         public string MediaServiceAccountName { get; set; }
+
+        /// <summary>
+        /// Azure Media Services intstance health state
+        /// </summary>
         public string HealthState { get; set; }
+
+        /// <summary>
+        /// Data record update time
+        /// </summary>
         public DateTimeOffset LastUpdated { get; set; }
+
+        /// <summary>
+        /// Indicator if Azure Media Services intstance is enabled and should accept new requests
+        /// </summary>
         public bool IsEnabled { get; set; }
 
+        /// <summary>
+        /// Creates MediaServiceInstanceHealthModel object
+        /// </summary>
+        /// <returns>MediaServiceInstanceHealthModel object</returns>
         public MediaServiceInstanceHealthModel GetMediaServiceInstanceHealthModel()
         {
             return new MediaServiceInstanceHealthModel
