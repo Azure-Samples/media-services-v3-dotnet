@@ -19,7 +19,7 @@
         Task<JobOutputStatusModel> CreateOrUpdateAsync(JobOutputStatusModel jobOutputStatusModel, ILogger logger);
 
         /// <summary>
-        /// Read all job output status records for a given job name and output asset name.
+        /// Reads all job output status records for a given job name and output asset name.
         /// </summary>
         /// <param name="jobName">Job name to load data for</param>
         /// <param name="jobOutputAssetName">Output asset name to load data for</param>
@@ -27,7 +27,7 @@
         Task<IEnumerable<JobOutputStatusModel>> ListAsync(string jobName, string jobOutputAssetName);
 
         /// <summary>
-        /// Read latest job output status record for a given job name and output asset name.
+        /// Reads latest job output status record for a given job name and output asset name.
         /// </summary>
         /// <param name="jobName">Job name to load data for</param>
         /// <param name="jobOutputAssetName">Output asset name to load data for</param>
@@ -35,7 +35,7 @@
         Task<JobOutputStatusModel> GetLatestJobOutputStatusAsync(string jobName, string jobOutputAssetName);
 
         /// <summary>
-        /// Read all records for a given account name and time duration condition
+        /// Reads all records for a given account name and time duration condition
         /// </summary>
         /// <param name="mediaServiceAccountName">Account name to load data for</param>
         /// <param name="timeWindowInMinutesToLoadJobs">How far back to go to load data</param>
