@@ -25,11 +25,22 @@
         /// </summary>
         private readonly JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="queue">Azure Queue client</param>
         public JobVerificationRequestStorageService(QueueClient queue)
         {
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
+        /// <summary>
+        /// Creates new job verification request. This requests is used to verify that job was successfully completed.
+        /// </summary>
+        /// <param name="jobVerificationRequestModel">Job verification request</param>
+        /// <param name="verificationDelay">How far in future to run verification logic</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Stored job verification request</returns>
         public async Task<JobVerificationRequestModel> CreateAsync(JobVerificationRequestModel jobVerificationRequestModel, TimeSpan verificationDelay, ILogger logger)
         {
             var message = JsonConvert.SerializeObject(jobVerificationRequestModel, this.settings);
@@ -39,6 +50,11 @@
             return jobVerificationRequestModel;
         }
 
+        /// <summary>
+        /// Gets next job verification request from the storage
+        /// </summary>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Loaded job verification request</returns>
         public async Task<JobVerificationRequestModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);

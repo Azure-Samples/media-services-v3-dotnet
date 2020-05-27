@@ -16,7 +16,7 @@
         /// </summary>
         /// <param name="mediaServiceInstanceHealthModel">Data to store</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Created Azure Media Services instance health data record</returns>
         Task<MediaServiceInstanceHealthModel> CreateOrUpdateAsync(MediaServiceInstanceHealthModel mediaServiceInstanceHealthModel, ILogger logger);
 
         /// <summary>
@@ -38,7 +38,7 @@
         /// <param name="mediaServiceName">Azure Media Services instance account name</param>
         /// <param name="instanceHealthState">health state</param>
         /// <param name="eventDateTime">update record timestamp</param>
-        /// <returns></returns>
+        /// <returns>Azure Media Services instance health data record</returns>
         Task<MediaServiceInstanceHealthModel> UpdateHealthStateAsync(string mediaServiceName, InstanceHealthState instanceHealthState, DateTimeOffset eventDateTime);
     }
 }

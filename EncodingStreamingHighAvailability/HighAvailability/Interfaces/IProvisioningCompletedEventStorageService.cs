@@ -14,7 +14,7 @@
         /// </summary>
         /// <param name="provisioningCompletedEventModel">Event to store</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
+        /// <returns>Stored provisioning completed event</returns>
         Task<ProvisioningCompletedEventModel> CreateAsync(ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger);
 
         /// <summary>

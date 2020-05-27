@@ -15,7 +15,7 @@
         /// </summary>
         /// <param name="jobOutputStatusModel">Data to store</param>
         /// <param name="logger">Logger to log</param>
-        /// <returns></returns>
+        /// <returns>Stored model</returns>
         Task<JobOutputStatusModel> CreateOrUpdateAsync(JobOutputStatusModel jobOutputStatusModel, ILogger logger);
 
         /// <summary>
@@ -23,7 +23,7 @@
         /// </summary>
         /// <param name="jobName">Job name to load data for</param>
         /// <param name="jobOutputAssetName">Output asset name to load data for</param>
-        /// <returns></returns>
+        /// <returns>List of job output status records</returns>
         Task<IEnumerable<JobOutputStatusModel>> ListAsync(string jobName, string jobOutputAssetName);
 
         /// <summary>
@@ -31,7 +31,7 @@
         /// </summary>
         /// <param name="jobName">Job name to load data for</param>
         /// <param name="jobOutputAssetName">Output asset name to load data for</param>
-        /// <returns></returns>
+        /// <returns>Latest job output status record</returns>
         Task<JobOutputStatusModel> GetLatestJobOutputStatusAsync(string jobName, string jobOutputAssetName);
 
         /// <summary>
@@ -39,7 +39,7 @@
         /// </summary>
         /// <param name="mediaServiceAccountName">Account name to load data for</param>
         /// <param name="timeWindowInMinutesToLoadJobs">How far back to go to load data</param>
-        /// <returns></returns>
+        /// <returns>List of job output status records</returns>
         Task<IEnumerable<JobOutputStatusModel>> ListByMediaServiceAccountNameAsync(string mediaServiceAccountName, int timeWindowInMinutesToLoadJobs);
     }
 }

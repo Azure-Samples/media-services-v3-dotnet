@@ -20,11 +20,21 @@
         /// </summary>
         private readonly QueueClient queue;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="queue">Azure Queue client</param>
         public ProvisioningRequestStorageService(QueueClient queue)
         {
             this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
+        /// <summary>
+        /// Stores new provisioning request
+        /// </summary>
+        /// <param name="provisioningRequest">Request to store</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Stored provisioning request</returns>
         public async Task<ProvisioningRequestModel> CreateAsync(ProvisioningRequestModel provisioningRequest, ILogger logger)
         {
             var message = JsonConvert.SerializeObject(provisioningRequest);
@@ -35,6 +45,11 @@
             return provisioningRequest;
         }
 
+        /// <summary>
+        /// Gets next provisioning request from the storage
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <returns>Provisioning request</returns>
         public async Task<ProvisioningRequestModel> GetNextAsync(ILogger logger)
         {
             var messages = await this.queue.ReceiveMessagesAsync(maxMessages: 1).ConfigureAwait(false);

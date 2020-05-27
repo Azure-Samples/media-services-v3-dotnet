@@ -23,12 +23,23 @@
         /// </summary>
         private readonly IProvisioningCompletedEventStorageService provisioningCompletedEventStorageService;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="provisioningServices">List of provisioning services</param>
+        /// <param name="provisioningCompletedEventStorageService">Storage service to persist provisioning completed event</param>
         public ProvisioningOrchestrator(IList<IProvisioningService> provisioningServices, IProvisioningCompletedEventStorageService provisioningCompletedEventStorageService)
         {
             this.provisioningServices = provisioningServices ?? throw new ArgumentNullException(nameof(provisioningServices));
             this.provisioningCompletedEventStorageService = provisioningCompletedEventStorageService ?? throw new ArgumentNullException(nameof(provisioningCompletedEventStorageService));
         }
 
+        /// <summary>
+        /// Provisions encoded assets
+        /// </summary>
+        /// <param name="provisioningRequestModel">Request to process</param>
+        /// <param name="logger">Logger to log data</param>
+        /// <returns>Task for async operation</returns>
         public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequestModel, ILogger logger)
         {
             logger.LogInformation($"ProvisioningOrchestrator::ProvisionAsync started: provisioningRequestModel={LogHelper.FormatObjectForLog(provisioningRequestModel)}");
