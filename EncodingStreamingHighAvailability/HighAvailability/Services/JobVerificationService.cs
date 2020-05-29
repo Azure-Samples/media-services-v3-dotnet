@@ -175,7 +175,7 @@
                        EncodedAssetMediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                        EncodedAssetName = jobVerificationRequestModel.JobOutputAssetName,
                        StreamingLocatorName = $"streaming-{jobVerificationRequestModel.OriginalJobRequestModel.OutputAssetName}"
-                   }, 
+                   },
                    logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobVerificationService::ProcessFinishedJob stream provisioning request submitted for completed job: provisioningRequestResult={LogHelper.FormatObjectForLog(provisioningRequestResult)}");
@@ -203,7 +203,7 @@
 
             // If job has failed for system errors, it needs to be resubmitted.
             if (jobOutputStatusModel.IsSystemError)
-            {                
+            {
                 await this.ResubmitJob(jobVerificationRequestModel, logger).ConfigureAwait(false);
             }
             else
@@ -248,8 +248,29 @@
                 var verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus * jobVerificationRequestModel.RetryCount, 0);
 
                 // submit new verification request with future visibility.
-                var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, verificationDelay, logger).ConfigureAwait(false);
-                logger.LogInformation($"JobVerificationService::SubmitVerificationRequestAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
+                var retryCount = 3;
+                var retryTimeOut = 1000;
+                // Job is submitted at this point, failing to do any calls after this point would result in reprocessing this job request and submitting duplicate one.
+                // It is ok to retry and igonre exception at the end. In current implementation based on Azure storage, it is very unlikely to fail in any of the below calls.
+                do
+                {
+                    try
+                    {
+                        var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, verificationDelay, logger).ConfigureAwait(false);
+                        logger.LogInformation($"JobVerificationService::SubmitVerificationRequestAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
+                        // no expcetion happened, let's break.
+                        break;
+                    }
+#pragma warning disable CA1031 // Do not catch general exception types
+                    catch (Exception e)
+#pragma warning restore CA1031 // Do not catch general exception types
+                    {
+                        logger.LogError($"JobVerificationService::SubmitVerificationRequestAsync got exception calling jobVerificationRequestStorageService.CreateAsync: retryCount={retryCount} message={e.Message} jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                        retryCount--;
+                        await Task.Delay(retryTimeOut).ConfigureAwait(false);
+                    }
+                }
+                while (retryCount > 0);
             }
             else
             {
