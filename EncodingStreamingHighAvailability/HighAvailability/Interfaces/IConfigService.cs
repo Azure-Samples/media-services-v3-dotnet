@@ -70,12 +70,12 @@
         int TimeSinceLastUpdateToForceJobResyncInMinutes { get; }
 
         /// <summary>
-        /// Success/Total job ration threshold to determine when Azure Media Service instance is healthy.
+        /// Success/Total job ratio threshold to determine when Azure Media Service instance is healthy.
         /// </summary>
         float SuccessRateForHealthyState { get; }
 
         /// <summary>
-        /// Success/Total job ration threshold to determine when Azure Media Service instance is unhealthy.
+        /// Success/Total job ratio threshold to determine when Azure Media Service instance is unhealthy.
         /// </summary>
         float SuccessRateForUnHealthyState { get; }
 
