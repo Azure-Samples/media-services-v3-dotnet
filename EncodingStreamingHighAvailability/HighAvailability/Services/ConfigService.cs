@@ -54,11 +54,11 @@
             this.TableStorageAccountConnectionString = string.Empty;
             this.FrontDoorHostName = string.Empty;
             this.NumberOfMinutesInProcessToMarkJobStuck = 60;
-            this.TimeWindowToLoadJobsInMinutes = 11480;
+            this.TimeWindowToLoadJobsInMinutes = 480;
             this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
-            this.TimeDurationInMinutesToVerifyJobStatus = 10;
+            this.TimeDurationInMinutesToVerifyJobStatus = 60;
             this.ContentKeyPolicyName = "TestPolicyName";
             this.TokenAudience = "TestTokenAudience";
             this.TokenIssuer = "TestTokenIssuer";
@@ -125,12 +125,12 @@
         public int TimeSinceLastUpdateToForceJobResyncInMinutes { get; private set; }
 
         /// <summary>
-        /// Success/Total job ration threshold to determine when Azure Media Service instance is healthy.
+        /// Success/Total job ratio threshold to determine when Azure Media Service instance is healthy.
         /// </summary>
         public float SuccessRateForHealthyState { get; private set; }
 
         /// <summary>
-        /// Success/Total job ration threshold to determine when Azure Media Service instance is unhealthy.
+        /// Success/Total job ratio threshold to determine when Azure Media Service instance is unhealthy.
         /// </summary>
         public float SuccessRateForUnHealthyState { get; private set; }
 

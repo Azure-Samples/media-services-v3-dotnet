@@ -42,7 +42,7 @@ namespace HighAvailability.InstanceHealth
         /// <param name="logger">Logger to log data to App Insights</param>
         /// <returns>Task for async operation</returns>
         [FunctionName("InstanceHealthFunction")]
-        public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo timerInfo, ILogger logger)
+        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo timerInfo, ILogger logger)
         {
             try
             {
@@ -70,7 +70,7 @@ namespace HighAvailability.InstanceHealth
         /// <param name="logger">Logger to log data to App Insights</param>
         /// <returns>Task for async operation</returns>
         [FunctionName("JobOutputStatusSyncFunction")]
-        public async Task JobOutputStatusSyncRun([TimerTrigger("0 */10 * * * *")] TimerInfo timerInfo, ILogger logger)
+        public async Task JobOutputStatusSyncRun([TimerTrigger("0 */15 * * * *")] TimerInfo timerInfo, ILogger logger)
         {
             try
             {
