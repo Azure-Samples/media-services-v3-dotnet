@@ -33,7 +33,7 @@
         /// <summary>
         /// Construct config container and load default settings.
         /// </summary>
-        /// <param name="keyVaultName"></param>
+        /// <param name="keyVaultName">keyvault name</param>
         public ConfigService(string keyVaultName)
         {
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
@@ -171,7 +171,7 @@
         /// <summary>
         /// Load configuration from environment properties and keyvault
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Task of async operation</returns>
         public async Task LoadConfigurationAsync()
         {           
             // this value is set by ARM deployment script

@@ -17,17 +17,48 @@ namespace HighAvailability.Tests
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// This class contains code that needs to run once after initial install of this sample.
+    /// It sets up transform and key policy for each AMS instance, upload initial records for health state tracking for each instance.
+    /// </summary>
     [TestClass]
     public class E2ETests
     {
+        /// <summary>
+        /// Default transform name
+        /// </summary>
         private static string transformName = "TestTransform";
 
+        /// <summary>
+        /// Job request queue client
+        /// </summary>
         private static QueueClient jobRequestQueue;
+
+        /// <summary>
+        /// Table storage service to persist Azure Media Service instance health
+        /// </summary>
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
+
+        /// <summary>
+        /// Table storage service to store job output status
+        /// </summary>
         private static ITableStorageService jobOutputStatusTableStorageService;
+
+        /// <summary>
+        /// Configuration container
+        /// </summary>
         private static IConfigService configService;
+
+        /// <summary>
+        /// Job verification request queue client
+        /// </summary>
         private static QueueClient jobVerificationRequestQueue;
 
+        /// <summary>
+        /// Initialize objec to run this setup
+        /// </summary>
+        /// <param name="_">not used in this sample</param>
+        /// <returns>Task for async operation</returns>
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
         {
@@ -58,6 +89,11 @@ namespace HighAvailability.Tests
             await jobVerificationRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Uploads initial values to services for this sample to work. 
+        /// Submits test requests.
+        /// </summary>
+        /// <returns>Task for async operation</returns>
         [TestMethod]
         public async Task SubmitTestRequests()
         {
@@ -106,6 +142,12 @@ namespace HighAvailability.Tests
             }
         }
 
+        /// <summary>
+        /// Generates test data
+        /// </summary>
+        /// <param name="sequenceNumber">sequence number</param>
+        /// <param name="uniqueness">unique part of the names</param>
+        /// <returns>Generated JobRequestModel</returns>
         private static JobRequestModel GenerateJobRequestModel(int sequenceNumber, string uniqueness)
         {
             var jobId = $"jobId-{sequenceNumber}-{uniqueness}";
