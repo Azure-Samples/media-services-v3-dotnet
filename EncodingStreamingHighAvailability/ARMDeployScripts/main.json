@@ -657,6 +657,10 @@
           "fullName": "[variables('functionNames')[copyIndex()]]"
         }
       }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[variables('keyVaultName')]"
     }
   }
 }
