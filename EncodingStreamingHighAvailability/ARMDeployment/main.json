@@ -244,11 +244,7 @@
             {
               "name": "KeyVaultName",
               "value": "[variables('keyVaultName')]"
-            },
-            {
-              "name": "amsConfiguration",
-              "value": "[string(variables('amsConfiguration'))]"
-            },
+            },           
             {
               "name": "FrontDoorHostName",
               "value": "[variables('frontDoorHostName')]"
@@ -329,6 +325,23 @@
           "enabled": true
         },
         "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2019-12-12').connectionStrings[4].connectionString]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "name": "[concat(variables('keyVaultName'), '/AMSConfiguration')]",
+      "apiVersion": "2016-10-01",
+      "location": "[parameters('deploymentRegionLocation')]",
+      "scale": null,
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[string(variables('amsConfiguration'))]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",

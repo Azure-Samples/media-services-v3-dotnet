@@ -19,12 +19,7 @@
         /// KeyVault name to load configuration
         /// </summary>
         private readonly string keyVaultName;
-
-        /// <summary>
-        /// Environment property name to load Azure Media Service configuration data.
-        /// </summary>
-        private readonly string AMSConfigurationKeyName = "AMSConfiguration";
-
+       
         /// <summary>
         /// Environment property name to load Azure Front Door host name.
         /// </summary>
@@ -178,18 +173,7 @@
         /// </summary>
         /// <returns></returns>
         public async Task LoadConfigurationAsync()
-        {
-            // this value is set by ARM deployment script
-            var amsConfigurationString = Environment.GetEnvironmentVariable(this.AMSConfigurationKeyName);
-
-            if (amsConfigurationString == null)
-            {
-                throw new Exception($"Function confo does not have {this.AMSConfigurationKeyName} value");
-            }
-
-            var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(amsConfigurationString);
-            this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
-
+        {           
             // this value is set by ARM deployment script
             this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.FrontDoorHostNameKeyName);
 
@@ -200,23 +184,26 @@
 
             // All keyvault secrets are set by ARM deployment script
             var azureServiceTokenProvider = new AzureServiceTokenProvider();
-            using (var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback)))
+            using var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            var secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSConfiguration").ConfigureAwait(false);
+
+            var amsConfigurationList = JsonConvert.DeserializeObject<List<MediaServiceConfigurationModel>>(secret.Value);
+            this.MediaServiceInstanceConfiguration = amsConfigurationList.ToDictionary(i => i.AccountName);
+
+            secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/StorageAccountConnectionString").ConfigureAwait(false);
+            this.StorageAccountConnectionString = secret.Value;
+
+            secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/TableStorageAccountConnectionString").ConfigureAwait(false);
+            this.TableStorageAccountConnectionString = secret.Value;
+
+            foreach (var configuration in this.MediaServiceInstanceConfiguration)
             {
-                var secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/StorageAccountConnectionString").ConfigureAwait(false);
-                this.StorageAccountConnectionString = secret.Value;
-
-                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/TableStorageAccountConnectionString").ConfigureAwait(false);
-                this.TableStorageAccountConnectionString = secret.Value;
-
-                foreach (var configuration in this.MediaServiceInstanceConfiguration)
-                {
-                    secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
-                    this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
-                }
-
-                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/ClearKeyStreamingKey").ConfigureAwait(false);
-                this.clearKeyStreamingKey = Convert.FromBase64String(secret.Value);
+                secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/AMSStorageAccountConnectionString-{configuration.Value.AccountName}").ConfigureAwait(false);
+                this.MediaServiceInstanceStorageAccountConnectionStrings.Add(configuration.Value.AccountName, secret.Value);
             }
+
+            secret = await keyVaultClient.GetSecretAsync($"https://{this.keyVaultName}.vault.azure.net/secrets/ClearKeyStreamingKey").ConfigureAwait(false);
+            this.clearKeyStreamingKey = Convert.FromBase64String(secret.Value);
         }
     }
 }
