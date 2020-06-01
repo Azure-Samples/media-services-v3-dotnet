@@ -14,6 +14,7 @@ namespace HighAvailability.Tests
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
         {
+            // TBD remove keyvault value
             configService = new E2ETestConfigService("sipetrik-keyvault");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
         }

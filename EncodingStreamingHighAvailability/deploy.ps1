@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Continue' # Due to the issue provisioning new managed 
 $numberOfRetries = 3;
 while ($numberOfRetries -gt 0)
 {
-    $mainDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/main.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose
+    $mainDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployScripts/main.json' -TemplateParameterFile './ARMDeployScripts/all.parameters.json' -Verbose
     if ($null -ne $mainDeployment.Outputs)
     {
         break
@@ -50,4 +50,7 @@ foreach ($functionName in $createdFunctionNames)
 }
 
 Write-Host 'Running event grid setup ARM template deployment...'
-$eventGridDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployment/eventgridsetup.json' -TemplateParameterFile 'ARMDeployment/all.parameters.json' -Verbose 
+$eventGridDeployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile './ARMDeployScripts/eventgridsetup.json' -TemplateParameterFile './ARMDeployScripts/all.parameters.json' -Verbose 
+
+$keyVaultName = $mainDeployment.Outputs['keyVaultName'].Value
+Write-Host "This is keyvault name, use this to update E2ETests.cs file to submit sample requests: $keyVaultName"

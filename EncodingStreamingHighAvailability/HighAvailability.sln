@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobSchedul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobOutputStatus", "HighAvailability.JobOutputStatus\HighAvailability.JobOutputStatus.csproj", "{FAE812A4-F34A-40D3-9665-1B273F874D55}"
 EndProject
-Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ARMDeployment", "ARMDeployment\ARMDeployment.deployproj", "{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.Provisioning", "HighAvailability.Provisioning\HighAvailability.Provisioning.csproj", "{A10C6871-70F2-48F0-9D6A-74992C984B9C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.JobVerification", "HighAvailability.JobVerification\HighAvailability.JobVerification.csproj", "{E641CC6D-E13D-4CCD-B633-025183147213}"
@@ -24,6 +22,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.InstanceHealth", "HighAvailability.InstanceHealth\HighAvailability.InstanceHealth.csproj", "{3C2995C9-4EC1-4DB9-BED8-74A84A83376B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ARMDeployScripts", "ARMDeployScripts", "{9E6BBA07-1719-481E-8515-B64D71813D76}"
+	ProjectSection(SolutionItems) = preProject
+		DeployScripts\all.parameters.json = DeployScripts\all.parameters.json
+		DeployScripts\eventgridsetup.json = DeployScripts\eventgridsetup.json
+		DeployScripts\main.json = DeployScripts\main.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +52,6 @@ Global
 		{FAE812A4-F34A-40D3-9665-1B273F874D55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAE812A4-F34A-40D3-9665-1B273F874D55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAE812A4-F34A-40D3-9665-1B273F874D55}.Release|Any CPU.Build.0 = Release|Any CPU
-		{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{96EEC0FF-B586-4D19-8ECA-268ECB94EAD2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A10C6871-70F2-48F0-9D6A-74992C984B9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A10C6871-70F2-48F0-9D6A-74992C984B9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A10C6871-70F2-48F0-9D6A-74992C984B9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
