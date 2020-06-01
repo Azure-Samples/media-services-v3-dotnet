@@ -6,11 +6,22 @@ namespace HighAvailability.Tests
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// This is a class to implement Azure Media Service clien up
+    /// </summary>
     [TestClass]
     public class Cleanup
     {
+        /// <summary>
+        /// Configuration container
+        /// </summary>
         private static IConfigService configService;
 
+        /// <summary>
+        /// Initialize environment
+        /// </summary>
+        /// <param name="_">Not used</param>
+        /// <returns>Task of async operation</returns>
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
         {
@@ -19,6 +30,10 @@ namespace HighAvailability.Tests
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Cleans up all assets and transforms with associated jobs
+        /// </summary>
+        /// <returns>Task of async operation</returns>
         [TestMethod]
         public async Task CleanupAssets()
         {
