@@ -32,6 +32,7 @@ namespace HighAvailability.Tests
         public static async Task Initialize(TestContext _)
         {
             configService = new E2ETestConfigService("sipetrik-keyvault");
+          //  configService = new E2ETestConfigService("<enter keyvault name>");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
@@ -58,7 +59,7 @@ namespace HighAvailability.Tests
         }
 
         [TestMethod]
-        public async Task TestJobRequestStorageService()
+        public async Task SubmitTestRequests()
         {
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
@@ -111,6 +112,8 @@ namespace HighAvailability.Tests
             var jobName = $"jobName-{sequenceNumber}-{uniqueness}";
             var outputAssetName = $"output-{sequenceNumber}-{uniqueness}";
 
+            // Add job input for this test
+            // TBD remove following value
             var input = new JobInputHttp(
                                    baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
                                    files: new List<string> { "Ignite-short.mp4" },
