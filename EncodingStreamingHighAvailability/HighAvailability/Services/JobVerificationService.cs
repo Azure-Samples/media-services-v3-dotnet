@@ -274,8 +274,7 @@
             }
             else
             {
-                logger.LogInformation($"JobVerificationService::SubmitVerificationRequestAsync max number of retries reached, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
-                logger.LogWarning($"Max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resbumitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                logger.LogWarning($"JobVerificationService::SubmitVerificationRequestAsync max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resbumitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
             }
         }
 
@@ -354,7 +353,7 @@
             }
             else
             {
-                logger.LogInformation($"JobVerificationService::ResubmitJob max number of retries reached, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                logger.LogWarning($"JobVerificationService::ResubmitJob max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resbumitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");                
             }
         }
     }
