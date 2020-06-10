@@ -8,7 +8,7 @@
     public static class LogHelper
     {
         /// <summary>
-        /// Format any object for log output
+        /// Formats any object for log output
         /// </summary>
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="objectToFormat">Object to format</param>

@@ -49,6 +49,11 @@
         private int timeSinceLastUpdateToForceJobResyncInMinutes = 60;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// </summary>
+        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Default page size for Azure Media Services paged list APIs.
         /// </summary>
         private readonly int pageSize = 100;
@@ -59,10 +64,12 @@
         /// <param name="mediaServiceInstanceHealthService">Service to load Azure Media Service instance health information</param>
         /// <param name="jobOutputStatusStorageService">Storage service for job output status records</param>
         /// <param name="mediaServiceInstanceFactory">Factory to create Azure Media Services instance</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public JobOutputStatusSyncService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
@@ -70,6 +77,7 @@
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.timeWindowToLoadJobsInMinutes = this.configService.TimeWindowToLoadJobsInMinutes;
+            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.timeSinceLastUpdateToForceJobResyncInMinutes = this.configService.TimeSinceLastUpdateToForceJobResyncInMinutes;
         }
 
@@ -193,10 +201,20 @@
                 logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync reloading job status using API: mediaServiceInstanceName={mediaServiceAccountName} oldJobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
 
                 // Load job using Get API
-                var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    transformName,
-                    jobOutputStatusModel.JobName).ConfigureAwait(false);
+                var job = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await clientInstance.Jobs.GetWithHttpMessagesAsync(
+                            clientConfiguration.ResourceGroup,
+                            clientConfiguration.AccountName,
+                            transformName,
+                            jobOutputStatusModel.JobName).ConfigureAwait(false);
+                    },
+                    jobOutputStatusModel,
+                    mediaServiceAccountName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Jobs.GetWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
 
@@ -224,7 +242,17 @@
             var odataQuery = new ODataQuery<Job>($"properties/created gt {dateFilter}");
 
             // Loads first page
-            var firstPage = await clientInstance.Jobs.ListAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);
+            var firstPage = await MediaServicesHelper.CallAzureMediaServices(
+                async () =>
+                {
+                    return await clientInstance.Jobs.ListWithHttpMessagesAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, transformName, odataQuery).ConfigureAwait(false);
+                },
+                $"transformName={transformName} count(jobOutputStatusModels)={jobOutputStatusModels.Count}",
+                mediaServiceAccountName,
+                this.mediaServiceCallHistoryStorageService,
+                "Jobs.ListWithHttpMessagesAsync",
+                logger).ConfigureAwait(false);
+
             logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded first page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={firstPage.Count()}");
 
             var currentPage = firstPage;
@@ -243,7 +271,17 @@
                 // check if more items are available
                 if (currentPage.NextPageLink != null)
                 {
-                    currentPage = await clientInstance.Jobs.ListNextAsync(currentPage.NextPageLink).ConfigureAwait(false);
+                    currentPage = await MediaServicesHelper.CallAzureMediaServices(
+                        async () =>
+                        {
+                            return await clientInstance.Jobs.ListNextWithHttpMessagesAsync(currentPage.NextPageLink).ConfigureAwait(false);
+                        },
+                        $"transformName={transformName} count(jobOutputStatusModels)={jobOutputStatusModels.Count}",
+                        mediaServiceAccountName,
+                        this.mediaServiceCallHistoryStorageService,
+                        "Jobs.ListWithHttpMessagesAsync",
+                        logger).ConfigureAwait(false);
+
                     logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API, loaded next page: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}, count={currentPage.Count()}");
                     // not done yet
                     everythingProcessed = false;

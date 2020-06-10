@@ -38,6 +38,10 @@ namespace HighAvailability.JobVerification
             jobOutputStatusTable.CreateIfNotExists();
             var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
+            var mediaServiceCallHistoryTable = tableClient.GetTableReference(configService.MediaServiceCallHistoryTableName);
+            mediaServiceCallHistoryTable.CreateIfNotExists();
+            var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
+
             var provisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningRequestQueueName);
             provisioningRequestQueue.CreateIfNotExists();
 
@@ -45,6 +49,7 @@ namespace HighAvailability.JobVerification
             jobVerificationRequestQueue.CreateIfNotExists();
 
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
+            var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
@@ -55,7 +60,8 @@ namespace HighAvailability.JobVerification
                 jobOutputStatusStorageService, 
                 provisioningRequestStorageService, 
                 jobVerificationRequestStorageService, 
-                new MediaServiceInstanceFactory(configService), 
+                new MediaServiceInstanceFactory(configService),
+                mediaServiceCallHistoryStorageService,
                 configService);
 
             builder.Services.AddSingleton<IJobVerificationService>(jobVerificationService);

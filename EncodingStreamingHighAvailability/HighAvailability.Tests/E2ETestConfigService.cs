@@ -35,6 +35,7 @@
             this.keyVaultName = keyVaultName ?? throw new ArgumentNullException(nameof(keyVaultName));
             this.MediaServiceInstanceHealthTableName = "MediaServiceInstanceHealth";
             this.JobOutputStatusTableName = "JobOutputStatus";
+            this.MediaServiceCallHistoryTableName = "MediaServiceCallHistory";
             this.ProvisioningRequestQueueName = "provisioning-requests";
             this.JobVerificationRequestQueueName = "job-verification-requests";
             this.JobRequestQueueName = "job-requests";
@@ -64,6 +65,11 @@
         /// Azure Table name to store job output status records.
         /// </summary>
         public string JobOutputStatusTableName { get; private set; }
+
+        /// <summary>
+        /// Azure Table name to store Azure Media Service call history
+        /// </summary>
+        public string MediaServiceCallHistoryTableName { get; private set; }
 
         /// <summary>
         /// Azure Storage Account connection string. This account hosts Azure Queues.

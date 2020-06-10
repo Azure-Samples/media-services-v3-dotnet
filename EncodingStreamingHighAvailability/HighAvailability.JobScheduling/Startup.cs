@@ -33,14 +33,19 @@ namespace HighAvailability.JobScheduling
             jobOutputStatusTable.CreateIfNotExists();
             var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
+            var mediaServiceCallHistoryTable = tableClient.GetTableReference(configService.MediaServiceCallHistoryTableName);
+            mediaServiceCallHistoryTable.CreateIfNotExists();
+            var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
+
             var jobVerificationRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobVerificationRequestQueueName);
             jobVerificationRequestQueue.CreateIfNotExists();
 
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
+            var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
-            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), configService);
+            var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
 
             builder.Services.AddSingleton<IJobSchedulingService>(jobSchedulerService);
         }
