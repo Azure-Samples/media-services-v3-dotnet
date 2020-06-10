@@ -24,6 +24,11 @@
         private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// </summary>
+        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Configuration container
         /// </summary>
         private readonly IConfigService configService;
@@ -32,10 +37,14 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
-        public AssetDataProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory, IConfigService configService)
+        public AssetDataProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                            IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
+                                            IConfigService configService)
         {
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
+            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -102,24 +111,61 @@
             logger.LogInformation($"AssetDataProvisioningService::CopyAssetAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName}");
 
             // Need to ensure that target asset exits
-            var targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+            var targetAsset = await MediaServicesHelper.CallAzureMediaServices(
+                async () =>
+                {
+                    return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                },
+                provisioningRequest,
+                targetConfig.AccountName,
+                this.mediaServiceCallHistoryStorageService,
+                "Assets.GetWithHttpMessagesAsync",
+                logger).ConfigureAwait(false);
 
             // if there is no target asset, need to provision one
             if (targetAsset == null)
             {
                 // create new target asset
-                targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                targetAsset = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await targetClient.Assets.CreateOrUpdateWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                    },
+                    provisioningRequest,
+                    targetConfig.AccountName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Assets.CreateOrUpdateWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
+
                 // need to reload asset to get Container value populated, otherwise Container is null after asset creation
-                targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                targetAsset = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                    },
+                    provisioningRequest,
+                    targetConfig.AccountName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Assets.GetWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
             }
 
             // Get SAS token associated with source asset. SAS token is requried to initiate StartCopyFromUri
-            var sourceAssetContainerSas = await sourceClient.Assets.ListContainerSasAsync(
-               sourceConfig.ResourceGroup,
-               sourceConfig.AccountName,
-               provisioningRequest.EncodedAssetName,
-               permissions: AssetContainerPermission.Read,
-               expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
+            var sourceAssetContainerSas = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await sourceClient.Assets.ListContainerSasWithHttpMessagesAsync(
+                           sourceConfig.ResourceGroup,
+                           sourceConfig.AccountName,
+                           provisioningRequest.EncodedAssetName,
+                           permissions: AssetContainerPermission.Read,
+                           expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
+                    },
+                    provisioningRequest,
+                    targetConfig.AccountName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Assets.ListContainerSasWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
 
             var sourceContainerSasUrl = new Uri(sourceAssetContainerSas.AssetContainerSasUrls.FirstOrDefault());
 

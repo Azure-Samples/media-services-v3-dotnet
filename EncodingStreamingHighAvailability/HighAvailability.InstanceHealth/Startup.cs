@@ -37,8 +37,13 @@ namespace HighAvailability.InstanceHealth
             jobOutputStatusTable.CreateIfNotExists();
             var jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
 
+            var mediaServiceCallHistoryTable = tableClient.GetTableReference(configService.MediaServiceCallHistoryTableName);
+            mediaServiceCallHistoryTable.CreateIfNotExists();
+            var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
+
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
+            var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
 
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(
                 mediaServiceInstanceHealthStorageService, 
@@ -48,7 +53,8 @@ namespace HighAvailability.InstanceHealth
             var jobOutputStatusSyncService = new JobOutputStatusSyncService(
                 mediaServiceInstanceHealthService, 
                 jobOutputStatusStorageService, 
-                new MediaServiceInstanceFactory(configService), 
+                new MediaServiceInstanceFactory(configService),
+                mediaServiceCallHistoryStorageService,
                 configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);

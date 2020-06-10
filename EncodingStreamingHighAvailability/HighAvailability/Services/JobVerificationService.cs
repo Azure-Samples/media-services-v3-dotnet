@@ -45,15 +45,31 @@
         private readonly IConfigService configService;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// </summary>
+        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Max number of verification retries before dropping verification logic.
         /// </summary>
         private readonly int maxNumberOfRetries = 2;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="mediaServiceInstanceHealthService">Service to load Azure Media Service instance health information</param>
+        /// <param name="jobOutputStatusStorageService">Storage service for job output status records</param>
+        /// <param name="provisioningRequestStorageService">Storage service to persit provisioning requests</param>
+        /// <param name="jobVerificationRequestStorageService">Storage service to persit job verification requests</param>
+        /// <param name="mediaServiceInstanceFactory">Factory to create Azure Media Services instance</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
+        /// <param name="configService">Configuration container</param>
         public JobVerificationService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IProvisioningRequestStorageService provisioningRequestStorageService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
@@ -61,6 +77,7 @@
             this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
+            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -87,10 +104,19 @@
                 logger.LogInformation($"JobVerificationService::VerifyJobAsync checking job status using API: mediaServiceInstanceName={jobVerificationRequestModel.MediaServiceAccountName}");
 
                 // Get job data to verify status of specific job output.
-                var job = await clientInstance.Jobs.GetAsync(clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                    jobVerificationRequestModel.JobName).ConfigureAwait(false);
+                var job = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await clientInstance.Jobs.GetWithHttpMessagesAsync(clientConfiguration.ResourceGroup,
+                            clientConfiguration.AccountName,
+                            jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
+                            jobVerificationRequestModel.JobName).ConfigureAwait(false);
+                    },
+                    jobVerificationRequestModel,
+                    jobVerificationRequestModel.MediaServiceAccountName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Jobs.GetWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobVerificationService::VerifyJobAsync loaded job data from API: job={LogHelper.FormatObjectForLog(job)}");
 
@@ -290,7 +316,16 @@
 
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
             var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(jobVerificationRequestModel.MediaServiceAccountName).ConfigureAwait(false);
-            await clientInstance.Jobs.DeleteAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
+            await MediaServicesHelper.CallAzureMediaServices(
+                async () =>
+                {
+                    return await clientInstance.Jobs.DeleteWithHttpMessagesAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
+                },
+                jobVerificationRequestModel,
+                jobVerificationRequestModel.MediaServiceAccountName,
+                this.mediaServiceCallHistoryStorageService,
+                "Jobs.DeleteWithHttpMessagesAsync",
+                logger).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::DeleteJobAsync completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
         }
@@ -316,28 +351,43 @@
                 // This logic below may need to be updated if multiple job outputs are used per single job and partial resubmit is required to process only failed job outputs.
 
                 // Update output asset.
-                var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
-                    clientConfiguration.ResourceGroup,
-                    clientConfiguration.AccountName,
-                    jobVerificationRequestModel.JobOutputAssetName,
-                    new Asset()).ConfigureAwait(false);
-
-                JobOutput[] jobOutputs =
+                var outputAsset = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
                     {
-                        new JobOutputAsset(outputAsset.Name)
-                    };
+                        return await clientInstance.Assets.CreateOrUpdateWithHttpMessagesAsync(
+                            clientConfiguration.ResourceGroup,
+                            clientConfiguration.AccountName,
+                            jobVerificationRequestModel.JobOutputAssetName,
+                            new Asset()).ConfigureAwait(false);
+                    },
+                    jobVerificationRequestModel,
+                    selectedInstanceName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Assets.CreateOrUpdateWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
+
+                JobOutput[] jobOutputs = { new JobOutputAsset(outputAsset.Name) };
 
                 // Old job is deleted, new job can be submitted again with the same name.
-                var job = await clientInstance.Jobs.CreateAsync(
-                   clientConfiguration.ResourceGroup,
-                   clientConfiguration.AccountName,
-                   jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                   jobVerificationRequestModel.JobName,
-                   new Job
-                   {
-                       Input = jobVerificationRequestModel.OriginalJobRequestModel.JobInputs,
-                       Outputs = jobOutputs,
-                   }).ConfigureAwait(false);
+                var job = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await clientInstance.Jobs.CreateWithHttpMessagesAsync(
+                           clientConfiguration.ResourceGroup,
+                           clientConfiguration.AccountName,
+                           jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
+                           jobVerificationRequestModel.JobName,
+                           new Job
+                           {
+                               Input = jobVerificationRequestModel.OriginalJobRequestModel.JobInputs,
+                               Outputs = jobOutputs,
+                           }).ConfigureAwait(false);
+                    },
+                    jobVerificationRequestModel,
+                    selectedInstanceName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Jobs.CreateWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobVerificationService::ResubmitJob successfully re-submitted job: job={LogHelper.FormatObjectForLog(job)}");
 
