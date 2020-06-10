@@ -25,9 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.InstanceHe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ARMDeployScripts", "ARMDeployScripts", "{9E6BBA07-1719-481E-8515-B64D71813D76}"
 	ProjectSection(SolutionItems) = preProject
-		DeployScripts\all.parameters.json = DeployScripts\all.parameters.json
-		DeployScripts\eventgridsetup.json = DeployScripts\eventgridsetup.json
-		DeployScripts\main.json = DeployScripts\main.json
+		ARMDeployScripts\all.parameters.json = ARMDeployScripts\all.parameters.json
+		ARMDeployScripts\eventgridsetup.json = ARMDeployScripts\eventgridsetup.json
+		ARMDeployScripts\main.json = ARMDeployScripts\main.json
 	EndProjectSection
 EndProject
 Global

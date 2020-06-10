@@ -1,5 +1,5 @@
 ﻿param(
-    $ResourceGroupName = 'ha-test2',
+    $ResourceGroupName = 'hatest',
     $ResourceGroupLocation = 'eastus'
 )
 

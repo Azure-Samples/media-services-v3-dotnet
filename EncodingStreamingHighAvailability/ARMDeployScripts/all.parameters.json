@@ -3,9 +3,9 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "deploymentNameBase": { "value": "sipetrik" },
-    "deploymentRegionLocation": { "value": "eastus" },
+    "deploymentRegionLocation": { "value": "westus" },
     "keyVaultTenantId": { "value": "72f988bf-86f1-41af-91ab-2d7cd011db47" },
     "keyVaultOwnerObjectId": { "value": "61d47788-7040-4f46-8fa2-59047ac82bb3" },
-    "amsRegions": { "value": [ "eastus", "westus" ] }
+    "amsRegions": { "value": [ "westus" ] }
   }
 }

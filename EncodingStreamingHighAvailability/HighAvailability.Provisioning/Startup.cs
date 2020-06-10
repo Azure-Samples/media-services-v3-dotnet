@@ -9,6 +9,7 @@ namespace HighAvailability.Provisioner
     using HighAvailability.Factories;
     using HighAvailability.Interfaces;
     using HighAvailability.Services;
+    using Microsoft.Azure.Cosmos.Table;
     using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection;
     using System;
@@ -27,14 +28,22 @@ namespace HighAvailability.Provisioner
             var configService = new ConfigService(keyVaultName);
             configService.LoadConfigurationAsync().Wait();
 
+            var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
+            var tableClient = tableStorageAccount.CreateCloudTableClient();
+
+            var mediaServiceCallHistoryTable = tableClient.GetTableReference(configService.MediaServiceCallHistoryTableName);
+            mediaServiceCallHistoryTable.CreateIfNotExists();
+            var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
+
             var provisioningCompletedEventQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningCompletedEventQueueName);
             provisioningCompletedEventQueue.CreateIfNotExists();
 
             var provisioningCompletedEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
+            var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
 
-            var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(configService), configService);
-            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
-            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(new MediaServiceInstanceFactory(configService), configService);
+            var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
+            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
+            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
 
             // Instantiate the list of provisioning services to run for each provisioning request
             // These services run in the same order as in this list

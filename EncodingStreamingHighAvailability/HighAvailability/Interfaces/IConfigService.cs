@@ -20,6 +20,11 @@
         string JobOutputStatusTableName { get; }
 
         /// <summary>
+        /// Azure Table name to store Azure Media Service call history
+        /// </summary>
+        string MediaServiceCallHistoryTableName { get; }
+
+        /// <summary>
         /// Azure Queue name to store provisioning requests.
         /// </summary>
         string ProvisioningRequestQueueName { get; }

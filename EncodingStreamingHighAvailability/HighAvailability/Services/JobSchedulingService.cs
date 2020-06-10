@@ -6,6 +6,7 @@
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Rest.Azure;
     using System;
     using System.Threading.Tasks;
 
@@ -45,23 +46,31 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// </summary>
+        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceHealthService">Media services instance health service</param>
         /// <param name="jobVerificationRequestStorageService">Job verification requets storage service </param>
         /// <param name="jobOutputStatusStorageService">Job output status service to persist job output status after initial job submission</param>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public JobSchedulingService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobVerificationRequestStorageService jobVerificationRequestStorageService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobVerificationRequestStorageService = jobVerificationRequestStorageService ?? throw new ArgumentNullException(nameof(jobVerificationRequestStorageService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
+            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.verificationDelay = new TimeSpan(0, this.configService.TimeDurationInMinutesToVerifyJobStatus, 0);
         }
@@ -87,28 +96,43 @@
             var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName).ConfigureAwait(false);
 
             // In order to submit a new job, output asset has to be created first
-            var outputAsset = await clientInstance.Assets.CreateOrUpdateAsync(
-                clientConfiguration.ResourceGroup,
-                clientConfiguration.AccountName,
-                jobRequestModel.OutputAssetName,
-                new Asset()).ConfigureAwait(false);
-
-            JobOutput[] jobOutputs =
+            var asset = await MediaServicesHelper.CallAzureMediaServices(
+                async () =>
                 {
-                    new JobOutputAsset(jobRequestModel.OutputAssetName)
-                };
+                    return await clientInstance.Assets.CreateOrUpdateWithHttpMessagesAsync(
+                        clientConfiguration.ResourceGroup,
+                        clientConfiguration.AccountName,
+                        jobRequestModel.OutputAssetName,
+                        new Asset()).ConfigureAwait(false);
+                },
+                jobRequestModel,
+                selectedInstanceName,
+                this.mediaServiceCallHistoryStorageService,
+                "Assets.CreateOrUpdateWithHttpMessagesAsync",
+                logger).ConfigureAwait(false);
+
+              JobOutput[] jobOutputs = { new JobOutputAsset(jobRequestModel.OutputAssetName) };
 
             // submit new job
-            var job = await clientInstance.Jobs.CreateAsync(
-                clientConfiguration.ResourceGroup,
-                clientConfiguration.AccountName,
-                jobRequestModel.TransformName,
-                jobRequestModel.JobName,
-                new Job
+            var job = await MediaServicesHelper.CallAzureMediaServices(
+                async () =>
                 {
-                    Input = jobRequestModel.JobInputs,
-                    Outputs = jobOutputs,
-                }).ConfigureAwait(false);
+                    return await clientInstance.Jobs.CreateWithHttpMessagesAsync(
+                        clientConfiguration.ResourceGroup,
+                        clientConfiguration.AccountName,
+                        jobRequestModel.TransformName,
+                        jobRequestModel.JobName,
+                        new Job
+                        {
+                            Input = jobRequestModel.JobInputs,
+                            Outputs = jobOutputs,
+                        }).ConfigureAwait(false);
+                },
+                jobRequestModel,
+                selectedInstanceName,
+                this.mediaServiceCallHistoryStorageService,
+                "Jobs.CreateWithHttpMessagesAsync",
+                logger).ConfigureAwait(false);
 
             logger.LogInformation($"JobSchedulingService::SubmitJobAsync successfully created job: job={LogHelper.FormatObjectForLog(job)}");
 
@@ -149,13 +173,13 @@
             {
                 try
                 {
-                    // persist initial job output status
+                     // persist initial job output status
                     await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModel, logger).ConfigureAwait(false);
 
                     // persist job verification request. It is used to trigger logic to verify that job was completed and not stuck sometime in future.
                     var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
                     logger.LogInformation($"JobSchedulingService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
-                    
+
                     // no expcetion happened, let's break.
                     break;
                 }

@@ -18,7 +18,7 @@
         /// <summary>
         /// Factory to get Azure Media Service instance client
         /// </summary>
-        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;  
 
         /// <summary>
         /// Configuration container
@@ -29,8 +29,11 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
-        public ClearStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory, IConfigService configService)
+        public ClearStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
+                                                    IConfigService configService) : base(mediaServiceCallHistoryStorageService)
         {
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
