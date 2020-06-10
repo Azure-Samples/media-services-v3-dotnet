@@ -46,13 +46,13 @@ namespace HighAvailability.InstanceHealth
             var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
 
             var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(
-                mediaServiceInstanceHealthStorageService, 
-                jobOutputStatusStorageService, 
+                mediaServiceInstanceHealthStorageService,
+                jobOutputStatusStorageService,
                 configService);
 
             var jobOutputStatusSyncService = new JobOutputStatusSyncService(
-                mediaServiceInstanceHealthService, 
-                jobOutputStatusStorageService, 
+                mediaServiceInstanceHealthService,
+                jobOutputStatusStorageService,
                 new MediaServiceInstanceFactory(configService),
                 mediaServiceCallHistoryStorageService,
                 configService);

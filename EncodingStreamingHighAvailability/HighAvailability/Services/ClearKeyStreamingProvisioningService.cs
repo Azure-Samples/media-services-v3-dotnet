@@ -68,17 +68,17 @@
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
-                assetName: provisioningRequest.EncodedAssetName, 
-                streamingPolicyName: PredefinedStreamingPolicy.ClearKey, 
+                assetName: provisioningRequest.EncodedAssetName,
+                streamingPolicyName: PredefinedStreamingPolicy.ClearKey,
                 defaultContentKeyPolicyName: this.configService.ContentKeyPolicyName);
 
             // Provision created locator
-            sourceLocator = await ProvisionLocatorAsync(
-                sourceClient, 
-                sourceClientConfiguration, 
-                provisioningRequest.EncodedAssetName, 
-                streamingLocatorName, 
-                sourceLocator, 
+            sourceLocator = await this.ProvisionLocatorAsync(
+                sourceClient,
+                sourceClientConfiguration,
+                provisioningRequest.EncodedAssetName,
+                streamingLocatorName,
+                sourceLocator,
                 logger).ConfigureAwait(false);
 
             // Record the fact that locator was created
@@ -116,22 +116,22 @@
 
                 // Create locator for target instance
                 var targetLocator = new StreamingLocator(
-                    assetName: sourceLocator.AssetName, 
-                    streamingPolicyName: sourceLocator.StreamingPolicyName, 
-                    id: sourceLocator.Id, 
-                    name: sourceLocator.Name, 
-                    type: sourceLocator.Type, 
-                    streamingLocatorId: sourceLocator.StreamingLocatorId, 
-                    defaultContentKeyPolicyName: sourceLocator.DefaultContentKeyPolicyName, 
+                    assetName: sourceLocator.AssetName,
+                    streamingPolicyName: sourceLocator.StreamingPolicyName,
+                    id: sourceLocator.Id,
+                    name: sourceLocator.Name,
+                    type: sourceLocator.Type,
+                    streamingLocatorId: sourceLocator.StreamingLocatorId,
+                    defaultContentKeyPolicyName: sourceLocator.DefaultContentKeyPolicyName,
                     contentKeys: sourceContentKeysResponse.ContentKeys);
 
                 // Provision created locator
-                targetLocator = await ProvisionLocatorAsync(
-                    targetClient, 
-                    targetClientConfiguration, 
-                    provisioningRequest.EncodedAssetName, 
-                    streamingLocatorName, 
-                    targetLocator, 
+                targetLocator = await this.ProvisionLocatorAsync(
+                    targetClient,
+                    targetClientConfiguration,
+                    provisioningRequest.EncodedAssetName,
+                    streamingLocatorName,
+                    targetLocator,
                     logger).ConfigureAwait(false);
 
                 // Record fact that locator was provisioned to target instance

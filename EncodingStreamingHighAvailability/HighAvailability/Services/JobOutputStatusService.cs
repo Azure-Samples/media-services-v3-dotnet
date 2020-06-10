@@ -56,7 +56,7 @@
                         EncodedAssetMediaServiceAccountName = jobOutputStatusModel.MediaServiceAccountName,
                         EncodedAssetName = jobOutputStatusModel.JobOutputAssetName,
                         StreamingLocatorName = $"streaming-{jobOutputStatusModel.JobOutputAssetName}"
-                    }, 
+                    },
                     logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobOutputStatusService::ProcessJobOutputStatusAsync created stream provisioning request: result={LogHelper.FormatObjectForLog(provisioningRequestResult)}");
