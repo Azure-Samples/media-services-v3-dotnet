@@ -121,7 +121,7 @@
             // Next, need to select single instance from all available ones.
             // First select instances that never were used before.
             var candidates = allHealthyInstances.Except(this.mediaServiceInstanceUsage.Keys);
-            
+
             if (candidates.Any())
             {
                 // if found, pick first avalable.
@@ -238,8 +238,8 @@
 
                 // update newly calcualte health rating
                 var updatedMediaServiceInstanceHealthModel = this.mediaServiceInstanceHealthStorageService.UpdateHealthStateAsync(
-                                                                mediaServiceInstanceHealthModel.MediaServiceAccountName, 
-                                                                state, 
+                                                                mediaServiceInstanceHealthModel.MediaServiceAccountName,
+                                                                state,
                                                                 DateTime.UtcNow).GetAwaiter().GetResult();
 
                 // since this is processed in parallel for all available Azure Media Service instances, need to sync on updating final list

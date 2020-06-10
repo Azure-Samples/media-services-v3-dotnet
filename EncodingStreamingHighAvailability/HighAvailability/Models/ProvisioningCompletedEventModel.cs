@@ -67,6 +67,6 @@
         public void AddClearKeyStreamingLocators(StreamingLocator streamingLocator)
         {
             this.ClearKeyStreamingLocators.Add(streamingLocator);
-        }       
+        }
     }
 }

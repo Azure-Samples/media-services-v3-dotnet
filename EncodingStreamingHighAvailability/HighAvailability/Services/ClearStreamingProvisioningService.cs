@@ -18,7 +18,7 @@
         /// <summary>
         /// Factory to get Azure Media Service instance client
         /// </summary>
-        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;  
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
 
         /// <summary>
         /// Configuration container
@@ -64,16 +64,16 @@
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
-                assetName: provisioningRequest.EncodedAssetName, 
+                assetName: provisioningRequest.EncodedAssetName,
                 streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
 
             // Provision created locator
-            sourceLocator = await ProvisionLocatorAsync(
-                sourceClient, 
-                sourceClientConfiguration, 
-                provisioningRequest.EncodedAssetName, 
-                provisioningRequest.StreamingLocatorName, 
-                sourceLocator, 
+            sourceLocator = await this.ProvisionLocatorAsync(
+                sourceClient,
+                sourceClientConfiguration,
+                provisioningRequest.EncodedAssetName,
+                provisioningRequest.StreamingLocatorName,
+                sourceLocator,
                 logger).ConfigureAwait(false);
 
             // Record the fact that locator was created
@@ -94,20 +94,20 @@
 
                 // Create locator for target instance
                 var targetLocator = new StreamingLocator(
-                    assetName: sourceLocator.AssetName, 
-                    streamingPolicyName: sourceLocator.StreamingPolicyName, 
-                    id: sourceLocator.Id, 
-                    name: sourceLocator.Name, 
-                    type: sourceLocator.Type, 
+                    assetName: sourceLocator.AssetName,
+                    streamingPolicyName: sourceLocator.StreamingPolicyName,
+                    id: sourceLocator.Id,
+                    name: sourceLocator.Name,
+                    type: sourceLocator.Type,
                     streamingLocatorId: sourceLocator.StreamingLocatorId);
 
                 // Provision created locator
-                targetLocator = await ProvisionLocatorAsync(
-                    targetClient, 
-                    targetClientConfiguration, 
-                    provisioningRequest.EncodedAssetName, 
-                    provisioningRequest.StreamingLocatorName, 
-                    targetLocator, 
+                targetLocator = await this.ProvisionLocatorAsync(
+                    targetClient,
+                    targetClientConfiguration,
+                    provisioningRequest.EncodedAssetName,
+                    provisioningRequest.StreamingLocatorName,
+                    targetLocator,
                     logger).ConfigureAwait(false);
 
                 // Record fact that locator was provisioned to target instance

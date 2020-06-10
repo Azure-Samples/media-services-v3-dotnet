@@ -3,7 +3,6 @@
     using HighAvailability.Helpers;
     using HighAvailability.Interfaces;
     using HighAvailability.Models;
-    using Microsoft.Azure.EventGrid;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Extensions.Logging;
     using System.Text.RegularExpressions;

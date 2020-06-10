@@ -83,10 +83,10 @@
 
                 // Get client associated with target instance
                 var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
-                
+
                 // Copy data from source instance to target instance
                 var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
-                
+
                 // Record fact that asset was provisioned to target instance
                 provisioningCompletedEventModel.AddMediaServiceAccountName(target);
             }

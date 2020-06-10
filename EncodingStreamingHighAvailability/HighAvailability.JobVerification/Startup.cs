@@ -56,10 +56,10 @@ namespace HighAvailability.JobVerification
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
 
             var jobVerificationService = new JobVerificationService(
-                mediaServiceInstanceHealthService, 
-                jobOutputStatusStorageService, 
-                provisioningRequestStorageService, 
-                jobVerificationRequestStorageService, 
+                mediaServiceInstanceHealthService,
+                jobOutputStatusStorageService,
+                provisioningRequestStorageService,
+                jobVerificationRequestStorageService,
                 new MediaServiceInstanceFactory(configService),
                 mediaServiceCallHistoryStorageService,
                 configService);
