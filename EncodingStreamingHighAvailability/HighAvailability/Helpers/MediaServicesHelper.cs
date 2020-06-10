@@ -238,8 +238,8 @@
         /// <returns></returns>
         public static async Task<TResult> CallAzureMediaServices<TContext, TResult>(
             Func<Task<AzureOperationResponse<TResult>>> func,
-            TContext context, 
-            string mediaServiceAccountName, 
+            TContext context,
+            string mediaServiceAccountName,
             IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
             string callName,
             ILogger logger)

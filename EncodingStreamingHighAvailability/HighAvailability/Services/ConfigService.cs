@@ -19,7 +19,7 @@
         /// KeyVault name to load configuration
         /// </summary>
         private readonly string keyVaultName;
-       
+
         /// <summary>
         /// Environment property name to load Azure Front Door host name.
         /// </summary>
@@ -179,7 +179,7 @@
         /// </summary>
         /// <returns>Task of async operation</returns>
         public async Task LoadConfigurationAsync()
-        {           
+        {
             // this value is set by ARM deployment script
             this.FrontDoorHostName = Environment.GetEnvironmentVariable(this.FrontDoorHostNameKeyName);
 

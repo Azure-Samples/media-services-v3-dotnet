@@ -3,10 +3,8 @@
     using HighAvailability.Helpers;
     using HighAvailability.Interfaces;
     using HighAvailability.Models;
-    using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Rest.Azure;
     using System;
     using System.Threading.Tasks;
 
@@ -111,7 +109,7 @@
                 "Assets.CreateOrUpdateWithHttpMessagesAsync",
                 logger).ConfigureAwait(false);
 
-              JobOutput[] jobOutputs = { new JobOutputAsset(jobRequestModel.OutputAssetName) };
+            JobOutput[] jobOutputs = { new JobOutputAsset(jobRequestModel.OutputAssetName) };
 
             // submit new job
             var job = await MediaServicesHelper.CallAzureMediaServices(
@@ -173,7 +171,7 @@
             {
                 try
                 {
-                     // persist initial job output status
+                    // persist initial job output status
                     await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModel, logger).ConfigureAwait(false);
 
                     // persist job verification request. It is used to trigger logic to verify that job was completed and not stuck sometime in future.

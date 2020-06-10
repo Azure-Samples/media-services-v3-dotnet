@@ -63,7 +63,7 @@ namespace HighAvailability.Tests
         public static async Task Initialize(TestContext _)
         {
             configService = new E2ETestConfigService("sipetrik-keyvault");
-          //  configService = new E2ETestConfigService("<enter keyvault name>");
+            //  configService = new E2ETestConfigService("<enter keyvault name>");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
