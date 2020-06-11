@@ -11,17 +11,17 @@
         public string Id { get; set; }
 
         /// <summary>
-        /// Encoding job output asset name
+        /// Processed asset name
         /// </summary>
-        public string EncodedAssetName { get; set; }
+        public string ProcessedAssetName { get; set; }
 
         /// <summary>
-        /// Azure Media Services instance account name associated with encoding job
+        /// Azure Media Services instance account name associated with processing job
         /// </summary>
-        public string EncodedAssetMediaServiceAccountName { get; set; }
+        public string ProcessedAssetMediaServiceAccountName { get; set; }
 
         /// <summary>
-        /// Streaming locator name to stream encoded asset data
+        /// Streaming locator name to stream processed asset data
         /// </summary>
         public string StreamingLocatorName { get; set; }
     }

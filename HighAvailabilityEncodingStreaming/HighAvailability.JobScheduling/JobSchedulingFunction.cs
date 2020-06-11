@@ -37,6 +37,8 @@ namespace HighAvailability.JobScheduling
         /// This function is triggered by messages in job-requests Azure queue.
         /// It submits a new job request to AMS cluster.
         /// If function fails, exception is thrown and message is automatically reprocessed up to 5 times by default.
+        /// See this link for more details how to configure retry settings
+        /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-output?tabs=csharp#hostjson-settings
         /// </summary>
         /// <param name="message">Request data</param>
         /// <param name="logger">Logger to log data to App Insights</param>

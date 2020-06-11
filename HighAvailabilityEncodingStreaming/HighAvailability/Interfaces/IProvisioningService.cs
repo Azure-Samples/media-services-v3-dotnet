@@ -5,12 +5,12 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Interface to define service methods to provision encoded assets
+    /// Interface to define service methods to provision processed assets
     /// </summary>
     public interface IProvisioningService
     {
         /// <summary>
-        /// Provisions encoded assets
+        /// Provisions processed assets
         /// </summary>
         /// <param name="provisioningRequestModel">Model to provision</param>
         /// <param name="provisioningCompletedEventModel">Provision completed event model to store provisioning data</param>

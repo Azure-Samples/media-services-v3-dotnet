@@ -24,7 +24,7 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         /// <summary>
-        /// Provisioning request storage service is used to persist new request to provision encoded assets.
+        /// Provisioning request storage service is used to persist new request to provision processed assets.
         /// </summary>
         private readonly IProvisioningRequestStorageService provisioningRequestStorageService;
 
@@ -197,8 +197,8 @@
                    new ProvisioningRequestModel
                    {
                        Id = Guid.NewGuid().ToString(),
-                       EncodedAssetMediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
-                       EncodedAssetName = jobVerificationRequestModel.JobOutputAssetName,
+                       ProcessedAssetMediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
+                       ProcessedAssetName = jobVerificationRequestModel.JobOutputAssetName,
                        StreamingLocatorName = $"streaming-{jobVerificationRequestModel.OriginalJobRequestModel.OutputAssetName}"
                    },
                    logger).ConfigureAwait(false);

@@ -40,10 +40,10 @@
         }
 
         /// <summary>
-        /// Provisions clear key streaming locator in all Azure Media Services instances for a given encoded asset. 
+        /// Provisions clear key streaming locator in all Azure Media Services instances for a given processed asset. 
         /// This implementation is based on https://github.com/Azure-Samples/media-services-v3-dotnet-core-tutorials/tree/master/NETCore/EncodeHTTPAndPublishAESEncrypted
         /// </summary>
-        /// <param name="provisioningRequest">Provisioning request associated with encoded asset</param>
+        /// <param name="provisioningRequest">Provisioning request associated with processed asset</param>
         /// <param name="provisioningCompletedEventModel">Provision completed event model to store provisioning data</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns></returns>
@@ -52,23 +52,23 @@
             logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
             // Make sure that account name that asset is provisioned exists in current configuration
-            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.EncodedAssetMediaServiceAccountName))
+            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.ProcessedAssetMediaServiceAccountName))
             {
-                throw new Exception($"ClearKeyStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.EncodedAssetMediaServiceAccountName}");
+                throw new Exception($"ClearKeyStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.ProcessedAssetMediaServiceAccountName}");
             }
 
-            // Get source configuration that asset is provisioned as part of encoding job
-            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
+            // Get source configuration that asset is provisioned as part of processing job
+            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.ProcessedAssetMediaServiceAccountName];
 
             // Create a custom streaming locator name, it has to differ from originally requested locator name to avoid name collision
             var streamingLocatorName = $"{provisioningRequest.StreamingLocatorName}-encrypted";
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.EncodedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName).ConfigureAwait(false);
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
-                assetName: provisioningRequest.EncodedAssetName,
+                assetName: provisioningRequest.ProcessedAssetName,
                 streamingPolicyName: PredefinedStreamingPolicy.ClearKey,
                 defaultContentKeyPolicyName: this.configService.ContentKeyPolicyName);
 
@@ -76,7 +76,7 @@
             sourceLocator = await this.ProvisionLocatorAsync(
                 sourceClient,
                 sourceClientConfiguration,
-                provisioningRequest.EncodedAssetName,
+                provisioningRequest.ProcessedAssetName,
                 streamingLocatorName,
                 sourceLocator,
                 logger).ConfigureAwait(false);
@@ -103,7 +103,7 @@
 
             // Create a list of Azure Media Services instances that locator needs to be provisioned. It should be all instances listed in configuration, except source instance
             var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(
-                                    i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+                                    i => !i.Equals(provisioningRequest.ProcessedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
             // Iterate through the list of all Azure Media Services instance names that locator needs to be provisioned to
             foreach (var target in targetInstances)
@@ -129,7 +129,7 @@
                 targetLocator = await this.ProvisionLocatorAsync(
                     targetClient,
                     targetClientConfiguration,
-                    provisioningRequest.EncodedAssetName,
+                    provisioningRequest.ProcessedAssetName,
                     streamingLocatorName,
                     targetLocator,
                     logger).ConfigureAwait(false);
