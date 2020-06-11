@@ -15,6 +15,7 @@ namespace HighAvailability.InstanceHealth
 
     /// <summary>
     /// Implements startup logic for instance health Azure function.
+    /// See TBD link for more details.
     /// See for more details about dependency injection for Azure Functions
     /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
     /// </summary>

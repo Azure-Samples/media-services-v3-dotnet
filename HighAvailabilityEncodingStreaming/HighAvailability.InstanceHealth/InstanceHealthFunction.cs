@@ -8,7 +8,9 @@ namespace HighAvailability.InstanceHealth
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Implements instance health Azure function
+    /// Implements instance health Azure function.
+    /// This module tracks submitted jobs and determines health status for each AMS instance. It tracks finished jobs, failed jobs and jobs that never finished.
+    /// See TBD link for more details
     /// </summary>
     public class InstanceHealthFunction
     {
@@ -61,7 +63,7 @@ namespace HighAvailability.InstanceHealth
 
         /// <summary>
         /// Runs job output status re-sync logic. 
-        /// EventGrid events sometimes are lost and manual resync is required. This method triggers job output status sync between 
+        /// EventGrid events sometimes are delayed or lost and manual re-sync is required. This method triggers job output status sync between 
         /// job output status storage and Azure Media Services APIs. 
         /// This function is triggered every 10 minutes, may need to be adjusted to trigger less often for busy environments.
         /// Exception is thrown from this function, it marks function as failed.

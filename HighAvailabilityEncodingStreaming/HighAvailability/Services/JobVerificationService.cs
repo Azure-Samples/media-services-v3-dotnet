@@ -95,7 +95,7 @@
             var jobOutputStatus = await this.jobOutputStatusStorageService.GetLatestJobOutputStatusAsync(jobVerificationRequestModel.JobName, jobVerificationRequestModel.JobOutputAssetName).ConfigureAwait(false);
             var jobOutputStatusLoadedFromAPI = false;
 
-            // if job has not reached final state, need to reload status from Azure Media Service APIs to ensure that EventGridEvent has not been lost.
+            // if job has not reached final state, need to reload status from Azure Media Service APIs in case of delayed or lost EventGrid event.
             if (jobOutputStatus?.JobOutputState != JobState.Finished && jobOutputStatus?.JobOutputState != JobState.Error && jobOutputStatus?.JobOutputState != JobState.Canceled)
             {
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];

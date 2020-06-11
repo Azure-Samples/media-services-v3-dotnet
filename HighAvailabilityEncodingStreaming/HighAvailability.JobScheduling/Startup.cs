@@ -14,6 +14,12 @@ namespace HighAvailability.JobScheduling
     using Microsoft.Extensions.DependencyInjection;
     using System;
 
+    /// <summary>
+    /// Implements startup logic for job scheduling Azure function.
+    /// See TBD link for more details.
+    /// See for more details about dependency injection for Azure Functions
+    /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
+    /// </summary>
     public class Startup : FunctionsStartup
     {
         public override void Configure(IFunctionsHostBuilder builder)
