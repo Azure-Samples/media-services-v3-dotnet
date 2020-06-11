@@ -122,7 +122,7 @@
         public int TimeWindowToLoadJobsInMinutes { get; private set; }
 
         /// <summary>
-        ///This value is used to determine how far back to go to load Azure Media Services call history when instance health is calculated. 
+        /// This value is used to determine how far back to go to load Azure Media Services call history when instance health is calculated. 
         /// </summary>
         public int TimeWindowToLoadMediaServiceCallsInMinutes { get; private set; }
 
