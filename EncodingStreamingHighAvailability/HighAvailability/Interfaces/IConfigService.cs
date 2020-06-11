@@ -70,6 +70,11 @@
         int TimeWindowToLoadJobsInMinutes { get; }
 
         /// <summary>
+        ///This value is used to determine how far back to go to load Azure Media Services call history when instance health is calculated. 
+        /// </summary>
+        int TimeWindowToLoadMediaServiceCallsInMinutes { get; }
+
+        /// <summary>
         /// This value is used to determine when to trigger manual job output status refresh from Azure Media Service API. Sometimes EventGridEvents are missing and manual refresh is required to correctly calculate Azure Media Service instance health.
         /// </summary>
         int TimeSinceLastUpdateToForceJobResyncInMinutes { get; }
