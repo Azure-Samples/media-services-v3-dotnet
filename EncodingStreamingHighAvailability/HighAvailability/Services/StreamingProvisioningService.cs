@@ -15,7 +15,7 @@
     public class StreamingProvisioningService
     {
         /// <summary>
-        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// Media Services call histoty storage service to persist call status to Media Service
         /// </summary>
         protected IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService { get; set; }
 

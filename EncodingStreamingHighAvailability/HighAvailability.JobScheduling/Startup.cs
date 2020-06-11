@@ -43,7 +43,7 @@ namespace HighAvailability.JobScheduling
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, mediaServiceCallHistoryStorageService, configService);
             var jobVerificationRequestStorageService = new JobVerificationRequestStorageService(jobVerificationRequestQueue);
             var jobSchedulerService = new JobSchedulingService(mediaServiceInstanceHealthService, jobVerificationRequestStorageService, jobOutputStatusStorageService, new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
 

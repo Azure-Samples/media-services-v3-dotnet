@@ -47,6 +47,7 @@
             this.FrontDoorHostName = string.Empty;
             this.NumberOfMinutesInProcessToMarkJobStuck = 60;
             this.TimeWindowToLoadJobsInMinutes = 11480;
+            this.TimeWindowToLoadMediaServiceCallsInMinutes = 480;
             this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
@@ -115,6 +116,11 @@
         /// This value is used to determine how far back to go to load job status when instance health is calculated. 
         /// </summary>
         public int TimeWindowToLoadJobsInMinutes { get; private set; }
+
+        /// <summary>
+        ///This value is used to determine how far back to go to load Azure Media Services call history when instance health is calculated. 
+        /// </summary>
+        public int TimeWindowToLoadMediaServiceCallsInMinutes { get; private set; }
 
         /// <summary>
         /// This value is used to determine when to trigger manual job output status refresh from Azure Media Service API. Sometimes EventGridEvents are missing and manual refresh is required to correctly calculate Azure Media Service instance health.

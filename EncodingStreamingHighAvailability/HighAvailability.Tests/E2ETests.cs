@@ -40,6 +40,11 @@ namespace HighAvailability.Tests
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist Media Service call status
+        /// </summary>
+        private static MediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Table storage service to store job output status
         /// </summary>
         private static ITableStorageService jobOutputStatusTableStorageService;
@@ -82,6 +87,11 @@ namespace HighAvailability.Tests
             jobOutputStatusTableStorageService = new TableStorageService(jobOutputStatusTable);
             await jobOutputStatusTableStorageService.DeleteAllAsync<JobOutputStatusModelTableEntity>().ConfigureAwait(false);
 
+            var mediaServiceCallHistoryTable = tableClient.GetTableReference(configService.MediaServiceCallHistoryTableName);
+            mediaServiceCallHistoryTable.CreateIfNotExists();
+            var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
+            mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
+
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
 
@@ -99,7 +109,7 @@ namespace HighAvailability.Tests
         {
             var jobOutputStatusStorageService = new JobOutputStatusStorageService(jobOutputStatusTableStorageService);
             var mediaServiceInstanceHealthStorageService = new MediaServiceInstanceHealthStorageService(mediaServiceInstanceHealthTableStorageService);
-            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, configService);
+            var mediaServiceInstanceHealthService = new MediaServiceInstanceHealthService(mediaServiceInstanceHealthStorageService, jobOutputStatusStorageService, mediaServiceCallHistoryStorageService, configService);
             var mediaServiceInstanceFactory = new MediaServiceInstanceFactory(configService);
 
             foreach (var config in configService.MediaServiceInstanceConfiguration)
