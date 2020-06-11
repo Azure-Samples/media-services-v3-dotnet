@@ -13,7 +13,7 @@
     /// <summary>
     /// Implements clear key streaming locator provisioning to multiple Azure Media Services instances
     /// </summary>
-    public class ClearKeyStreamingProvisioningService : StreamingProvisioningService, IProvisioningService
+    public class OutputEncryptionStreamingProvisioningService : StreamingProvisioningService, IProvisioningService
     {
         /// <summary>
         /// Factory to get Azure Media Service instance client
@@ -31,7 +31,7 @@
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
-        public ClearKeyStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+        public OutputEncryptionStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
                                                     IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                                     IConfigService configService) : base(mediaServiceCallHistoryStorageService)
         {
@@ -49,12 +49,12 @@
         /// <returns></returns>
         public async Task ProvisionAsync(ProvisioningRequestModel provisioningRequest, ProvisioningCompletedEventModel provisioningCompletedEventModel, ILogger logger)
         {
-            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
+            logger.LogInformation($"OutputEncryptionStreamingProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
             // Make sure that account name that asset is provisioned exists in current configuration
             if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.ProcessedAssetMediaServiceAccountName))
             {
-                throw new Exception($"ClearKeyStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.ProcessedAssetMediaServiceAccountName}");
+                throw new Exception($"OutputEncryptionStreamingProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.ProcessedAssetMediaServiceAccountName}");
             }
 
             // Get source configuration that asset is provisioned as part of processing job
@@ -138,7 +138,7 @@
                 provisioningCompletedEventModel.AddClearKeyStreamingLocators(targetLocator);
             }
 
-            logger.LogInformation($"ClearKeyStreamingProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
+            logger.LogInformation($"OutputEncryptionStreamingProvisioningService::ProvisionAsync completed: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
         }
 
         /// <summary>

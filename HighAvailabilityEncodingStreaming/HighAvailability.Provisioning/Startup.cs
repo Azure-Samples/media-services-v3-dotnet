@@ -43,7 +43,7 @@ namespace HighAvailability.Provisioner
 
             var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
             var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
-            var clearKeyStreamingProvisioningService = new ClearKeyStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
+            var outputEncryptionStreamingProvisioningService = new OutputEncryptionStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
 
             // Instantiate the list of provisioning services to run for each provisioning request
             // These services run in the same order as in this list
@@ -53,7 +53,7 @@ namespace HighAvailability.Provisioner
                 {
                     assetDataProvisioningService,
                     clearStreamingProvisioningService,
-                    clearKeyStreamingProvisioningService
+                    outputEncryptionStreamingProvisioningService
                 },
                 provisioningCompletedEventStorageService);
 
