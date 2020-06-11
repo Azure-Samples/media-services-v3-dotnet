@@ -47,6 +47,7 @@ namespace HighAvailability.Provisioner
 
             // Instantiate the list of provisioning services to run for each provisioning request
             // These services run in the same order as in this list
+            // Provisioning logic can be customized by removing any of the services from the list below. Also new services can be created and added to this list.
             var provisioningOrchestrator = new ProvisioningOrchestrator(
                 new List<IProvisioningService>
                 {
