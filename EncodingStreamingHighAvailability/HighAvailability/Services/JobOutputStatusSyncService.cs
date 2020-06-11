@@ -48,7 +48,7 @@
         private int timeSinceLastUpdateToForceJobResyncInMinutes = 60;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist processed job requests after initial job submission
+        /// Media Services call histoty storage service to persist call status to Media Service
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 

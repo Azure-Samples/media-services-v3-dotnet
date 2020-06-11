@@ -27,6 +27,11 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         /// <summary>
+        /// Media Services call histoty storage service to persist call status to Media Service
+        /// </summary>
+        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
+
+        /// <summary>
         /// Default value for expected max number of minutes required to complete encoding job. If job stays in process longer, it is marked as "stuck" and this information is used to determine instance health.
         /// </summary>
         private int numberOfMinutesInProcessToMarkJobStuck = 60;
@@ -35,6 +40,11 @@
         /// Default value to determine how far back to go to load job status. 
         /// </summary>
         private int timeWindowToLoadJobsInMinutes = 480;
+
+        /// <summary>
+        /// Default value to determine how far back to go to load Azure Media Services call history. 
+        /// </summary>
+        private int timeWindowToLoadMediaServiceCallsInMinutes = 480;
 
         /// <summary>
         /// Default value of Success/Total job ration threshold to determine when Azure Media Service instance is healthy.
@@ -56,15 +66,19 @@
         /// </summary>
         /// <param name="mediaServiceInstanceHealthStorageService">Storate service to persist Azure Media Services instance health records</param>
         /// <param name="jobOutputStatusStorageService">Job output status storage service is used to recalculate Azure Media Services instance health</param>
+        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public MediaServiceInstanceHealthService(IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService,
                                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
+                                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthStorageService = mediaServiceInstanceHealthStorageService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthStorageService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
+            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.numberOfMinutesInProcessToMarkJobStuck = configService.NumberOfMinutesInProcessToMarkJobStuck;
             this.timeWindowToLoadJobsInMinutes = configService.TimeWindowToLoadJobsInMinutes;
+            this.timeWindowToLoadMediaServiceCallsInMinutes = configService.TimeWindowToLoadMediaServiceCallsInMinutes;
             this.successRateForHealthyState = configService.SuccessRateForHealthyState;
             this.successRateForUnHealthyState = configService.SuccessRateForUnHealthyState;
         }
@@ -171,17 +185,17 @@
                 var aggregatedData = allJobs.GroupBy(i => i.JobName);
 
                 // for each Azure Media Service instance, calculate following statistics
-                var successCount = 0;
-                var totalCount = 0;
-                var inHealthyProgressCount = 0;
+                var jobsSuccessCount = 0;
+                var jobsTotalCount = 0;
+                var jobsInHealthyProgressCount = 0;
                 foreach (var jobData in aggregatedData)
                 {
-                    totalCount++;
+                    jobsTotalCount++;
                     var finalStateReached = false;
 
                     if (jobData.Any(j => j.JobOutputState == JobState.Finished))
                     {
-                        successCount++;
+                        jobsSuccessCount++;
                         finalStateReached = true;
                     }
 
@@ -193,7 +207,7 @@
                     // do not count canceled jobs
                     if (jobData.Any(j => j.JobOutputState == JobState.Canceled))
                     {
-                        totalCount--;
+                        jobsTotalCount--;
                         finalStateReached = true;
                     }
 
@@ -207,21 +221,39 @@
                         // if duration below max threshold, it is "healthy" in progress, otherwise it is counted as "unheatlhy"
                         if (duration.TotalMinutes < this.numberOfMinutesInProcessToMarkJobStuck)
                         {
-                            inHealthyProgressCount++;
+                            jobsInHealthyProgressCount++;
                         }
                     }
                 }
 
-                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync aggregated data: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} successCount={successCount} totalCount={totalCount} inHealthyProgressCount={inHealthyProgressCount}");
+                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync jobs aggregated data: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} jobSuccessCount={jobsSuccessCount} jobTotalCount={jobsTotalCount} jobInHealthyProgressCount={jobsInHealthyProgressCount}");
 
                 // default is healthy
-                var successRate = 1f;
+                var jobsSuccessRate = 1f;
 
                 // if no records exist, instance is healthy
-                if (totalCount > 0)
+                if (jobsTotalCount > 0)
                 {
-                    successRate = ((float)(successCount + inHealthyProgressCount)) / totalCount;
+                    jobsSuccessRate = ((float)(jobsSuccessCount + jobsInHealthyProgressCount)) / jobsTotalCount;
                 }
+
+                var allCalls = this.mediaServiceCallHistoryStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowToLoadMediaServiceCallsInMinutes).GetAwaiter().GetResult().ToList();
+
+                var callsTotalCount = allCalls.Count;
+                var callsSuccessCount = allCalls.Count(c => (int)c.HttpStatus < 500);
+
+                logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync calls aggregated data: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} callsSuccessCount={callsSuccessCount} callsTotalCount={callsTotalCount}");
+
+                // default is healthy
+                var callsSuccessRate = 1f;
+
+                // if no records exist, instance is healthy
+                if (callsTotalCount > 0)
+                {
+                    callsSuccessRate = ((float)callsSuccessCount) / callsTotalCount;
+                }
+
+                var successRate = (jobsSuccessRate + callsSuccessRate) / 2;
 
                 // degraded state is set if successRate is in between successRateForHealthyState and successRateForUnHealthyState
                 var state = InstanceHealthState.Degraded;
