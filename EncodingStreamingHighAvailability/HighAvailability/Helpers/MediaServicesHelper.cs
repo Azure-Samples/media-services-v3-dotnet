@@ -289,7 +289,7 @@
         {
             TResult result;
 
-            // Create model and initiliaze common field values
+            // Create model and initialize common field values
             var mediaServiceCallHistoryModel = new MediaServiceCallHistoryModel
             {
                 Id = Guid.NewGuid().ToString(),

@@ -60,7 +60,7 @@
             // Get source configuration that asset is provisioned as part of encoding job
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
 
-            // Create a custom streaming locator name, it has to differe from originally requested locator name to avoid name collision
+            // Create a custom streaming locator name, it has to differ from originally requested locator name to avoid name collision
             var streamingLocatorName = $"{provisioningRequest.StreamingLocatorName}-encrypted";
 
             // Get Azure Media Services instance client associated with provisioned asset
@@ -142,7 +142,7 @@
         }
 
         /// <summary>
-        /// Generates streaming locator using Azure Front Door url
+        /// Generates streaming locator using Azure Front Door URL
         /// This implementation is based on https://github.com/Azure-Samples/media-services-v3-dotnet-core-tutorials/tree/master/NETCore/EncodeHTTPAndPublishAESEncrypted
         /// </summary>
         /// <param name="client">Azure Media Services instance client</param>

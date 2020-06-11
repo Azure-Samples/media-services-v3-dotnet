@@ -17,7 +17,7 @@
         /// </summary>
         /// <param name="eventGridEvent">Data to parse</param>
         /// <param name="logger">Logger to log data</param>
-        /// <returns>Parsed job outpout status model</returns>
+        /// <returns>Parsed job output status model</returns>
         public JobOutputStatusModel ParseEventData(EventGridEvent eventGridEvent, ILogger logger)
         {
             var eventId = eventGridEvent.Id;

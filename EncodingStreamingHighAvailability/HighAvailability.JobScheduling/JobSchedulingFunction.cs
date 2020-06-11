@@ -35,7 +35,7 @@ namespace HighAvailability.JobScheduling
 
         /// <summary>
         /// This function is triggered by messages in job-requests Azure queue.
-        /// It submits new job requets to AMS cluster.
+        /// It submits a new job request to AMS cluster.
         /// If function fails, exception is thrown and message is automatically reprocessed up to 5 times by default.
         /// </summary>
         /// <param name="message">Request data</param>

@@ -21,7 +21,7 @@ namespace HighAvailability.JobOutputStatus
         private IJobOutputStatusService jobOutputStatusService { get; set; }
 
         /// <summary>
-        /// Service to to parse EvetGridEvents
+        /// Service to parse EventGridEvents
         /// </summary>
         private IEventGridService eventGridService { get; set; }
 
@@ -29,7 +29,7 @@ namespace HighAvailability.JobOutputStatus
         /// Constructor
         /// </summary>
         /// <param name="jobOutputStatusService">Service to process job output status events</param>
-        /// <param name="eventGridService">Service to to parse EvetGridEvents</param>
+        /// <param name="eventGridService">Service to parse EventGridEvents</param>
         public JobOutputStatusFunction(IJobOutputStatusService jobOutputStatusService, IEventGridService eventGridService)
         {
             this.jobOutputStatusService = jobOutputStatusService ?? throw new ArgumentNullException(nameof(jobOutputStatusService));
@@ -44,7 +44,7 @@ namespace HighAvailability.JobOutputStatus
         /// Microsoft.Media.JobOutputProcessing
         /// Microsoft.Media.JobOutputScheduled
         /// Microsoft.Media.JobOutputCanceling
-        /// See ARMDeployemnt/eventgridsetup.json for registration script
+        /// See ARMDeployment/eventgridsetup.json for registration script
         /// </summary>
         /// <param name="eventGridEvent">Event data</param>
         /// <param name="logger">Logger to log data to App Insights</param>

@@ -24,7 +24,7 @@
         private readonly IMediaServiceInstanceHealthService mediaServiceInstanceHealthService;
 
         /// <summary>
-        /// Job verification requets is persisted in job verification request storage service to run job verification logic in future.
+        /// Job verification requests is persisted in job verification request storage service to run job verification logic in future.
         /// </summary>
         private readonly IJobVerificationRequestStorageService jobVerificationRequestStorageService;
 
@@ -44,7 +44,7 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -52,7 +52,7 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceHealthService">Media services instance health service</param>
-        /// <param name="jobVerificationRequestStorageService">Job verification requets storage service </param>
+        /// <param name="jobVerificationRequestStorageService">Job verification requests storage service </param>
         /// <param name="jobOutputStatusStorageService">Job output status service to persist job output status after initial job submission</param>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
@@ -166,7 +166,7 @@
             var retryCount = 3;
             var retryTimeOut = 1000;
             // Job is submitted at this point, failing to do any calls after this point would result in reprocessing this job request and submitting duplicate one.
-            // It is ok to retry and igonre exception at the end. In current implementation based on Azure storage, it is very unlikely to fail in any of the below calls.
+            // It is OK to retry and ignore exception at the end. In current implementation based on Azure storage, it is very unlikely to fail in any of the below calls.
             do
             {
                 try
@@ -178,7 +178,7 @@
                     var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, this.verificationDelay, logger).ConfigureAwait(false);
                     logger.LogInformation($"JobSchedulingService::SubmitJobAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
 
-                    // no expcetion happened, let's break.
+                    // no exception happened, let's break.
                     break;
                 }
 #pragma warning disable CA1031 // Do not catch general exception types

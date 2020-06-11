@@ -7,7 +7,7 @@ namespace HighAvailability.Tests
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This is a class to implement Azure Media Service clien up
+    /// This is a class to implement Azure Media Service client up
     /// </summary>
     [TestClass]
     public class Cleanup

@@ -5,7 +5,7 @@
     using System;
 
     /// <summary>
-    /// Implements table storage specific model for JobOutputStatusModel class
+    /// Implements table storage specific model for JobOutputStatusModel class.  
     /// </summary>
     public class JobOutputStatusModelTableEntity : TableEntity
     {

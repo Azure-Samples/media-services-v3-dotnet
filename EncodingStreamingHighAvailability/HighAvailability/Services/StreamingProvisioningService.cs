@@ -15,7 +15,7 @@
     public class StreamingProvisioningService
     {
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         protected IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService { get; set; }
 
@@ -54,10 +54,10 @@
                 "StreamingLocators.GetWithHttpMessagesAsync",
                 logger).ConfigureAwait(false);
 
-            // if locator exists, but associated with different asset, throw. This should only happen if locators are created outside from this autoamted process
+            // if locator exists, but associated with different asset, throw. This should only happen if locators are created outside from this automated process
             if (locator != null && !locator.AssetName.Equals(assetName, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new Exception($"Locator already exists with incorrect asset name, accountName={config.AccountName} locatorName={locator.Name} existingAssetNane={locator.AssetName} requestedAssetName={assetName}");
+                throw new Exception($"Locator already exists with incorrect asset name, accountName={config.AccountName} locatorName={locator.Name} existingAssetName={locator.AssetName} requestedAssetName={assetName}");
             }
 
             // locator does not exists, need to create new one

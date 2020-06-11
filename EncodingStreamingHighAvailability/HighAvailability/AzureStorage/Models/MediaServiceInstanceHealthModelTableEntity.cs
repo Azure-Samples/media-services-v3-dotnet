@@ -36,12 +36,12 @@
         }
 
         /// <summary>
-        /// Azure Media Services intstance account name
+        /// Azure Media Services instance account name
         /// </summary>
         public string MediaServiceAccountName { get; set; }
 
         /// <summary>
-        /// Azure Media Services intstance health state
+        /// Azure Media Services instance health state
         /// </summary>
         public string HealthState { get; set; }
 
@@ -51,7 +51,7 @@
         public DateTimeOffset LastUpdated { get; set; }
 
         /// <summary>
-        /// Indicator if Azure Media Services intstance is enabled and should accept new requests
+        /// Indicator if Azure Media Services instance is enabled and should accept new requests
         /// </summary>
         public bool IsEnabled { get; set; }
 

@@ -5,7 +5,7 @@
     using System.Net;
 
     /// <summary>
-    /// Implements data model to store Media Service call hisotry data
+    /// Implements data model to store Media Service call history data
     /// </summary>
     public class MediaServiceCallHistoryModel
     {
@@ -35,7 +35,7 @@
         public DateTimeOffset EventTime { get; set; }
 
         /// <summary>
-        /// Azure Media Service call nane
+        /// Azure Media Service call name
         /// </summary>
         public string CallName { get; set; }
 
