@@ -103,7 +103,7 @@
                 // Group all job output status records by job name.
                 var aggregatedData = allJobs.GroupBy(i => i.JobName);
                 var jobsToRefresh = new List<JobOutputStatusModel>();
-                var uniqueJobCount = 0;
+                var uniqueJobCountPerTransform = new Dictionary<string, int>();
 
                 // Iterates through each job
                 foreach (var jobData in aggregatedData)
@@ -118,6 +118,16 @@
                         finalStateReached = true;
                     }
 
+                    // Transform name is needed to load job from API, transform name is not parsed from event grid based records. 
+                    // Need to got to original record that was created as part of job creation process.
+                    var jobToAdd = jobData.FirstOrDefault(j => !string.IsNullOrEmpty(j.TransformName));
+
+                    // if job output record with transform name is not found, have to skip this record, since transform name is required field to do other processing
+                    if (jobToAdd == null)
+                    {
+                        continue;
+                    }
+
                     if (!finalStateReached)
                     {
                         var lastUpdate = jobData.Max(j => j.EventTime);
@@ -125,19 +135,20 @@
                         // If final state is not reached, and job was not refreshed for longer than max threshold
                         if (currentTime.AddMinutes(-this.timeSinceLastUpdateToForceJobResyncInMinutes) > lastUpdate)
                         {
-                            // Transform name is needed to load job from API, transform name is not parsed from event grid based records. 
-                            // Need to got to original record that was created as part of job creation process.
-                            var jobToAdd = jobData.FirstOrDefault(j => !string.IsNullOrEmpty(j.TransformName));
-                            if (jobToAdd != null)
-                            {
-                                jobsToRefresh.Add(jobToAdd);
-                            }
+                            jobsToRefresh.Add(jobToAdd);
                         }
                     }
-                    uniqueJobCount++;
+
+                    if (!uniqueJobCountPerTransform.ContainsKey(jobToAdd.TransformName))
+                    {
+                        uniqueJobCountPerTransform.Add(jobToAdd.TransformName, 0);
+                    }
+
+                    uniqueJobCountPerTransform[jobToAdd.TransformName] += 1;
+
                 }
 
-                this.RefreshJobOutputStatusAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, jobsToRefresh, uniqueJobCount, logger).GetAwaiter().GetResult();
+                this.RefreshJobOutputStatusAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, jobsToRefresh, uniqueJobCountPerTransform, logger).GetAwaiter().GetResult();
             });
         }
 
@@ -149,7 +160,7 @@
         /// <param name="totalNumberOfJobs">Total number of jobs available for a given instance</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
-        private async Task RefreshJobOutputStatusAsync(string mediaServiceAccountName, IList<JobOutputStatusModel> jobOutputStatusModels, int totalNumberOfJobs, ILogger logger)
+        private async Task RefreshJobOutputStatusAsync(string mediaServiceAccountName, IList<JobOutputStatusModel> jobOutputStatusModels, Dictionary<string, int> totalNumberOfJobs, ILogger logger)
         {
             if (jobOutputStatusModels.Any())
             {
@@ -170,7 +181,14 @@
                     // Overall goal is to minimize number of calls to Azure Media Services APIs.
                     // This logic determines if it is lower number calls to do individual Get calls for each missing job status record or
                     // load all jobs using list API.
-                    if (count > totalNumberOfJobs / this.pageSize)
+
+                    int numberOfCallsToLoadAllJobsUsingListOperation = totalNumberOfJobs[transformName] / this.pageSize + 1;
+
+                    // Job List operation is 8 times more expensive than single job Get operation. This data was loaded from back-end telemetry. 
+                    int getOperationVsListOperationExpenseRatio = 8;
+
+                    // Check if it is "cheaper" to load all missing job data using individual Get operation or load all jobs using List operation
+                    if (count > numberOfCallsToLoadAllJobsUsingListOperation * getOperationVsListOperationExpenseRatio)
                     {
                         await this.RefreshJobOutputStatusUsingListAsync(mediaServiceAccountName, jobOutputStatusModels, transformName, logger).ConfigureAwait(false);
                     }

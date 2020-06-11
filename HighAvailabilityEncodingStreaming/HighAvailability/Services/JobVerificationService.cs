@@ -6,6 +6,7 @@
     using Microsoft.Azure.Management.Media.Models;
     using Microsoft.Extensions.Logging;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -345,6 +346,27 @@
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
                 var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName).ConfigureAwait(false);
                 jobVerificationRequestModel.RetryCount++;
+
+                var transform = await MediaServicesHelper.CallAzureMediaServices(
+                    async () =>
+                    {
+                        return await clientInstance.Transforms.GetWithHttpMessagesAsync(
+                            clientConfiguration.ResourceGroup,
+                            clientConfiguration.AccountName,
+                            jobVerificationRequestModel.OriginalJobRequestModel.TransformName).ConfigureAwait(false);
+                    },
+                    jobVerificationRequestModel,
+                    selectedInstanceName,
+                    this.mediaServiceCallHistoryStorageService,
+                    "Transforms.GetWithHttpMessagesAsync",
+                    logger).ConfigureAwait(false);
+
+                // Need to check transform output on error setting. If all outputs have continue job, no need to resubmit such job, since failure is not critical.
+                if (transform.Outputs.All(t => t.OnError == OnErrorType.ContinueJob))
+                {
+                    logger.LogInformation($"JobVerificationService::ResubmitJob skipping request to resubmit since all transforms outputs are set to continue job: transform={LogHelper.FormatObjectForLog(transform)}");
+                    return;
+                }
 
                 // Logic below is similar to JobSchedulingService implementation when initial job is submitted.
                 // This logic below may need to be updated if multiple job outputs are used per single job and partial resubmit is required to process only failed job outputs.
