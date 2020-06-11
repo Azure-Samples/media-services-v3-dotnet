@@ -70,7 +70,7 @@
                 // create output with given preset
                 var outputs = new TransformOutput[]
                 {
-                    new TransformOutput(preset),
+                    new TransformOutput(preset)                    
                 };
 
                 // create new transform
