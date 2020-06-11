@@ -29,8 +29,10 @@ namespace HighAvailabikity.Provisioner
 
         /// <summary>
         /// This function is triggered by messages in provisioning-requests Azure queue.
-        /// It runs provisioning logic for encoded assets.
+        /// It runs provisioning logic for processed assets.
         /// If function fails, exception is thrown and message is automatically reprocessed up to 5 times by default.
+        /// See this link for more details how to configure retry settings
+        /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue-output?tabs=csharp#hostjson-settings
         /// </summary>
         /// <param name="message"></param>
         /// <param name="logger"></param>

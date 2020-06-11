@@ -5,12 +5,12 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Interface to define methods to orchestrate encoded assets provisioning logic.
+    /// Interface to define methods to orchestrate processed assets provisioning logic.
     /// </summary>
     public interface IProvisioningOrchestrator
     {
         /// <summary>
-        /// Provisions encoded assets
+        /// Provisions processed assets
         /// </summary>
         /// <param name="provisioningRequestModel">Request to process</param>
         /// <param name="logger">Logger to log data</param>

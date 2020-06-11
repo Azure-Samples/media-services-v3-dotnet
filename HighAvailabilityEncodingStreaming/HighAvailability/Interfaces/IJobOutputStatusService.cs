@@ -10,7 +10,7 @@
     public interface IJobOutputStatusService
     {
         /// <summary>
-        /// Stores job output status record and submits request to provision encoded assets.
+        /// Stores job output status record and submits request to provision processed assets.
         /// </summary>
         /// <param name="jobOutputStatusModel">Input data model</param>
         /// <param name="logger">Logger to log data</param>
