@@ -17,7 +17,7 @@
     public class MediaServiceInstanceHealthService : IMediaServiceInstanceHealthService
     {
         /// <summary>
-        /// Storate service to persist Azure Media Services instance health records
+        /// Storage service to persist Azure Media Services instance health records
         /// </summary>
         private readonly IMediaServiceInstanceHealthStorageService mediaServiceInstanceHealthStorageService;
 
@@ -27,7 +27,7 @@
         private readonly IJobOutputStatusStorageService jobOutputStatusStorageService;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -64,7 +64,7 @@
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="mediaServiceInstanceHealthStorageService">Storate service to persist Azure Media Services instance health records</param>
+        /// <param name="mediaServiceInstanceHealthStorageService">Storage service to persist status of all calls to Media Services APIs</param>
         /// <param name="jobOutputStatusStorageService">Job output status storage service is used to recalculate Azure Media Services instance health</param>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
@@ -138,7 +138,7 @@
 
             if (candidates.Any())
             {
-                // if found, pick first avalable.
+                // if found, pick first available.
                 instance = candidates.FirstOrDefault();
             }
             else
@@ -218,7 +218,7 @@
                         var lastUdate = jobData.Max(j => j.EventTime);
                         var duration = lastUdate - firstUpdate;
 
-                        // if duration below max threshold, it is "healthy" in progress, otherwise it is counted as "unheatlhy"
+                        // if duration below max threshold, it is "healthy" in progress, otherwise it is counted as "unhealthy"
                         if (duration.TotalMinutes < this.numberOfMinutesInProcessToMarkJobStuck)
                         {
                             jobsInHealthyProgressCount++;
@@ -255,7 +255,7 @@
 
                 var successRate = (jobsSuccessRate + callsSuccessRate) / 2;
 
-                // degraded state is set if successRate is in between successRateForHealthyState and successRateForUnHealthyState
+                // degraded state is set if successRate is in between successRateForHealthyState and successRateForUnhealthyState
                 var state = InstanceHealthState.Degraded;
                 if (successRate > this.successRateForHealthyState)
                 {
@@ -268,14 +268,14 @@
 
                 logger.LogInformation($"MediaServiceInstanceHealthService::ReEvaluateMediaServicesHealthAsync setting health state: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} state={state}");
 
-                // update newly calcualte health rating
+                // update newly calculated health rating
                 var updatedMediaServiceInstanceHealthModel = this.mediaServiceInstanceHealthStorageService.UpdateHealthStateAsync(
                                                                 mediaServiceInstanceHealthModel.MediaServiceAccountName,
                                                                 state,
                                                                 DateTime.UtcNow).GetAwaiter().GetResult();
 
                 // since this is processed in parallel for all available Azure Media Service instances, need to sync on updating final list
-                // this should not cause any perf issue, since it is simple update and rest of the method is significant more expensive to run.
+                // this should not cause any performance issue, since it is simple update and rest of the method is significant more expensive to run.
                 lock (updatedInstances)
                 {
                     updatedInstances.Add(updatedMediaServiceInstanceHealthModel);

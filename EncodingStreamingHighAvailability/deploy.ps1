@@ -26,7 +26,7 @@ $ErrorActionPreference = 'Stop'
 
 if ($numberOfRetries -eq 0)
 {
-    throw "Failed to deploy ARM tempplate"
+    throw "Failed to deploy ARM template"
 }
 
 $createdFunctionNames = $mainDeployment.Outputs['functionNames'].Value

@@ -44,7 +44,7 @@
 
             if (tableEntityModelResult == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
-                throw new Exception("Got error callig Table API");
+                throw new Exception("Got error calling Table API");
             }
 
             return tableEntityModelResult;
@@ -65,7 +65,7 @@
 
             if (tableEntityModel == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
-                throw new Exception("Got error callig Table API");
+                throw new Exception("Got error calling Table API");
             }
 
             return tableEntityModel;
@@ -85,7 +85,7 @@
 
             if (tableEntityModelResult == null || !this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
-                throw new Exception("Got error callig Table API");
+                throw new Exception("Got error calling Table API");
             }
 
             return tableEntityModelResult;
@@ -148,7 +148,7 @@
 
             if (!this.IsStatusCodeSuccess(result.HttpStatusCode))
             {
-                throw new Exception("Got error callig Table API");
+                throw new Exception("Got error calling Table API");
             }
         }
 

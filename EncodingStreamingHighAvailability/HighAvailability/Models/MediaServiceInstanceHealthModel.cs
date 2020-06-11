@@ -3,17 +3,17 @@
     using System;
 
     /// <summary>
-    /// Implements data model to store Azure Media Services intstance health data
+    /// Implements data model to store Azure Media Services instance health data
     /// </summary>
     public class MediaServiceInstanceHealthModel
     {
         /// <summary>
-        /// Azure Media Services intstance account name
+        /// Azure Media Services instance account name
         /// </summary>
         public string MediaServiceAccountName { get; set; }
 
         /// <summary>
-        /// Azure Media Services intstance health state
+        /// Azure Media Services instance health state
         /// </summary>
         public InstanceHealthState HealthState { get; set; }
 
@@ -23,13 +23,13 @@
         public DateTimeOffset LastUpdated { get; set; }
 
         /// <summary>
-        /// Indicator if Azure Media Services intstance is enabled and should accept new requests
+        /// Indicator if Azure Media Services instance is enabled and should accept new requests
         /// </summary>
         public bool IsEnabled { get; set; }
     }
 
     /// <summary>
-    /// Enum to indicate Azure Media Services intstance health
+    /// Enum to indicate Azure Media Services instance health
     /// </summary>
     public enum InstanceHealthState
     {

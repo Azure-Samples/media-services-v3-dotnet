@@ -24,7 +24,7 @@
         private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -150,7 +150,7 @@
                     logger).ConfigureAwait(false);
             }
 
-            // Get SAS token associated with source asset. SAS token is requried to initiate StartCopyFromUri
+            // Get SAS token associated with source asset. SAS token is required to initiate StartCopyFromUri
             var sourceAssetContainerSas = await MediaServicesHelper.CallAzureMediaServices(
                     async () =>
                     {
@@ -185,7 +185,7 @@
                     var sourceBlob = sourceBlobClient.GetBlobClient(blobItem.Name);
                     // Start copy operation, see more data about it https://docs.microsoft.com/en-us/dotnet/api/azure.storage.blobs.specialized.blobbaseclient.startcopyfromuriasync?view=azure-dotnet
                     var copyOperation = targetBlob.StartCopyFromUri(sourceBlob.Uri);
-                    // Wait for copy to complete, since this is running on seprate thread, no need to do async
+                    // Wait for copy to complete, since this is running on separate thread, no need to do async
                     var copyResult = copyOperation.WaitForCompletionAsync().GetAwaiter().GetResult();
                     // Check copy operation status
                     if (copyResult.GetRawResponse().Status != 200)

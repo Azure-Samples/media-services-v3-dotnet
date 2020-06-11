@@ -26,7 +26,7 @@
         private readonly string FrontDoorHostNameKeyName = "FrontDoorHostName";
 
         /// <summary>
-        /// Binary sreaming key used for clear key streaming.
+        /// Binary streaming key used for clear key streaming.
         /// </summary>
         private byte[] clearKeyStreamingKey;
 
@@ -191,7 +191,7 @@
 
             if (this.FrontDoorHostName == null)
             {
-                throw new Exception($"Function confo does not have {this.FrontDoorHostNameKeyName} value");
+                throw new Exception($"Function config does not have {this.FrontDoorHostNameKeyName} value");
             }
 
             // All keyvault secrets are set by ARM deployment script
