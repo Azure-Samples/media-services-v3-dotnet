@@ -44,7 +44,7 @@
         private readonly IConfigService configService;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -58,8 +58,8 @@
         /// </summary>
         /// <param name="mediaServiceInstanceHealthService">Service to load Azure Media Service instance health information</param>
         /// <param name="jobOutputStatusStorageService">Storage service for job output status records</param>
-        /// <param name="provisioningRequestStorageService">Storage service to persit provisioning requests</param>
-        /// <param name="jobVerificationRequestStorageService">Storage service to persit job verification requests</param>
+        /// <param name="provisioningRequestStorageService">Storage service to persist provisioning requests</param>
+        /// <param name="jobVerificationRequestStorageService">Storage service to persist job verification requests</param>
         /// <param name="mediaServiceInstanceFactory">Factory to create Azure Media Services instance</param>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
@@ -144,7 +144,7 @@
             // At this point here, jobOutputStatus is either loaded from job output status storage or from Azure Media Service API.
             logger.LogInformation($"JobVerificationService::VerifyJobAsync jobOutputStatus={LogHelper.FormatObjectForLog(jobOutputStatus)}");
 
-            // Check if job ouput has been successfully finished.
+            // Check if job output has been successfully finished.
             if (jobOutputStatus?.JobOutputState == JobState.Finished)
             {
                 await this.ProcessFinishedJobAsync(jobVerificationRequestModel, jobOutputStatusLoadedFromAPI, logger).ConfigureAwait(false);
@@ -169,7 +169,7 @@
                 return jobVerificationRequestModel;
             }
 
-            // At this point, job is stuck, it is not in the final state and long enough time period has passed (since this code is runnin for a given job).
+            // At this point, job is stuck, it is not in the final state and long enough time period has passed (since this code is running for a given job).
             await this.ProcessStuckJob(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::VerifyJobAsync completed: job={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
@@ -189,7 +189,7 @@
             logger.LogInformation($"JobVerificationService::ProcessFinishedJob started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
             // check if stream provisioning requests needs to be submitted. 
-            // There are two scenarios, if job was completed and there is record in local storage, there is nothing to do, since this requeset was submitted as part of job output status process.
+            // There are two scenarios, if job was completed and there is record in local storage, there is nothing to do, since this request was submitted as part of job output status process.
             // If job is completed, but status is missing in storage service, this means that EventGrid event was lost and provisioning request needs to be submitted.
             if (submitProvisioningRequest)
             {
@@ -234,7 +234,7 @@
             else
             {
                 // no need to resubmit job that failed for user error.
-                logger.LogInformation($"JobVerificationService::ProcessFailedJob job failed, not a system error, skipping retry: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                logger.LogInformation($"JobVerificationService::ProcessFailedJob submitted job failed, not a system error, skipping retry: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
             }
 
             logger.LogInformation($"JobVerificationService::ProcessFailedJob completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)} jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
@@ -257,7 +257,7 @@
         }
 
         /// <summary>
-        /// Submits another verificationr request for "stuck" job.
+        /// Submits another verification request for "stuck" job.
         /// </summary>
         /// <param name="jobVerificationRequestModel"></param>
         /// <param name="logger"></param>
@@ -276,14 +276,14 @@
                 var retryCount = 3;
                 var retryTimeOut = 1000;
                 // Job is submitted at this point, failing to do any calls after this point would result in reprocessing this job request and submitting duplicate one.
-                // It is ok to retry and igonre exception at the end. In current implementation based on Azure storage, it is very unlikely to fail in any of the below calls.
+                // It is OK to retry and ignore exception at the end. In current implementation based on Azure storage, it is very unlikely to fail in any of the below calls.
                 do
                 {
                     try
                     {
                         var jobVerificationResult = await this.jobVerificationRequestStorageService.CreateAsync(jobVerificationRequestModel, verificationDelay, logger).ConfigureAwait(false);
                         logger.LogInformation($"JobVerificationService::SubmitVerificationRequestAsync successfully submitted jobVerificationModel: result={LogHelper.FormatObjectForLog(jobVerificationResult)}");
-                        // no expcetion happened, let's break.
+                        // no exception happened, let's break.
                         break;
                     }
 #pragma warning disable CA1031 // Do not catch general exception types
@@ -299,12 +299,12 @@
             }
             else
             {
-                logger.LogWarning($"JobVerificationService::SubmitVerificationRequestAsync max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resbumitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                logger.LogWarning($"JobVerificationService::SubmitVerificationRequestAsync max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resubmitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
             }
         }
 
         /// <summary>
-        /// Deletes job info from Azure Media Service intance.
+        /// Deletes job info from Azure Media Service instance.
         /// </summary>
         /// <param name="jobVerificationRequestModel"></param>
         /// <param name="logger"></param>
@@ -402,7 +402,7 @@
             }
             else
             {
-                logger.LogWarning($"JobVerificationService::ResubmitJob max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resbumitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
+                logger.LogWarning($"JobVerificationService::ResubmitJob max number of retries reached to check stuck job, this job request will not be processed, please manually check if job needs to be resubmitted, skipping request: result={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
             }
         }
     }

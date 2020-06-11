@@ -40,7 +40,7 @@ namespace HighAvailability.Tests
         private static ITableStorageService mediaServiceInstanceHealthTableStorageService;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist Media Service call status
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private static MediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -60,7 +60,7 @@ namespace HighAvailability.Tests
         private static QueueClient jobVerificationRequestQueue;
 
         /// <summary>
-        /// Initialize objec to run this setup
+        /// Initialize objects to run this setup
         /// </summary>
         /// <param name="_">not used in this sample</param>
         /// <returns>Task for async operation</returns>

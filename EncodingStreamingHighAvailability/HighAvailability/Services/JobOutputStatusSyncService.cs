@@ -48,7 +48,7 @@
         private int timeSinceLastUpdateToForceJobResyncInMinutes = 60;
 
         /// <summary>
-        /// Media Services call histoty storage service to persist call status to Media Service
+        /// Storage service to persist status of all calls to Media Services APIs
         /// </summary>
         private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
 
@@ -92,11 +92,11 @@
             // Load list of all instance to sync data for
             var instances = await this.mediaServiceInstanceHealthService.ListAsync().ConfigureAwait(false);
 
-            // each instance can be refreshed independenly
+            // each instance can be refreshed independently
             Parallel.ForEach(instances, new ParallelOptions { MaxDegreeOfParallelism = 5 }, (mediaServiceInstanceHealthModel) =>
             {
                 // Load all jobs for a given time period and account name.
-                // Since it is executed on seprate thread, no need to async here.
+                // Since it is executed on separate thread, no need to async here.
                 var allJobs = this.jobOutputStatusStorageService.ListByMediaServiceAccountNameAsync(mediaServiceInstanceHealthModel.MediaServiceAccountName, this.timeWindowToLoadJobsInMinutes).GetAwaiter().GetResult();
                 logger.LogInformation($"JobOutputStatusSyncService::SyncJobOutputStatusAsync loaded jobs history: instanceName={mediaServiceInstanceHealthModel.MediaServiceAccountName} count={allJobs.Count()}");
 
@@ -145,7 +145,7 @@
         /// Determines if individual Get calls or List class should be used to refresh job output status.
         /// </summary>
         /// <param name="mediaServiceAccountName">Account name to load</param>
-        /// <param name="jobOutputStatusModels">List of job output status records to resync</param>
+        /// <param name="jobOutputStatusModels">List of job output status records to re-sync</param>
         /// <param name="totalNumberOfJobs">Total number of jobs available for a given instance</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
@@ -153,7 +153,7 @@
         {
             if (jobOutputStatusModels.Any())
             {
-                // Jobs can be loaded by transfor name, need to group by that and do one by one
+                // Jobs can be loaded by transform name, need to group by that and do one by one
                 var aggregatedDataByTransform = jobOutputStatusModels.GroupBy(i => i.TransformName);
 
                 // Iterate through all transforms
@@ -186,7 +186,7 @@
         /// Reloads job status for each job individually
         /// </summary>
         /// <param name="mediaServiceAccountName">Account name to load</param>
-        /// <param name="jobOutputStatusModels">List of job output status records to resync</param>
+        /// <param name="jobOutputStatusModels">List of job output status records to re-sync</param>
         /// <param name="transformName">transform name</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
@@ -225,7 +225,7 @@
         /// Reloads job status using List API 
         /// </summary>
         /// <param name="mediaServiceAccountName">Account name to load</param>
-        /// <param name="jobOutputStatusModels">List of job output status to resync</param>
+        /// <param name="jobOutputStatusModels">List of job output status to re-sync</param>
         /// <param name="transformName">Transform name</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
@@ -258,7 +258,7 @@
             var everythingProcessed = false;
             while (!everythingProcessed)
             {
-                // only interested in records that need to be resync, not every item loaded from API
+                // only interested in records that need to be re-sync, not every item loaded from API
                 var matchedPairList = currentPage.Join(jobOutputStatusModels, (job) => job.Name, (jobOutputStatusModel) => jobOutputStatusModel.JobName, (jobOutputStatusModel, job) => (jobOutputStatusModel, job));
 
                 foreach (var matchedPair in matchedPairList)

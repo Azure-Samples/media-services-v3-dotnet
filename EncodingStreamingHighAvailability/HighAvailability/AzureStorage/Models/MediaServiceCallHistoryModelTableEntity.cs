@@ -54,7 +54,7 @@
         public DateTimeOffset EventTime { get; set; }
 
         /// <summary>
-        /// Azure Media Service call nane
+        /// Azure Media Service call name
         /// </summary>
         public string CallName { get; set; }
 

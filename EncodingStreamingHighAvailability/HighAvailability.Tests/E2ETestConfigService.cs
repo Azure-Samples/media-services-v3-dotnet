@@ -22,7 +22,7 @@
         private readonly string keyVaultName;
 
         /// <summary>
-        /// Binary sreaming key used for clear key streaming.
+        /// Binary streaming key used for clear key streaming.
         /// </summary>
         private byte[] clearKeyStreamingKey;
 
