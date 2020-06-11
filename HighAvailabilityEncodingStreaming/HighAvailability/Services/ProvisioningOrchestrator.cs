@@ -9,7 +9,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Implements logic to provision encoded assets. It supports multiple provisioning services that are called for a specific asset.
+    /// Implements logic to provision processed assets. It supports multiple provisioning services that are called for a specific asset.
     /// </summary>
     public class ProvisioningOrchestrator : IProvisioningOrchestrator
     {
@@ -35,7 +35,7 @@
         }
 
         /// <summary>
-        /// Provisions encoded assets
+        /// Provisions processed assets
         /// </summary>
         /// <param name="provisioningRequestModel">Request to process</param>
         /// <param name="logger">Logger to log data</param>
@@ -48,7 +48,7 @@
             var provisioningCompletedEventModel = new ProvisioningCompletedEventModel
             {
                 Id = Guid.NewGuid().ToString(),
-                AssetName = provisioningRequestModel.EncodedAssetName
+                AssetName = provisioningRequestModel.ProcessedAssetName
             };
 
             // Iterate through all available provisioning services and let each service handle provisioning request.

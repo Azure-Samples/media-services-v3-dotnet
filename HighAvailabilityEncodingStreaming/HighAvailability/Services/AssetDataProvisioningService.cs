@@ -14,7 +14,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Implements encoded asset provisioning to multiple Azure Media Services instances
+    /// Implements processed asset provisioning to multiple Azure Media Services instances
     /// </summary>
     public class AssetDataProvisioningService : IProvisioningService
     {
@@ -49,7 +49,7 @@
         }
 
         /// <summary>
-        /// Provisions encoded assets from Azure Media Services source instance to all other Azure Media Services instances.
+        /// Provisions processed assets from Azure Media Services source instance to all other Azure Media Services instances.
         /// </summary>
         /// <param name="provisioningRequestModel">Model to provision</param>
         /// <param name="provisioningCompletedEventModel">Provision completed event model to store provisioning data</param>
@@ -59,21 +59,21 @@
             logger.LogInformation($"AssetDataProvisioningService::ProvisionAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)}");
 
             // Make sure that account name that asset is provisioned exists in current configuration
-            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.EncodedAssetMediaServiceAccountName))
+            if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(provisioningRequest.ProcessedAssetMediaServiceAccountName))
             {
-                throw new Exception($"AssetDataProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.EncodedAssetMediaServiceAccountName}");
+                throw new Exception($"AssetDataProvisioningService::ProvisionAsync does not have configuration for account={provisioningRequest.ProcessedAssetMediaServiceAccountName}");
             }
 
             // Get source configuration that asset is provisioned as part of encoding job
-            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.EncodedAssetMediaServiceAccountName];
-            provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.EncodedAssetMediaServiceAccountName);
+            var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.ProcessedAssetMediaServiceAccountName];
+            provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.ProcessedAssetMediaServiceAccountName);
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.EncodedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName).ConfigureAwait(false);
 
             // Create a list of Azure Media Services instances that asset needs to be provisioned. It should be all instances listed in configuration, except source instance
             var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(
-                                    i => !i.Equals(provisioningRequest.EncodedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
+                                    i => !i.Equals(provisioningRequest.ProcessedAssetMediaServiceAccountName, StringComparison.InvariantCultureIgnoreCase));
 
             // Iterate through the list of all Azure Media Services instance names that asset needs to be provisioned to
             foreach (var target in targetInstances)
@@ -114,7 +114,7 @@
             var targetAsset = await MediaServicesHelper.CallAzureMediaServices(
                 async () =>
                 {
-                    return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                    return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
                 },
                 provisioningRequest,
                 targetConfig.AccountName,
@@ -129,7 +129,7 @@
                 targetAsset = await MediaServicesHelper.CallAzureMediaServices(
                     async () =>
                     {
-                        return await targetClient.Assets.CreateOrUpdateWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName, new Asset()).ConfigureAwait(false);
+                        return await targetClient.Assets.CreateOrUpdateWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName, new Asset()).ConfigureAwait(false);
                     },
                     provisioningRequest,
                     targetConfig.AccountName,
@@ -141,7 +141,7 @@
                 targetAsset = await MediaServicesHelper.CallAzureMediaServices(
                     async () =>
                     {
-                        return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.EncodedAssetName).ConfigureAwait(false);
+                        return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
                     },
                     provisioningRequest,
                     targetConfig.AccountName,
@@ -157,7 +157,7 @@
                         return await sourceClient.Assets.ListContainerSasWithHttpMessagesAsync(
                            sourceConfig.ResourceGroup,
                            sourceConfig.AccountName,
-                           provisioningRequest.EncodedAssetName,
+                           provisioningRequest.ProcessedAssetName,
                            permissions: AssetContainerPermission.Read,
                            expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
                     },
@@ -190,7 +190,7 @@
                     // Check copy operation status
                     if (copyResult.GetRawResponse().Status != 200)
                     {
-                        throw new Exception($"Copy operation failed, sourceAccount={sourceConfig.AccountName} targetAccount={targetConfig.AccountName} assetName={provisioningRequest.EncodedAssetName} blobName={blobItem.Name} httpStatus={copyResult.GetRawResponse().Status}");
+                        throw new Exception($"Copy operation failed, sourceAccount={sourceConfig.AccountName} targetAccount={targetConfig.AccountName} assetName={provisioningRequest.ProcessedAssetName} blobName={blobItem.Name} httpStatus={copyResult.GetRawResponse().Status}");
                     }
                 }));
             }

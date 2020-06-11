@@ -26,7 +26,7 @@
 #pragma warning restore CA1056 // Uri properties should not be strings
 
         /// <summary>
-        /// Encoded asset is provisioned to list of Azure Media Services instances. 
+        /// Processed asset is provisioned to list of Azure Media Services instances. 
         /// This is the list to track these instances.
         /// </summary>
         public IList<string> MediaServiceAccountNames { get; } = new List<string>();
@@ -41,7 +41,7 @@
         }
 
         /// <summary>
-        /// Clear streaming locators are provisioned for encoded assets.
+        /// Clear streaming locators are provisioned for processed assets.
         /// This is the list to track these locators
         /// </summary>
         public IList<StreamingLocator> ClearStreamingLocators { get; } = new List<StreamingLocator>();
@@ -56,7 +56,7 @@
         }
 
         /// <summary>
-        /// Clear key streaming locators are provisioned for encoded assets.
+        /// Clear key streaming locators are provisioned for processed assets.
         /// This is the list to track these locators
         public IList<StreamingLocator> ClearKeyStreamingLocators { get; } = new List<StreamingLocator>();
 
