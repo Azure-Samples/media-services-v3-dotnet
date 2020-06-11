@@ -10,7 +10,9 @@ namespace HighAvailability.JobVerification
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Implements job verification Azure function. It is triggered by messages in job-verification-requests Azure queue
+    /// Implements job verification Azure function. It is triggered by messages in job-verification-requests Azure queue.
+    /// This module tracks each submitted job, resubmits failed jobs and performs job data clean up once job is successfully finished.
+    /// See TBD link for more details.
     /// </summary>
     public class JobVerificationFunction
     {
