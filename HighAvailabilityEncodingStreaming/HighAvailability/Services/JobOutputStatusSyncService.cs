@@ -178,7 +178,7 @@
                         continue;
                     }
 
-                    // Overall goal is to minimize number of calls to Azure Media Services APIs.
+                    // Overall goal is to minimize number of calls to Azure Media Services APIs. 
                     // This logic determines if it is lower number calls to do individual Get calls for each missing job status record or
                     // load all jobs using list API.
 
