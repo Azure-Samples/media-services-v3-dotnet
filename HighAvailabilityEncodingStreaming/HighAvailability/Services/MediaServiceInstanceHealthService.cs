@@ -197,11 +197,20 @@
                     {
                         jobsSuccessCount++;
                         finalStateReached = true;
+                        break;
                     }
 
-                    if (jobData.Any(j => j.JobOutputState == JobState.Error))
+                    var failedJob = jobData.FirstOrDefault(j => j.JobOutputState == JobState.Error);
+
+                    if (failedJob != null)
                     {
                         finalStateReached = true;
+                        // only failed jobs that can be retried are counted as failed for this calculation. Job that fails because of bad data is not counted against instance health.
+                        if (!failedJob.IsSystemError)
+                        {
+                            jobsSuccessCount++;
+                        }
+                        break;
                     }
 
                     // do not count canceled jobs
@@ -209,6 +218,7 @@
                     {
                         jobsTotalCount--;
                         finalStateReached = true;
+                        break;
                     }
 
                     // check if job is stuck
