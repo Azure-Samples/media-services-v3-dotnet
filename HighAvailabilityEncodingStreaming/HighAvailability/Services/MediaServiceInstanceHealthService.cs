@@ -263,8 +263,8 @@
                     callsSuccessRate = ((float)callsSuccessCount) / callsTotalCount;
                 }
 
-                // Final successRate is calculated by taking health state from job status history and health state from AMS API call history. They are just averaged right now, this could be changed to have different weights.
-                var successRate = (jobsSuccessRate + callsSuccessRate) / 2;
+                // Final successRate is Min value health state from job status history and health state from AMS API call history.
+                var successRate = Math.Min(jobsSuccessRate, callsSuccessRate);
 
                 // degraded state is set if successRate is in between successRateForHealthyState and successRateForUnhealthyState
                 var state = InstanceHealthState.Degraded;
