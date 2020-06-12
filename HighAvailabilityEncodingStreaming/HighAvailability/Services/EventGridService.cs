@@ -70,7 +70,7 @@
                 JobOutputState = asset.State.ToString(),
                 EventTime = eventTime,
                 MediaServiceAccountName = amsAccountName,
-                IsSystemError = MediaServicesHelper.IsSystemError(asset)
+                IsSystemError = MediaServicesHelper.HasRetriableError(asset)
             };
             logger.LogInformation($"EventGridService::ParseEventData successfully parsed, jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
 

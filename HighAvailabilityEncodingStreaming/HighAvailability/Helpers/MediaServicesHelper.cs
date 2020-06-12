@@ -157,7 +157,7 @@
         /// <param name="job">Azure Media Services job</param>
         /// <param name="jobOutputAssetName">Output asset name</param>
         /// <returns>true if job should be resubmitted</returns>
-        public static bool IsSystemError(Job job, string jobOutputAssetName)
+        public static bool HasRetriableError(Job job, string jobOutputAssetName)
         {
             // if overall job has failed
             if (job.State == JobState.Error)
@@ -211,7 +211,7 @@
         /// </summary>
         /// <param name="jobOutput">Job output from EventGrid event</param>
         /// <returns>true if job should be resubmitted</returns>
-        public static bool IsSystemError(MediaJobOutputAsset jobOutput)
+        public static bool HasRetriableError(MediaJobOutputAsset jobOutput)
         {
             if (jobOutput.State == MediaJobState.Error)
             {

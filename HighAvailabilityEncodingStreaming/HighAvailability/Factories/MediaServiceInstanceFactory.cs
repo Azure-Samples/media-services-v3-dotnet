@@ -4,6 +4,8 @@
     using HighAvailability.Interfaces;
     using Microsoft.Azure.Management.Media;
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -15,6 +17,11 @@
         /// Configuration container to store data about media services instances
         /// </summary>
         private readonly IConfigService configService;
+
+        /// <summary>
+        /// Single Azure Media Client instance that is used for all calls
+        /// </summary>
+        private IAzureMediaServicesClient azureMediaServicesClient;
 
         /// <summary>
         /// Constructor
@@ -37,7 +44,12 @@
                 throw new ArgumentException($"Invalid accountName {accountName}");
             }
 
-            return await MediaServicesHelper.CreateMediaServicesClientAsync(this.configService.MediaServiceInstanceConfiguration[accountName]).ConfigureAwait(false);
+            if (this.azureMediaServicesClient == null)
+            {
+                this.azureMediaServicesClient = await MediaServicesHelper.CreateMediaServicesClientAsync(this.configService.MediaServiceInstanceConfiguration[accountName]).ConfigureAwait(false);
+            }
+
+            return this.azureMediaServicesClient;
         }
     }
 }

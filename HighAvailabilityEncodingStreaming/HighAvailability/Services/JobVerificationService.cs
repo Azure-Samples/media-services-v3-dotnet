@@ -132,7 +132,7 @@
                         MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                         JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
                         TransformName = jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                        IsSystemError = MediaServicesHelper.IsSystemError(job, jobVerificationRequestModel.JobOutputAssetName) // check if job should be retried
+                        IsSystemError = MediaServicesHelper.HasRetriableError(job, jobVerificationRequestModel.JobOutputAssetName) // check if job should be retried
                     };
 
                     jobOutputStatusLoadedFromAPI = true;
