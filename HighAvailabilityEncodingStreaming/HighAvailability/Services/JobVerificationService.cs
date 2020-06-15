@@ -93,7 +93,7 @@
             {
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
 
-                var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(jobVerificationRequestModel.MediaServiceAccountName, logger).ConfigureAwait(false);
+                var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(jobVerificationRequestModel.MediaServiceAccountName, logger);
                 logger.LogInformation($"JobVerificationService::VerifyJobAsync checking job status using API: mediaServiceInstanceName={jobVerificationRequestModel.MediaServiceAccountName}");
 
                 // Get job data to verify status of specific job output.
@@ -299,7 +299,7 @@
             logger.LogInformation($"JobVerificationService::DeleteJobAsync started: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
 
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[jobVerificationRequestModel.MediaServiceAccountName];
-            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(jobVerificationRequestModel.MediaServiceAccountName, logger).ConfigureAwait(false);
+            var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(jobVerificationRequestModel.MediaServiceAccountName, logger);
             await clientInstance.Jobs.DeleteWithHttpMessagesAsync(clientConfiguration.ResourceGroup, clientConfiguration.AccountName, jobVerificationRequestModel.OriginalJobRequestModel.TransformName, jobVerificationRequestModel.JobName).ConfigureAwait(false);
 
             logger.LogInformation($"JobVerificationService::DeleteJobAsync completed: jobVerificationRequestModel={LogHelper.FormatObjectForLog(jobVerificationRequestModel)}");
@@ -319,7 +319,7 @@
             {
                 var selectedInstanceName = await this.mediaServiceInstanceHealthService.GetNextAvailableInstanceAsync(logger).ConfigureAwait(false);
                 var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
-                var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName, logger).ConfigureAwait(false);
+                var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(selectedInstanceName, logger);
                 jobVerificationRequestModel.RetryCount++;
 
                 var transform = await clientInstance.Transforms.GetAsync(

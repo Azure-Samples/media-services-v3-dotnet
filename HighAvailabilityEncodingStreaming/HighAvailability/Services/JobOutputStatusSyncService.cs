@@ -205,7 +205,7 @@
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
 
-            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(mediaServiceAccountName, logger).ConfigureAwait(false);
+            var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(mediaServiceAccountName, logger);
             foreach (var jobOutputStatusModel in jobOutputStatusModels)
             {
                 logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingGetAsync reloading job status using API: mediaServiceInstanceName={mediaServiceAccountName} oldJobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
@@ -235,7 +235,7 @@
         {
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[mediaServiceAccountName];
 
-            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(mediaServiceAccountName, logger).ConfigureAwait(false);
+            var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(mediaServiceAccountName, logger);
             logger.LogInformation($"JobOutputStatusSyncService::RefreshJobOutputStatusUsingListAsync reloading job status using list API: mediaServiceInstanceName={mediaServiceAccountName} transformName={transformName}");
 
             // Need to load all jobs that were created within specific number of minutes.

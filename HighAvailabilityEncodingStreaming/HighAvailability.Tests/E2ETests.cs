@@ -114,7 +114,7 @@ namespace HighAvailability.Tests
 
             foreach (var config in configService.MediaServiceInstanceConfiguration)
             {
-                var client = await mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(config.Value.AccountName, Mock.Of<ILogger>()).ConfigureAwait(false);
+                var client = mediaServiceInstanceFactory.GetMediaServiceInstance(config.Value.AccountName, Mock.Of<ILogger>());
                 client.LongRunningOperationRetryTimeout = 2;
 
                 await MediaServicesHelper.EnsureTransformExists(

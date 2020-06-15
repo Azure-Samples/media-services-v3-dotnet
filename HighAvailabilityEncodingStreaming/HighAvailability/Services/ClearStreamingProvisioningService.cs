@@ -58,7 +58,7 @@
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.ProcessedAssetMediaServiceAccountName];
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger).ConfigureAwait(false);
+            var sourceClient = this.mediaServiceInstanceFactory.GetMediaServiceInstance(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger);
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
@@ -88,7 +88,7 @@
                 var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
 
                 // Get client associated with target instance
-                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target, logger).ConfigureAwait(false);
+                var targetClient = this.mediaServiceInstanceFactory.GetMediaServiceInstance(target, logger);
 
                 // Create locator for target instance
                 var targetLocator = new StreamingLocator(

@@ -84,7 +84,7 @@
             var clientConfiguration = this.configService.MediaServiceInstanceConfiguration[selectedInstanceName];
 
             // get client
-            var clientInstance = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(selectedInstanceName, logger).ConfigureAwait(false);
+            var clientInstance = this.mediaServiceInstanceFactory.GetMediaServiceInstance(selectedInstanceName, logger);
 
             // In order to submit a new job, output asset has to be created first
             var asset = await clientInstance.Assets.CreateOrUpdateAsync(
