@@ -19,7 +19,7 @@ namespace HighAvailability.Tests
 
     /// <summary>
     /// This class contains code that needs to run once after initial install of this sample.
-    /// It sets up transform and key policy for each AMS instance, upload initial records for health state tracking for each instance.
+    /// It sets up transform and key policy for each Media Services instance, upload initial records for health state tracking for each instance.
     /// </summary>
     [TestClass]
     public class E2ETests

@@ -9,7 +9,7 @@ namespace HighAvailability.InstanceHealth
 
     /// <summary>
     /// Implements instance health Azure function.
-    /// This module tracks submitted jobs and determines health status for each AMS instance. It tracks finished jobs, failed jobs and jobs that never finished.
+    /// This module tracks submitted jobs and determines health status for each Media Services instance. It tracks finished jobs, failed jobs and jobs that never finished.
     /// See TBD link for more details
     /// </summary>
     public class InstanceHealthFunction
