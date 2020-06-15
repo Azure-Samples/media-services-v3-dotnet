@@ -1,6 +1,7 @@
 ﻿namespace HighAvailability.Interfaces
 {
     using Microsoft.Azure.Management.Media;
+    using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -13,6 +14,6 @@
         /// </summary>
         /// <param name="accountName">Account name for this request</param>
         /// <returns>Azure Media Services instance client</returns>
-        Task<IAzureMediaServicesClient> GetMediaServiceInstanceAsync(string accountName);
+        Task<IAzureMediaServicesClient> GetMediaServiceInstanceAsync(string accountName, ILogger logger);
     }
 }

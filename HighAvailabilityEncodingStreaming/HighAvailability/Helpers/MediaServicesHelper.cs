@@ -1,15 +1,9 @@
 ﻿namespace HighAvailability.Helpers
 {
-    using HighAvailability.Interfaces;
-    using HighAvailability.Models;
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Azure.Management.Media;
     using Microsoft.Azure.Management.Media.Models;
-    using Microsoft.Azure.Services.AppAuthentication;
-    using Microsoft.Extensions.Logging;
     using Microsoft.IdentityModel.Tokens;
-    using Microsoft.Rest;
-    using Microsoft.Rest.Azure;
     using System;
     using System.Collections.Generic;
     using System.IdentityModel.Tokens.Jwt;
@@ -21,30 +15,6 @@
     /// </summary>
     public static class MediaServicesHelper
     {
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object
-        /// </summary>
-        /// <param name="config">configuration data </param>
-        /// <returns>Azure Media Services instance client</returns>
-        public static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(MediaServiceConfigurationModel config)
-        {
-            if (config == null)
-            {
-                throw new ArgumentNullException(nameof(config));
-            }
-
-            // Authenticate to Azure.
-            var azureServiceTokenProvider = new AzureServiceTokenProvider();
-            var accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com").ConfigureAwait(false);
-            ServiceClientCredentials credentials = new TokenCredentials(accessToken);
-
-            // Establish a connection to Media Services.
-            return new AzureMediaServicesClient(credentials)
-            {
-                SubscriptionId = config.SubscriptionId
-            };
-        }
-
         /// <summary>
         /// Checks if transform exists, if not, creates transform
         /// </summary>
@@ -70,7 +40,7 @@
                 // create output with given preset
                 var outputs = new TransformOutput[]
                 {
-                    new TransformOutput(preset)                    
+                    new TransformOutput(preset)
                 };
 
                 // create new transform
@@ -222,127 +192,6 @@
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// This method wraps the logic to record status of all the calls to Azure Media Services that return data.
-        /// </summary>
-        /// <typeparam name="TContext">Context type</typeparam>
-        /// <typeparam name="TResult">Media Services return operation type</typeparam>
-        /// <param name="func">Function to call</param>
-        /// <param name="context">Operation context, in most cases this is a message that has triggered overall function. This is useful data if manual retries is required to reprocess messages</param>
-        /// <param name="mediaServiceAccountName">Account name</param>
-        /// <param name="mediaServiceCallHistoryStorageService">Storage service to persist call data</param>
-        /// <param name="callName">Name of the call to Azure Media Services</param>
-        /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
-        public static async Task<TResult> CallAzureMediaServices<TContext, TResult>(
-            Func<Task<AzureOperationResponse<TResult>>> func,
-            TContext context,
-            string mediaServiceAccountName,
-            IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
-            string callName,
-            ILogger logger)
-        {
-            AzureOperationResponse<TResult> result;
-
-            result = await CallAzureMediaServiceInternal(func, context, mediaServiceAccountName, mediaServiceCallHistoryStorageService, callName, logger).ConfigureAwait(false);
-
-            return result.Body;
-        }
-
-        /// <summary>
-        /// This method wraps the logic to record status of all the calls to Azure Media Services that do not return data.
-        /// </summary>
-        /// <typeparam name="TContext">Context type</typeparam>
-        /// <param name="func">Function to call</param>
-        /// <param name="context">Operation context, in most cases this is a message that has triggered overall function. This is useful data if manual retries is required to reprocess messages</param>
-        /// <param name="mediaServiceAccountName">account name</param>
-        /// <param name="mediaServiceCallHistoryStorageService">storage service to persist call data</param>
-        /// <param name="callName">name of the call to Azure Media Services</param>
-        /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
-        public static async Task CallAzureMediaServices<TContext>(
-            Func<Task<AzureOperationResponse>> func,
-            TContext context,
-            string mediaServiceAccountName,
-            IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
-            string callName,
-            ILogger logger)
-        {
-            await CallAzureMediaServiceInternal(func, context, mediaServiceAccountName, mediaServiceCallHistoryStorageService, callName, logger).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// This method wraps the logic to record status of all the calls to Azure Media Services
-        /// </summary>
-        /// <typeparam name="TContext">Context type</typeparam>
-        /// <typeparam name="TResult">Http response type implementing IAzureOperationResponse</typeparam>
-        /// <param name="func">Function to call</param>
-        /// <param name="context">Operation context, in most cases this is a message that has triggered overall function. This is useful data if manual retries is required to reprocess messages</param>
-        /// <param name="mediaServiceAccountName">Account name</param>
-        /// <param name="mediaServiceCallHistoryStorageService">Storage service to persist call data</param>
-        /// <param name="callName">Name of the call to Azure Media Services</param>
-        /// <param name="logger">Logger to log data</param>
-        /// <returns></returns>
-        private static async Task<TResult> CallAzureMediaServiceInternal<TContext, TResult>(Func<Task<TResult>> func, TContext context, string mediaServiceAccountName, IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService, string callName, ILogger logger) where TResult : IAzureOperationResponse
-        {
-            TResult result;
-
-            // Create model and initialize common field values
-            var mediaServiceCallHistoryModel = new MediaServiceCallHistoryModel
-            {
-                Id = Guid.NewGuid().ToString(),
-                MediaServiceAccountName = mediaServiceAccountName,
-                CallName = callName,
-            };
-
-            mediaServiceCallHistoryModel.SetContextData(context);
-
-            // if call fails, need to log the result
-            try
-            {
-                result = await func().ConfigureAwait(false);
-            }
-            catch (ApiErrorException e)
-            {
-                // log failed call data
-                mediaServiceCallHistoryModel.HttpStatus = e.Response.StatusCode;
-                mediaServiceCallHistoryModel.EventTime = DateTime.UtcNow;
-                await mediaServiceCallHistoryStorageService.CreateOrUpdateAsync(mediaServiceCallHistoryModel, logger).ConfigureAwait(false);
-                throw;
-            }
-
-            // log successful call
-            mediaServiceCallHistoryModel.EventTime = DateTime.UtcNow;
-            mediaServiceCallHistoryModel.HttpStatus = result.Response.StatusCode;
-
-            // In order to keep this operation idempotent, there is no need to fail even if recording call data fails. Otherwise when request is resubmitted and it can result in data duplication.
-            var retryCount = 3;
-            var retryTimeOut = 1000;
-
-            do
-            {
-                try
-                {
-                    // try to store data
-                    await mediaServiceCallHistoryStorageService.CreateOrUpdateAsync(mediaServiceCallHistoryModel, logger).ConfigureAwait(false);
-
-                    // no exception, break
-                    break;
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception e)
-#pragma warning restore CA1031 // Do not catch general exception types
-                {
-                    logger.LogError($"MediaServicesHelper::CallAzureMediaServices got exception calling mediaServiceCallHistoryStorageService.CreateOrUpdateAsync: retryCount={retryCount} message={e.Message} mediaServiceCallHistoryModel={LogHelper.FormatObjectForLog(mediaServiceCallHistoryModel)}");
-                    retryCount--;
-                    await Task.Delay(retryTimeOut).ConfigureAwait(false);
-                }
-            }
-            while (retryCount > 0);
-
-            return result;
         }
     }
 }

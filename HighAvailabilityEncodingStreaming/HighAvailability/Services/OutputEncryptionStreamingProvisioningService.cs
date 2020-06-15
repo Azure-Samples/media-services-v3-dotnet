@@ -29,11 +29,9 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
-        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public OutputEncryptionStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
-                                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
-                                                    IConfigService configService) : base(mediaServiceCallHistoryStorageService)
+                                                    IConfigService configService)
         {
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -64,7 +62,7 @@
             var streamingLocatorName = $"{provisioningRequest.StreamingLocatorName}-encrypted";
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger).ConfigureAwait(false);
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
@@ -73,7 +71,7 @@
                 defaultContentKeyPolicyName: this.configService.ContentKeyPolicyName);
 
             // Provision created locator
-            sourceLocator = await this.ProvisionLocatorAsync(
+            sourceLocator = await ProvisionLocatorAsync(
                 sourceClient,
                 sourceClientConfiguration,
                 provisioningRequest.ProcessedAssetName,
@@ -85,21 +83,12 @@
             provisioningCompletedEventModel.AddClearKeyStreamingLocators(sourceLocator);
 
             // List all content keys
-            var sourceContentKeysResponse = await MediaServicesHelper.CallAzureMediaServices(
-                async () =>
-                {
-                    return await sourceClient.StreamingLocators.ListContentKeysWithHttpMessagesAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, streamingLocatorName).ConfigureAwait(false);
-                },
-                provisioningRequest,
-                sourceClientConfiguration.AccountName,
-                this.mediaServiceCallHistoryStorageService,
-                "StreamingLocators.ListContentKeysWithHttpMessagesAsync",
-                logger).ConfigureAwait(false);
+            var sourceContentKeysResponse = await sourceClient.StreamingLocators.ListContentKeysAsync(sourceClientConfiguration.ResourceGroup, sourceClientConfiguration.AccountName, streamingLocatorName).ConfigureAwait(false);
 
             var keyIdentifier = sourceContentKeysResponse.ContentKeys.First().Id.ToString();
 
             // Generate primary URL for streaming, it includes token to decrypt content
-            provisioningCompletedEventModel.PrimaryUrl = await this.GenerateStreamingUrl(sourceClient, sourceClientConfiguration, streamingLocatorName, keyIdentifier, logger).ConfigureAwait(false);
+            provisioningCompletedEventModel.PrimaryUrl = await this.GenerateStreamingUrl(sourceClient, sourceClientConfiguration, streamingLocatorName, keyIdentifier).ConfigureAwait(false);
 
             // Create a list of Azure Media Services instances that locator needs to be provisioned. It should be all instances listed in configuration, except source instance
             var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(
@@ -112,7 +101,7 @@
                 var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
 
                 // Get client associated with target instance
-                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
+                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target, logger).ConfigureAwait(false);
 
                 // Create locator for target instance
                 var targetLocator = new StreamingLocator(
@@ -126,7 +115,7 @@
                     contentKeys: sourceContentKeysResponse.ContentKeys);
 
                 // Provision created locator
-                targetLocator = await this.ProvisionLocatorAsync(
+                targetLocator = await ProvisionLocatorAsync(
                     targetClient,
                     targetClientConfiguration,
                     provisioningRequest.ProcessedAssetName,
@@ -150,22 +139,13 @@
         /// <param name="locatorName">locator name</param>
         /// <param name="keyIdentifier">key identifier</param>
         /// <returns></returns>
-        private async Task<string> GenerateStreamingUrl(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, string locatorName, string keyIdentifier, ILogger logger)
+        private async Task<string> GenerateStreamingUrl(IAzureMediaServicesClient client, MediaServiceConfigurationModel config, string locatorName, string keyIdentifier)
         {
             // Get token to access content
             var token = MediaServicesHelper.GetToken(this.configService.TokenIssuer, this.configService.TokenAudience, keyIdentifier, this.configService.GetClearKeyStreamingKey());
 
             // Get list of all paths associated with specific locator
-            var paths = await MediaServicesHelper.CallAzureMediaServices(
-                async () =>
-                {
-                    return await client.StreamingLocators.ListPathsWithHttpMessagesAsync(config.ResourceGroup, config.AccountName, locatorName).ConfigureAwait(false);
-                },
-                $"locatorName={locatorName} keyIdentifier={keyIdentifier}",
-                config.AccountName,
-                this.mediaServiceCallHistoryStorageService,
-                "StreamingLocators.ListPathsWithHttpMessagesAsync",
-                logger).ConfigureAwait(false);
+            var paths = await client.StreamingLocators.ListPathsAsync(config.ResourceGroup, config.AccountName, locatorName).ConfigureAwait(false);
 
             // Create Dash URL
             for (var i = 0; i < paths.StreamingPaths.Count; i++)

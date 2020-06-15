@@ -61,8 +61,7 @@ namespace HighAvailability.JobVerification
                 jobOutputStatusStorageService,
                 provisioningRequestStorageService,
                 jobVerificationRequestStorageService,
-                new MediaServiceInstanceFactory(configService),
-                mediaServiceCallHistoryStorageService,
+                new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService),
                 configService);
 
             builder.Services.AddSingleton<IJobVerificationService>(jobVerificationService);

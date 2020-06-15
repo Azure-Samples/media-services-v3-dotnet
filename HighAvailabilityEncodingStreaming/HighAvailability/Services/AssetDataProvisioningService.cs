@@ -24,11 +24,6 @@
         private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
 
         /// <summary>
-        /// Storage service to persist status of all calls to Media Services APIs
-        /// </summary>
-        private readonly IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService;
-
-        /// <summary>
         /// Configuration container
         /// </summary>
         private readonly IConfigService configService;
@@ -37,14 +32,11 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
-        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public AssetDataProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
-                                            IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
                                             IConfigService configService)
         {
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
-            this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
         }
 
@@ -69,7 +61,7 @@
             provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.ProcessedAssetMediaServiceAccountName);
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger).ConfigureAwait(false);
 
             // Create a list of Azure Media Services instances that asset needs to be provisioned. It should be all instances listed in configuration, except source instance
             var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(
@@ -82,7 +74,7 @@
                 var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
 
                 // Get client associated with target instance
-                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
+                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target, logger).ConfigureAwait(false);
 
                 // Copy data from source instance to target instance
                 var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
@@ -111,61 +103,25 @@
             logger.LogInformation($"AssetDataProvisioningService::CopyAssetAsync started: provisioningRequest={LogHelper.FormatObjectForLog(provisioningRequest)} sourceInstanceName={sourceConfig.AccountName} targetInstanceName={targetConfig.AccountName}");
 
             // Need to ensure that target asset exits
-            var targetAsset = await MediaServicesHelper.CallAzureMediaServices(
-                async () =>
-                {
-                    return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
-                },
-                provisioningRequest,
-                targetConfig.AccountName,
-                this.mediaServiceCallHistoryStorageService,
-                "Assets.GetWithHttpMessagesAsync",
-                logger).ConfigureAwait(false);
+            var targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
 
             // if there is no target asset, need to provision one
             if (targetAsset == null)
             {
                 // create new target asset
-                targetAsset = await MediaServicesHelper.CallAzureMediaServices(
-                    async () =>
-                    {
-                        return await targetClient.Assets.CreateOrUpdateWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName, new Asset()).ConfigureAwait(false);
-                    },
-                    provisioningRequest,
-                    targetConfig.AccountName,
-                    this.mediaServiceCallHistoryStorageService,
-                    "Assets.CreateOrUpdateWithHttpMessagesAsync",
-                    logger).ConfigureAwait(false);
+                targetAsset = await targetClient.Assets.CreateOrUpdateAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName, new Asset()).ConfigureAwait(false);
 
                 // need to reload asset to get Container value populated, otherwise Container is null after asset creation
-                targetAsset = await MediaServicesHelper.CallAzureMediaServices(
-                    async () =>
-                    {
-                        return await targetClient.Assets.GetWithHttpMessagesAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
-                    },
-                    provisioningRequest,
-                    targetConfig.AccountName,
-                    this.mediaServiceCallHistoryStorageService,
-                    "Assets.GetWithHttpMessagesAsync",
-                    logger).ConfigureAwait(false);
+                targetAsset = await targetClient.Assets.GetAsync(targetConfig.ResourceGroup, targetConfig.AccountName, provisioningRequest.ProcessedAssetName).ConfigureAwait(false);
             }
 
             // Get SAS token associated with source asset. SAS token is required to initiate StartCopyFromUri
-            var sourceAssetContainerSas = await MediaServicesHelper.CallAzureMediaServices(
-                    async () =>
-                    {
-                        return await sourceClient.Assets.ListContainerSasWithHttpMessagesAsync(
+            var sourceAssetContainerSas = await sourceClient.Assets.ListContainerSasAsync(
                            sourceConfig.ResourceGroup,
                            sourceConfig.AccountName,
                            provisioningRequest.ProcessedAssetName,
                            permissions: AssetContainerPermission.Read,
                            expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()).ConfigureAwait(false);
-                    },
-                    provisioningRequest,
-                    targetConfig.AccountName,
-                    this.mediaServiceCallHistoryStorageService,
-                    "Assets.ListContainerSasWithHttpMessagesAsync",
-                    logger).ConfigureAwait(false);
 
             var sourceContainerSasUrl = new Uri(sourceAssetContainerSas.AssetContainerSasUrls.FirstOrDefault());
 
