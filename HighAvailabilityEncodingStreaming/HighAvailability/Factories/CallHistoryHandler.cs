@@ -26,13 +26,20 @@ namespace HighAvailability.Factories
         private readonly ILogger logger;
 
         /// <summary>
+        /// Factory to get Azure Media Service instance client
+        /// </summary>
+        private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
+        /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
         /// <param name="logger">Logger to log data</param>
-        public CallHistoryHandler(IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService, ILogger logger)
+        public CallHistoryHandler(IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService, IMediaServiceInstanceFactory mediaServiceInstanceFactory, ILogger logger)
         {
             this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
+            this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -44,7 +51,23 @@ namespace HighAvailability.Factories
         /// <returns></returns>
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            HttpResponseMessage response;
+            try
+            {
+                response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // any exception triggers reconnect to Media Services API
+                this.mediaServiceInstanceFactory.ResetMediaServiceInstance();
+                throw;
+            }
+
+            // any 5xx errors triggers reconnect to Media Services API
+            if ((int)response.StatusCode > 499)
+            {
+                this.mediaServiceInstanceFactory.ResetMediaServiceInstance();
+            }
 
             // Typical path that is used here, need to parse it
             // /subscriptions/<subscriptionId>/resourceGroups/<resourceGroypName>/providers/Microsoft.Media/mediaServices/<accountName>/assets/<assetName>

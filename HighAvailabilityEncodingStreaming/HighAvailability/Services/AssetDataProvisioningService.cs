@@ -61,7 +61,7 @@
             provisioningCompletedEventModel.AddMediaServiceAccountName(provisioningRequest.ProcessedAssetMediaServiceAccountName);
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger).ConfigureAwait(false);
+            var sourceClient = this.mediaServiceInstanceFactory.GetMediaServiceInstance(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger);
 
             // Create a list of Azure Media Services instances that asset needs to be provisioned. It should be all instances listed in configuration, except source instance
             var targetInstances = this.configService.MediaServiceInstanceConfiguration.Keys.Where(
@@ -74,7 +74,7 @@
                 var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
 
                 // Get client associated with target instance
-                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target, logger).ConfigureAwait(false);
+                var targetClient = this.mediaServiceInstanceFactory.GetMediaServiceInstance(target, logger);
 
                 // Copy data from source instance to target instance
                 var asset = await this.CopyAssetAsync(sourceClient, sourceClientConfiguration, targetClient, targetClientConfiguration, provisioningRequest, logger).ConfigureAwait(false);
