@@ -42,9 +42,9 @@ namespace HighAvailability.Provisioner
             var provisioningCompletedEventStorageService = new ProvisioningCompletedEventStorageService(provisioningCompletedEventQueue);
             var mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
 
-            var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
-            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
-            var outputEncryptionStreamingProvisioningService = new OutputEncryptionStreamingProvisioningService(new MediaServiceInstanceFactory(configService), mediaServiceCallHistoryStorageService, configService);
+            var assetDataProvisioningService = new AssetDataProvisioningService(new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService), configService);
+            var clearStreamingProvisioningService = new ClearStreamingProvisioningService(new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService), configService);
+            var outputEncryptionStreamingProvisioningService = new OutputEncryptionStreamingProvisioningService(new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService), configService);
 
             // Instantiate the list of provisioning services to run for each provisioning request
             // These services run in the same order as in this list

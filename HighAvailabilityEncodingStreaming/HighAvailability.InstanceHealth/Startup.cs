@@ -55,8 +55,7 @@ namespace HighAvailability.InstanceHealth
             var jobOutputStatusSyncService = new JobOutputStatusSyncService(
                 mediaServiceInstanceHealthService,
                 jobOutputStatusStorageService,
-                new MediaServiceInstanceFactory(configService),
-                mediaServiceCallHistoryStorageService,
+                new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService),
                 configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);
