@@ -29,8 +29,7 @@
             this.HttpStatus = (int)mediaServiceCallHistoryModel.HttpStatus;
             this.MediaServiceAccountName = mediaServiceCallHistoryModel.MediaServiceAccountName;
             this.EventTime = mediaServiceCallHistoryModel.EventTime;
-            this.CallName = mediaServiceCallHistoryModel.CallName;
-            this.ContextData = mediaServiceCallHistoryModel.ContextData;
+            this.CallInfo = mediaServiceCallHistoryModel.CallInfo;
         }
 
         /// <summary>
@@ -54,14 +53,9 @@
         public DateTimeOffset EventTime { get; set; }
 
         /// <summary>
-        /// Azure Media Service call name
+        /// Azure Media Service call info
         /// </summary>
-        public string CallName { get; set; }
-
-        /// <summary>
-        /// Context data associated with call
-        /// </summary>
-        public string ContextData { get; set; }
+        public string CallInfo { get; set; }
 
         /// <summary>
         /// Creates MediaServiceCallHistoryModel object
@@ -75,8 +69,7 @@
                 HttpStatus = (HttpStatusCode)this.HttpStatus,
                 MediaServiceAccountName = this.MediaServiceAccountName,
                 EventTime = this.EventTime,
-                CallName = this.CallName,
-                ContextData = this.ContextData
+                CallInfo = this.CallInfo
             };
         }
     }

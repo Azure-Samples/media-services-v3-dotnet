@@ -29,11 +29,9 @@
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceInstanceFactory">Factory to get Azure Media Service instance client</param>
-        /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
         /// <param name="configService">Configuration container</param>
         public ClearStreamingProvisioningService(IMediaServiceInstanceFactory mediaServiceInstanceFactory,
-                                                    IMediaServiceCallHistoryStorageService mediaServiceCallHistoryStorageService,
-                                                    IConfigService configService) : base(mediaServiceCallHistoryStorageService)
+                                                    IConfigService configService)
         {
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -60,7 +58,7 @@
             var sourceClientConfiguration = this.configService.MediaServiceInstanceConfiguration[provisioningRequest.ProcessedAssetMediaServiceAccountName];
 
             // Get Azure Media Services instance client associated with provisioned asset
-            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName).ConfigureAwait(false);
+            var sourceClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(provisioningRequest.ProcessedAssetMediaServiceAccountName, logger).ConfigureAwait(false);
 
             // Create locator for the source instance
             var sourceLocator = new StreamingLocator(
@@ -68,7 +66,7 @@
                 streamingPolicyName: PredefinedStreamingPolicy.ClearStreamingOnly);
 
             // Provision created locator
-            sourceLocator = await this.ProvisionLocatorAsync(
+            sourceLocator = await ProvisionLocatorAsync(
                 sourceClient,
                 sourceClientConfiguration,
                 provisioningRequest.ProcessedAssetName,
@@ -90,7 +88,7 @@
                 var targetClientConfiguration = this.configService.MediaServiceInstanceConfiguration[target];
 
                 // Get client associated with target instance
-                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target).ConfigureAwait(false);
+                var targetClient = await this.mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(target, logger).ConfigureAwait(false);
 
                 // Create locator for target instance
                 var targetLocator = new StreamingLocator(
@@ -102,7 +100,7 @@
                     streamingLocatorId: sourceLocator.StreamingLocatorId);
 
                 // Provision created locator
-                targetLocator = await this.ProvisionLocatorAsync(
+                targetLocator = await ProvisionLocatorAsync(
                     targetClient,
                     targetClientConfiguration,
                     provisioningRequest.ProcessedAssetName,

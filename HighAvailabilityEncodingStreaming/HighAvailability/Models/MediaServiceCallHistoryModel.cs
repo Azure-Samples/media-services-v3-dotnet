@@ -1,6 +1,5 @@
 ﻿namespace HighAvailability.Models
 {
-    using Newtonsoft.Json;
     using System;
     using System.Net;
 
@@ -9,11 +8,6 @@
     /// </summary>
     public class MediaServiceCallHistoryModel
     {
-        /// <summary>
-        /// Json settings to deserialize data using full type names. 
-        /// </summary>
-        private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-
         /// <summary>
         /// Unique id
         /// </summary>
@@ -35,23 +29,8 @@
         public DateTimeOffset EventTime { get; set; }
 
         /// <summary>
-        /// Azure Media Service call name
+        /// Azure Media Service call info
         /// </summary>
-        public string CallName { get; set; }
-
-        /// <summary>
-        /// Context data associated with call
-        /// </summary>
-        public string ContextData { get; set; }
-
-        /// <summary>
-        /// Formats to json and sets context data 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="contextData"></param>
-        public void SetContextData<T>(T contextData)
-        {
-            this.ContextData = JsonConvert.SerializeObject(contextData, jsonSettings);
-        }
+        public string CallInfo { get; set; }
     }
 }
