@@ -11,7 +11,7 @@ namespace HighAvailability.JobScheduling
 
     /// <summary>
     /// Implements job scheduling Azure function. It is triggered by messages in job-requests Azure queue.
-    /// This module submits new jobs to AMS cluster. It tracks health status of each AMS instance and determines next healthy instance to submit a new job.
+    /// This module submits new jobs to Media Services cluster. It tracks health status of each Media Services instance and determines next healthy instance to submit a new job.
     /// See TBD link for more details
     /// </summary>
     public class JobSchedulingFunction

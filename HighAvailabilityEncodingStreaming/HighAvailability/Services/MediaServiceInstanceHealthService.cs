@@ -263,7 +263,7 @@
                     callsSuccessRate = ((float)callsSuccessCount) / callsTotalCount;
                 }
 
-                // Final successRate is Min value health state from job status history and health state from AMS API call history.
+                // Final successRate is Min value health state from job status history and health state from Media Services API call history.
                 var successRate = Math.Min(jobsSuccessRate, callsSuccessRate);
 
                 // degraded state is set if successRate is in between successRateForHealthyState and successRateForUnhealthyState
