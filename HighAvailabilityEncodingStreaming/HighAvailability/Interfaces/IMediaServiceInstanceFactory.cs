@@ -14,6 +14,11 @@
         /// </summary>
         /// <param name="accountName">Account name for this request</param>
         /// <returns>Azure Media Services instance client</returns>
-        Task<IAzureMediaServicesClient> GetMediaServiceInstanceAsync(string accountName, ILogger logger);
+        IAzureMediaServicesClient GetMediaServiceInstance(string accountName, ILogger logger);
+
+        /// <summary>
+        /// Resets Media Service client. This should be used when error happens and new client connection is required.
+        /// </summary>
+        void ResetMediaServiceInstance();
     }
 }

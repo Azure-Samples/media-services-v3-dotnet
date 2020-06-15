@@ -30,6 +30,16 @@
         private IAzureMediaServicesClient azureMediaServicesClient;
 
         /// <summary>
+        /// Object used to sync access to azureMediaServicesClient
+        /// </summary>
+        private object azureMediaServicesClientLockObject;
+
+        /// <summary>
+        /// flag to indicate that client reset is requested
+        /// </summary>
+        private bool resetRequested;
+
+        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="mediaServiceCallHistoryStorageService">Service to store Media Services call history</param>
@@ -38,6 +48,8 @@
         {
             this.mediaServiceCallHistoryStorageService = mediaServiceCallHistoryStorageService ?? throw new ArgumentNullException(nameof(mediaServiceCallHistoryStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            this.azureMediaServicesClientLockObject = new object();
+            this.resetRequested = false;
         }
 
         /// <summary>
@@ -46,28 +58,46 @@
         /// <param name="accountName">Azure Media Service account name</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Created client</returns>
-        public async Task<IAzureMediaServicesClient> GetMediaServiceInstanceAsync(string accountName, ILogger logger)
+        public IAzureMediaServicesClient GetMediaServiceInstance(string accountName, ILogger logger)
         {
             if (!this.configService.MediaServiceInstanceConfiguration.ContainsKey(accountName))
             {
                 throw new ArgumentException($"Invalid accountName {accountName}");
             }
 
-            if (this.azureMediaServicesClient == null)
+            lock (azureMediaServicesClientLockObject)
             {
-                var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                var accessToken = await azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com").ConfigureAwait(false);
-                ServiceClientCredentials credentials = new TokenCredentials(accessToken);
-
-                // Establish a connection to Media Services.
-                this.azureMediaServicesClient = new AzureMediaServicesClient(credentials,
-                    new DelegatingHandler[] { new CallHistoryHandler(this.mediaServiceCallHistoryStorageService, logger) })
+                if (this.azureMediaServicesClient == null || this.resetRequested)
                 {
-                    SubscriptionId = this.configService.MediaServiceInstanceConfiguration[accountName].SubscriptionId
-                };
+                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                    var accessToken = azureServiceTokenProvider.GetAccessTokenAsync("https://management.azure.com").GetAwaiter().GetResult();
+                    ServiceClientCredentials credentials = new TokenCredentials(accessToken);
+
+                    // Establish a connection to Media Services.
+                    this.azureMediaServicesClient = new AzureMediaServicesClient(credentials,
+                        new DelegatingHandler[] { new CallHistoryHandler(this.mediaServiceCallHistoryStorageService, this, logger) })
+                    {
+                        SubscriptionId = this.configService.MediaServiceInstanceConfiguration[accountName].SubscriptionId
+                    };
+
+                    this.resetRequested = false;
+                }
             }
 
             return this.azureMediaServicesClient;
+        }
+
+        /// <summary>
+        /// Resets Media Service client. This should be used when error happens and new client connection is required.
+        /// </summary>
+        /// <returns>Async operation result</returns>
+        public void ResetMediaServiceInstance()
+        {
+            lock(azureMediaServicesClientLockObject)
+            {
+                // this will force to recreate client on next call
+                this.resetRequested = true;
+            }
         }
     }
 }

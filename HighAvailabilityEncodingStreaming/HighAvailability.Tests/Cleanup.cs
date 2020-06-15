@@ -59,7 +59,7 @@ namespace HighAvailability.Tests
             var mediaServiceInstanceFactory = new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService);
             foreach (var config in configuration.Values)
             {
-                var client = await mediaServiceInstanceFactory.GetMediaServiceInstanceAsync(config.AccountName, Mock.Of<ILogger>()).ConfigureAwait(false);
+                var client = mediaServiceInstanceFactory.GetMediaServiceInstance(config.AccountName, Mock.Of<ILogger>());
                 var assets = await client.Assets.ListAsync(config.ResourceGroup, config.AccountName).ConfigureAwait(false);
                 foreach (var asset in assets)
                 {
