@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace HighAvailability.Factories
 {
     /// <summary>
-    /// Delegating handler to log data about each AMS call
+    /// Delegating handler to log data about each Media Services call
     /// </summary>
     public class CallHistoryHandler : DelegatingHandler
     {
