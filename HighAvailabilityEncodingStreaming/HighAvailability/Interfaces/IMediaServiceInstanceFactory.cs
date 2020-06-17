@@ -1,8 +1,10 @@
-﻿namespace HighAvailability.Interfaces
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Interfaces
 {
     using Microsoft.Azure.Management.Media;
     using Microsoft.Extensions.Logging;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Interface for creating IAzureMediaServicesClient instances

@@ -1,15 +1,18 @@
-﻿using HighAvailability.Helpers;
-using HighAvailability.Interfaces;
-using HighAvailability.Models;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 namespace HighAvailability.Factories
 {
+    using HighAvailability.Helpers;
+    using HighAvailability.Interfaces;
+    using HighAvailability.Models;
+    using Microsoft.Extensions.Logging;
+    using System;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Delegating handler to log data about each Media Services call
     /// </summary>

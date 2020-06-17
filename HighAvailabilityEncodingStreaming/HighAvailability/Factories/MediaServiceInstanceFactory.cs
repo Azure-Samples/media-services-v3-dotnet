@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Factories
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Factories
 {
     using HighAvailability.Interfaces;
     using Microsoft.Azure.Management.Media;
@@ -7,7 +10,6 @@
     using Microsoft.Rest;
     using System;
     using System.Net.Http;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Factory class for creating IAzureMediaServicesClient instances
@@ -65,7 +67,7 @@
                 throw new ArgumentException($"Invalid accountName {accountName}");
             }
 
-            lock (azureMediaServicesClientLockObject)
+            lock (this.azureMediaServicesClientLockObject)
             {
                 if (this.azureMediaServicesClient == null || this.resetRequested)
                 {
@@ -93,7 +95,7 @@
         /// <returns>Async operation result</returns>
         public void ResetMediaServiceInstance()
         {
-            lock(azureMediaServicesClientLockObject)
+            lock (this.azureMediaServicesClientLockObject)
             {
                 // this will force to recreate client on next call
                 this.resetRequested = true;
