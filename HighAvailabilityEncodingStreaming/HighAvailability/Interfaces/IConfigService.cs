@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Interfaces
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Interfaces
 {
     using HighAvailability.Models;
     using System.Collections.Generic;
