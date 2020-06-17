@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.AzureStorage.Services
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.AzureStorage.Services
 {
     using Microsoft.Azure.Cosmos.Table;
     using System.Collections.Generic;

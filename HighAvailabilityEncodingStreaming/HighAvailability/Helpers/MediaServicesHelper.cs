@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Helpers
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Helpers
 {
     using Microsoft.Azure.EventGrid.Models;
     using Microsoft.Azure.Management.Media;

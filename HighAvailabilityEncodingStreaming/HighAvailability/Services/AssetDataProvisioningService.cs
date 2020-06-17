@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Services
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Services
 {
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Specialized;

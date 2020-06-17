@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Models
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Models
 {
     using Microsoft.Azure.Management.Media.Models;
     using System.Collections.Generic;

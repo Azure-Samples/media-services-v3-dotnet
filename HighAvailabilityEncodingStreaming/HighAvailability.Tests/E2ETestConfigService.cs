@@ -1,4 +1,7 @@
-﻿namespace HighAvailability.Tests
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+namespace HighAvailability.Tests
 {
     using HighAvailability.Interfaces;
     using HighAvailability.Models;
