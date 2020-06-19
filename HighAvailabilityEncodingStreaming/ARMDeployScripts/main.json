@@ -14,9 +14,6 @@
     "keyVaultTenantId": {
       "type": "string"
     },
-    "keyVaultOwnerObjectId": {
-      "type": "string"
-    },
     "amsRegions": {
       "type": "array"
     }
@@ -122,50 +119,7 @@
           "name": "Standard"
         },
         "tenantId": "[parameters('keyVaultTenantId')]",
-        "accessPolicies": [
-          {
-            "tenantId": "[parameters('keyVaultTenantId')]",
-            "objectId": "[parameters('keyVaultOwnerObjectId')]",
-            "permissions": {
-              "keys": [
-                "Get",
-                "List",
-                "Update",
-                "Create",
-                "Import",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore"
-              ],
-              "secrets": [
-                "Get",
-                "List",
-                "Set",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore"
-              ],
-              "certificates": [
-                "Get",
-                "List",
-                "Update",
-                "Create",
-                "Import",
-                "Delete",
-                "Recover",
-                "Backup",
-                "Restore",
-                "ManageContacts",
-                "ManageIssuers",
-                "GetIssuers",
-                "ListIssuers",
-                "SetIssuers",
-                "DeleteIssuers"
-              ]
-            }
-          }
+        "accessPolicies": [          
         ],
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
@@ -450,21 +404,15 @@
       "location": "[parameters('deploymentRegionLocation')]",
       "kind": "GlobalDocumentDB",
       "properties": {
-        "publicNetworkAccess": "Enabled",
-        "enableAutomaticFailover": false,
-        "enableMultipleWriteLocations": false,
-        "isVirtualNetworkFilterEnabled": false,
-        "virtualNetworkRules": [],
-        "disableKeyBasedMetadataWriteAccess": false,
+        "capabilities": [ { "name": "EnableTable" } ],
+        "consistencyPolicy": "Session",
         "databaseAccountOfferType": "Standard",
-        "consistencyPolicy": {
-          "defaultConsistencyLevel": "BoundedStaleness",
-          "maxIntervalInSeconds": 86400,
-          "maxStalenessPrefix": 1000000
-        },
-        "capabilities": [
+        "enableAutomaticFailover": "false",
+        "locations": [
           {
-            "name": "EnableTable"
+            "locationName": "[parameters('deploymentRegionLocation')]",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
           }
         ]
       }
@@ -663,6 +611,10 @@
     "keyVaultName": {
       "type": "string",
       "value": "[variables('keyVaultName')]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]"
     }
   }
 }
