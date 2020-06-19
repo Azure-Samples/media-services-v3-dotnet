@@ -61,7 +61,6 @@ namespace HighAvailability.JobOutputStatus
                 // Events use inheritance and in order to correctly deserialize them, EventGridSubscriber should be used
                 var eventGridSubscriber = new EventGridSubscriber();
 
-                // TBD 
                 // as a work around, json is modified to have a list of events
                 var parsedEventGridEvents = eventGridSubscriber.DeserializeEventGridEvents($"[{eventGridEvent}]");
 

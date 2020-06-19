@@ -36,9 +36,8 @@ namespace HighAvailability.Tests
         /// <returns>Task of async operation</returns>
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
-        {
-            // TBD remove keyvault value
-            configService = new E2ETestConfigService("sipetrik-keyvault");
+        {            
+            configService = new E2ETestConfigService("<enter keyvault name>");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
