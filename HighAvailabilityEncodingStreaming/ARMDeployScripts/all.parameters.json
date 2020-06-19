@@ -5,10 +5,9 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "deploymentNameBase": { "value": "sipetrik" },
-    "deploymentRegionLocation": { "value": "westus" },
+    "deploymentNameBase": { "value": "amshatest" },
+    "deploymentRegionLocation": { "value": "eastus" },
     "keyVaultTenantId": { "value": "72f988bf-86f1-41af-91ab-2d7cd011db47" },
-    "keyVaultOwnerObjectId": { "value": "61d47788-7040-4f46-8fa2-59047ac82bb3" },
     "amsRegions": { "value": [ "westus", "eastus" ] }
   }
 }

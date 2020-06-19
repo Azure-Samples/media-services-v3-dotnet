@@ -39,6 +39,30 @@ $functionFolders = @{JobScheduling="HighAvailability.JobScheduling"; JobOutputSt
 
 . dotnet publish HighAvailability.sln
 
+$storageAccountName = $mainDeployment.Outputs['storageAccountName'].Value
+$storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName
+
+$queueNames = "job-requests", "job-verification-requests", "provisioning-requests", "provisioning-completed-events";
+$queues = Get-AzStorageQueue -Context $test.Context
+
+foreach ($queueName in $queueNames)
+{
+    $queueExists = $false
+    foreach ($queue in $queues) 
+    { 
+        if ($queue.Name -eq $queueName)
+        {
+            $queueExists = $true
+        }
+    }
+
+    if ($queueExists -eq $false)
+    {
+        New-AzStorageQueue -Name $queueName -Context $storageAccount.Context
+    }
+}
+
+
 foreach ($functionName in $createdFunctionNames)
 {
     Write-Host "function name:" $functionName["fullName"].Value "function local folder:" $functionFolders[$functionName["function"].Value]
@@ -50,6 +74,8 @@ foreach ($functionName in $createdFunctionNames)
 
     Write-Host "Publishing Azure Function:" $functionName["fullName"].Value
     Publish-AzWebApp -ResourceGroupName $ResourceGroupName -Name $functionName["fullName"].Value -ArchivePath $functionZipFilePath -Force
+
+    Restart-AzWebApp -ResourceGroupName $ResourceGroupName -Name $functionName["fullName"].Value
 }
 
 Write-Host 'Running event grid setup ARM template deployment...'
