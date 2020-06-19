@@ -43,7 +43,7 @@ $storageAccountName = $mainDeployment.Outputs['storageAccountName'].Value
 $storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName
 
 $queueNames = "job-requests", "job-verification-requests", "provisioning-requests", "provisioning-completed-events";
-$queues = Get-AzStorageQueue -Context $test.Context
+$queues = Get-AzStorageQueue -Context $storageAccount.Context
 
 foreach ($queueName in $queueNames)
 {
