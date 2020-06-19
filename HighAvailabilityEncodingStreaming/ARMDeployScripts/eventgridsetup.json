@@ -36,14 +36,35 @@
   },
   "resources": [
     {
-      "type": "Microsoft.Media/mediaServices/providers/eventSubscriptions",
-      "apiVersion": "2018-01-01",
-      "name": "[concat(variables('amsInstanceNames')[copyIndex('eventSubscription1')], '/Microsoft.EventGrid/', 'JobOutputStateUpdateEventSubscription')]",
-      "copy": {
-        "name": "eventSubscription1",
-        "count": "[length(variables('amsInstanceNames'))]"
-      },
+      "type": "Microsoft.EventGrid/systemTopics",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[concat('JobOutputStateTopic-', variables('amsInstanceNames')[copyIndex()])]",
+      "location": "[parameters('amsRegions')[copyIndex()]]",
       "properties": {
+          "source": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Media/mediaservices/', variables('amsInstanceNames')[copyIndex()])]",
+          "topicType": "Microsoft.Media.MediaServices"
+      },
+      "copy": {
+        "name": "topics",
+        "count": "[length(variables('amsInstanceNames'))]"
+      }
+    },
+    {
+      "type": "Microsoft.EventGrid/systemTopics/eventSubscriptions",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[concat('JobOutputStateTopic-', variables('amsInstanceNames')[copyIndex()], '/', variables('amsInstanceNames')[copyIndex()], '-subscription')]",
+      "dependsOn": [
+          "[resourceId('Microsoft.EventGrid/systemTopics', concat('JobOutputStateTopic-', variables('amsInstanceNames')[copyIndex()]))]"
+      ],
+      "properties": {
+        "destination": {
+          "properties": {
+              "resourceId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/sites/', variables('functionNames')[1], '/functions/JobOutputStatusFunction')]",
+              "maxEventsPerBatch": 1,
+              "preferredBatchSizeInKilobytes": 64
+          },
+          "endpointType": "AzureFunction"
+        },
         "filter": {
           "includedEventTypes": [
             "Microsoft.Media.JobOutputFinished",
@@ -54,12 +75,16 @@
             "Microsoft.Media.JobOutputCanceling"
           ]
         },
-        "destination": {
-          "endpointType": "WebHook",
-          "properties": {
-            "endpointUrl": "[concat(variables('amsJobOutputStateUpdateFunctionUrl'), listKeys(resourceId('Microsoft.Web/sites/host/', variables('functionNames')[1], 'default'), '2016-08-01').systemkeys.eventgrid_extension)]"
-          }
+        "labels": [],
+        "eventDeliverySchema": "EventGridSchema",
+        "retryPolicy": {
+            "maxDeliveryAttempts": 30,
+            "eventTimeToLiveInMinutes": 1440
         }
+      },
+      "copy": {
+        "name": "subscription",
+        "count": "[length(variables('amsInstanceNames'))]"
       }
     }
   ],
