@@ -55,7 +55,7 @@ namespace HighAvailability.Services
             this.NumberOfMinutesInProcessToMarkJobStuck = 60;
             this.TimeWindowToLoadJobsInMinutes = 480;
             this.TimeWindowToLoadMediaServiceCallsInMinutes = 480;
-            this.TimeSinceLastUpdateToForceJobResyncInMinutes = 60;
+            this.TimeSinceLastUpdateToForceJobResyncInMinutes = 20;
             this.SuccessRateForHealthyState = 0.9f;
             this.SuccessRateForUnHealthyState = 0.7f;
             this.TimeDurationInMinutesToVerifyJobStatus = 60;

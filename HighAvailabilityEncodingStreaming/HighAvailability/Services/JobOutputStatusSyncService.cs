@@ -37,6 +37,11 @@ namespace HighAvailability.Services
         private readonly IMediaServiceInstanceFactory mediaServiceInstanceFactory;
 
         /// <summary>
+        /// Storage services to persist provisioning requests.
+        /// </summary>
+        private readonly IProvisioningRequestStorageService provisioningRequestStorageService;
+
+        /// <summary>
         /// Configuration container.
         /// </summary>
         private readonly IConfigService configService;
@@ -62,15 +67,18 @@ namespace HighAvailability.Services
         /// <param name="mediaServiceInstanceHealthService">Service to load Azure Media Service instance health information</param>
         /// <param name="jobOutputStatusStorageService">Storage service for job output status records</param>
         /// <param name="mediaServiceInstanceFactory">Factory to create Azure Media Services instance</param>
+        /// <param name="provisioningRequestStorageService">Storage services to persist provisioning requests.</param>
         /// <param name="configService">Configuration container</param>
         public JobOutputStatusSyncService(IMediaServiceInstanceHealthService mediaServiceInstanceHealthService,
                                     IJobOutputStatusStorageService jobOutputStatusStorageService,
                                     IMediaServiceInstanceFactory mediaServiceInstanceFactory,
+                                    IProvisioningRequestStorageService provisioningRequestStorageService,
                                     IConfigService configService)
         {
             this.mediaServiceInstanceHealthService = mediaServiceInstanceHealthService ?? throw new ArgumentNullException(nameof(mediaServiceInstanceHealthService));
             this.jobOutputStatusStorageService = jobOutputStatusStorageService ?? throw new ArgumentNullException(nameof(jobOutputStatusStorageService));
             this.mediaServiceInstanceFactory = mediaServiceInstanceFactory ?? throw new ArgumentNullException(nameof(mediaServiceInstanceFactory));
+            this.provisioningRequestStorageService = provisioningRequestStorageService ?? throw new ArgumentNullException(nameof(provisioningRequestStorageService));
             this.configService = configService ?? throw new ArgumentNullException(nameof(configService));
             this.timeWindowToLoadJobsInMinutes = this.configService.TimeWindowToLoadJobsInMinutes;
             this.timeSinceLastUpdateToForceJobResyncInMinutes = this.configService.TimeSinceLastUpdateToForceJobResyncInMinutes;
@@ -297,6 +305,22 @@ namespace HighAvailability.Services
                     JobOutputAssetName = jobOutputStatusModel.JobOutputAssetName,
                     TransformName = jobOutputStatusModel.TransformName
                 };
+
+                // Provisioning request is created for all job output status events that are finished.
+                if (jobOutputStatusModel.JobOutputState == JobState.Finished)
+                {
+                    var provisioningRequestResult = await this.provisioningRequestStorageService.CreateAsync(
+                        new ProvisioningRequestModel
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            ProcessedAssetMediaServiceAccountName = jobOutputStatusModel.MediaServiceAccountName,
+                            ProcessedAssetName = jobOutputStatusModel.JobOutputAssetName,
+                            StreamingLocatorName = $"streaming-{jobOutputStatusModel.JobOutputAssetName}"
+                        },
+                        logger).ConfigureAwait(false);
+
+                    logger.LogInformation($"JobOutputStatusSyncService::UpdateJobOutputStatusAsync created stream provisioning request: result={LogHelper.FormatObjectForLog(provisioningRequestResult)}");
+                }
 
                 await this.jobOutputStatusStorageService.CreateOrUpdateAsync(jobOutputStatusModelFromAPI, logger).ConfigureAwait(false);
             }

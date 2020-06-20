@@ -119,7 +119,7 @@
           "name": "Standard"
         },
         "tenantId": "[parameters('keyVaultTenantId')]",
-        "accessPolicies": [          
+        "accessPolicies": [
         ],
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
@@ -495,6 +495,22 @@
       "properties": {
         "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
         "principalId": "[reference(variables('functionIdentities')[3], '2015-08-31-PREVIEW').principalId]"
+      },
+      "dependsOn": [
+        "mediaservicescopy"
+      ]
+    },
+    {
+      "type": "Microsoft.Media/mediaServices/providers/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[concat(concat(variables('amsInstanceNames')[copyIndex('roleassigmentcopy4')], '/Microsoft.Authorization/', guid(subscription().subscriptionId, resourceGroup().id, variables('amsInstanceNames')[copyIndex('roleassigmentcopy4')], variables('functionNamesSuffixes')[4])))]",
+      "copy": {
+        "name": "roleassigmentcopy4",
+        "count": "[length(variables('amsInstanceNames'))]"
+      },
+      "properties": {
+        "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+        "principalId": "[reference(variables('functionIdentities')[4], '2015-08-31-PREVIEW').principalId]"
       },
       "dependsOn": [
         "mediaservicescopy"
