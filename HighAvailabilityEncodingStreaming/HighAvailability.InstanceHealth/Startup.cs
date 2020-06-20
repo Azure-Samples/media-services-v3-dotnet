@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
 namespace HighAvailability.InstanceHealth
 {
+    using Azure.Storage.Queues;
     using HighAvailability.AzureStorage.Services;
     using HighAvailability.Factories;
     using HighAvailability.Interfaces;
@@ -29,6 +30,10 @@ namespace HighAvailability.InstanceHealth
             var keyVaultName = Environment.GetEnvironmentVariable("KeyVaultName");
             var configService = new ConfigService(keyVaultName);
             configService.LoadConfigurationAsync().Wait();
+
+            var provisioningRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.ProvisioningRequestQueueName);
+            provisioningRequestQueue.CreateIfNotExists();
+            var provisioningRequestStorageService = new ProvisioningRequestStorageService(provisioningRequestQueue);
 
             var tableStorageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
             var tableClient = tableStorageAccount.CreateCloudTableClient();
@@ -59,6 +64,7 @@ namespace HighAvailability.InstanceHealth
                 mediaServiceInstanceHealthService,
                 jobOutputStatusStorageService,
                 new MediaServiceInstanceFactory(mediaServiceCallHistoryStorageService, configService),
+                provisioningRequestStorageService,
                 configService);
 
             builder.Services.AddSingleton<IMediaServiceInstanceHealthService>(mediaServiceInstanceHealthService);

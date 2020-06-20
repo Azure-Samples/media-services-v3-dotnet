@@ -94,6 +94,7 @@ namespace HighAvailability.Tests
             mediaServiceCallHistoryTable.CreateIfNotExists();
             var mediaServiceCallHistoryTableStorageService = new TableStorageService(mediaServiceCallHistoryTable);
             mediaServiceCallHistoryStorageService = new MediaServiceCallHistoryStorageService(mediaServiceCallHistoryTableStorageService);
+            await mediaServiceCallHistoryTableStorageService.DeleteAllAsync<MediaServiceCallHistoryModelTableEntity>().ConfigureAwait(false);
 
             jobRequestQueue = new QueueClient(configService.StorageAccountConnectionString, configService.JobRequestQueueName);
             await jobRequestQueue.CreateIfNotExistsAsync().ConfigureAwait(false);
