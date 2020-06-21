@@ -16,9 +16,8 @@ namespace HighAvailability.Interfaces
         /// EventGrid events sometimes are delayed or lost and manual re-sync is required. This method syncs job output status records between 
         /// job output status storage and Azure Media Services APIs. 
         /// </summary>
-        /// <param name="currentTime">Current time, it is used to build time base criteria to load job status data.</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
-        Task SyncJobOutputStatusAsync(DateTime currentTime, ILogger logger);
+        Task SyncJobOutputStatusAsync(ILogger logger);
     }
 }
