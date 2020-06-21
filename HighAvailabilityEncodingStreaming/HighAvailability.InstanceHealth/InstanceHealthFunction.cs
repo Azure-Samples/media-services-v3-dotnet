@@ -81,7 +81,7 @@ namespace HighAvailability.InstanceHealth
             {
                 logger.LogInformation($"JobOutputStatusSyncFunction::Run triggered timerInfo={LogHelper.FormatObjectForLog(timerInfo)}");
 
-                await this.jobOutputStatusSyncService.SyncJobOutputStatusAsync(DateTime.UtcNow, logger).ConfigureAwait(false);
+                await this.jobOutputStatusSyncService.SyncJobOutputStatusAsync(logger).ConfigureAwait(false);
 
                 logger.LogInformation($"JobOutputStatusSyncFunction::Run completed");
             }

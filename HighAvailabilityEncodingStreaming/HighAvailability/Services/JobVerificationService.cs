@@ -110,11 +110,12 @@ namespace HighAvailability.Services
                 if (job != null)
                 {
                     // create job output status record using job loaded from Azure Media Service API.
+                    var statusInfo = MediaServicesHelper.GetJobOutputState(job, jobVerificationRequestModel.JobOutputAssetName);
                     jobOutputStatus = new JobOutputStatusModel
                     {
                         Id = Guid.NewGuid().ToString(),
-                        EventTime = job.LastModified,
-                        JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobVerificationRequestModel.JobOutputAssetName),
+                        EventTime = statusInfo.Item2,
+                        JobOutputState = statusInfo.Item1,
                         JobName = job.Name,
                         MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                         JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
