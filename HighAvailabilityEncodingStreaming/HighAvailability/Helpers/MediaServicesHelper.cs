@@ -161,8 +161,8 @@ namespace HighAvailability.Helpers
         /// </summary>
         /// <param name="job">Azure Media Services job</param>
         /// <param name="jobOutputAssetName">asset name</param>
-        /// <returns>JobState for a given asset name</returns>
-        public static JobState GetJobOutputState(Job job, string jobOutputAssetName)
+        /// <returns>JobState and timestamp for a given asset name</returns>
+        public static (JobState, DateTimeOffset) GetJobOutputState(Job job, string jobOutputAssetName)
         {
             foreach (var jobOutput in job.Outputs)
             {
@@ -171,12 +171,13 @@ namespace HighAvailability.Helpers
                     var jobOutputAsset = (JobOutputAsset)jobOutput;
                     if (jobOutputAsset.AssetName.Equals(jobOutputAssetName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        return jobOutputAsset.State;
+                        DateTimeOffset statusTime = jobOutputAsset.EndTime ?? jobOutputAsset.StartTime ?? job.LastModified;
+                        return (jobOutputAsset.State, statusTime);
                     }
                 }
             }
 
-            return null;
+            return (null, DateTime.MinValue);
         }
 
         /// <summary>

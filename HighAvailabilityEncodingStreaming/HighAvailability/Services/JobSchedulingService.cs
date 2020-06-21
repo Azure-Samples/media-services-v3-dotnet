@@ -126,11 +126,12 @@ namespace HighAvailability.Services
             };
 
             //create job output status record
+            var statusInfo = MediaServicesHelper.GetJobOutputState(job, jobRequestModel.OutputAssetName);
             var jobOutputStatusModel = new JobOutputStatusModel
             {
                 Id = Guid.NewGuid().ToString(),
-                EventTime = job.LastModified,
-                JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobRequestModel.OutputAssetName),
+                EventTime = statusInfo.Item2,
+                JobOutputState = statusInfo.Item1,
                 JobName = job.Name,
                 MediaServiceAccountName = selectedInstanceName,
                 JobOutputAssetName = jobRequestModel.OutputAssetName,

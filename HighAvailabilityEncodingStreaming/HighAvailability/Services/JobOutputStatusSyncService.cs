@@ -88,11 +88,11 @@ namespace HighAvailability.Services
         /// EventGrid events sometimes are delayed or lost and manual re-sync is required. This method syncs job output status records between 
         /// job output status storage and Azure Media Services APIs. 
         /// </summary>
-        /// <param name="currentTime">Current time, it is used to build time base criteria to load job status data.</param>
         /// <param name="logger">Logger to log data</param>
         /// <returns>Task for async operation</returns>
-        public async Task SyncJobOutputStatusAsync(DateTime currentTime, ILogger logger)
+        public async Task SyncJobOutputStatusAsync(ILogger logger)
         {
+            var currentTime = DateTime.UtcNow;
             // Load list of all instance to sync data for
             var instances = await this.mediaServiceInstanceHealthService.ListAsync().ConfigureAwait(false);
 
@@ -295,11 +295,12 @@ namespace HighAvailability.Services
         {
             if (job != null)
             {
+                var statusInfo = MediaServicesHelper.GetJobOutputState(job, jobOutputStatusModel.JobOutputAssetName);
                 var jobOutputStatusModelFromAPI = new JobOutputStatusModel
                 {
                     Id = Guid.NewGuid().ToString(),
-                    EventTime = job.LastModified,
-                    JobOutputState = MediaServicesHelper.GetJobOutputState(job, jobOutputStatusModel.JobOutputAssetName),
+                    EventTime = statusInfo.Item2,
+                    JobOutputState = statusInfo.Item1,
                     JobName = jobOutputStatusModel.JobName,
                     MediaServiceAccountName = mediaServiceAccountName,
                     JobOutputAssetName = jobOutputStatusModel.JobOutputAssetName,
