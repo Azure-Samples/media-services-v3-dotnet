@@ -73,7 +73,7 @@ namespace HighAvailability.Services
                 JobOutputState = asset.State.ToString(),
                 EventTime = eventTime,
                 MediaServiceAccountName = amsAccountName,
-                IsSystemError = MediaServicesHelper.HasRetriableError(asset)
+                HasRetriableError = MediaServicesHelper.HasRetriableError(asset)
             };
             logger.LogInformation($"EventGridService::ParseEventData successfully parsed, jobOutputStatusModel={LogHelper.FormatObjectForLog(jobOutputStatusModel)}");
 

@@ -34,7 +34,7 @@ namespace HighAvailability.AzureStorage.Models
             this.EventTime = jobOutputStatusModel.EventTime;
             this.MediaServiceAccountName = jobOutputStatusModel.MediaServiceAccountName;
             this.TransformName = jobOutputStatusModel.TransformName;
-            this.IsSystemError = jobOutputStatusModel.IsSystemError;
+            this.HasRetriableError = jobOutputStatusModel.HasRetriableError;
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace HighAvailability.AzureStorage.Models
         /// <summary>
         /// If encoding job output failed, this indicates if it can be successfully resubmitted
         /// </summary>
-        public bool IsSystemError { get; set; }
+        public bool HasRetriableError { get; set; }
 
         /// <summary>
         /// Creates JobOutputStatusModel object
@@ -92,7 +92,7 @@ namespace HighAvailability.AzureStorage.Models
                 EventTime = this.EventTime,
                 MediaServiceAccountName = this.MediaServiceAccountName,
                 TransformName = this.TransformName,
-                IsSystemError = this.IsSystemError
+                HasRetriableError = this.HasRetriableError
             };
         }
     }
