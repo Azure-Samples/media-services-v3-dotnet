@@ -49,6 +49,6 @@ namespace HighAvailability.Models
         /// <summary>
         /// If encoding job output failed, this indicates if it can be successfully resubmitted
         /// </summary>
-        public bool IsSystemError { get; set; }
+        public bool HasRetriableError { get; set; }
     }
 }

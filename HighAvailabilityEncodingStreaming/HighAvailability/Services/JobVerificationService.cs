@@ -120,7 +120,7 @@ namespace HighAvailability.Services
                         MediaServiceAccountName = jobVerificationRequestModel.MediaServiceAccountName,
                         JobOutputAssetName = jobVerificationRequestModel.JobOutputAssetName,
                         TransformName = jobVerificationRequestModel.OriginalJobRequestModel.TransformName,
-                        IsSystemError = MediaServicesHelper.HasRetriableError(job, jobVerificationRequestModel.JobOutputAssetName) // check if job should be retried
+                        HasRetriableError = MediaServicesHelper.HasRetriableError(job, jobVerificationRequestModel.JobOutputAssetName) // check if job should be retried
                     };
 
                     jobOutputStatusLoadedFromAPI = true;
@@ -216,7 +216,7 @@ namespace HighAvailability.Services
             await this.DeleteJobAsync(jobVerificationRequestModel, logger).ConfigureAwait(false);
 
             // If job has failed for system errors, it needs to be resubmitted.
-            if (jobOutputStatusModel.IsSystemError)
+            if (jobOutputStatusModel.HasRetriableError)
             {
                 await this.ResubmitJob(jobVerificationRequestModel, logger).ConfigureAwait(false);
             }
