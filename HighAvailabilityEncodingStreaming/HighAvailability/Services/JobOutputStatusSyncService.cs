@@ -307,15 +307,15 @@ namespace HighAvailability.Services
                 };
 
                 // Provisioning request is created for all job output status events that are finished.
-                if (jobOutputStatusModel.JobOutputState == JobState.Finished)
+                if (jobOutputStatusModelFromAPI.JobOutputState == JobState.Finished)
                 {
                     var provisioningRequestResult = await this.provisioningRequestStorageService.CreateAsync(
                         new ProvisioningRequestModel
                         {
                             Id = Guid.NewGuid().ToString(),
-                            ProcessedAssetMediaServiceAccountName = jobOutputStatusModel.MediaServiceAccountName,
-                            ProcessedAssetName = jobOutputStatusModel.JobOutputAssetName,
-                            StreamingLocatorName = $"streaming-{jobOutputStatusModel.JobOutputAssetName}"
+                            ProcessedAssetMediaServiceAccountName = jobOutputStatusModelFromAPI.MediaServiceAccountName,
+                            ProcessedAssetName = jobOutputStatusModelFromAPI.JobOutputAssetName,
+                            StreamingLocatorName = $"streaming-{jobOutputStatusModelFromAPI.JobOutputAssetName}"
                         },
                         logger).ConfigureAwait(false);
 
