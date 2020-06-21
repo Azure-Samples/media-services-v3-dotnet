@@ -194,48 +194,41 @@ namespace HighAvailability.Services
                 foreach (var jobData in aggregatedData)
                 {
                     jobsTotalCount++;
-                    var finalStateReached = false;
 
                     if (jobData.Any(j => j.JobOutputState == JobState.Finished))
                     {
                         jobsSuccessCount++;
-                        finalStateReached = true;
-                        break;
+                        continue;
                     }
 
                     var failedJob = jobData.FirstOrDefault(j => j.JobOutputState == JobState.Error);
 
                     if (failedJob != null)
                     {
-                        finalStateReached = true;
                         // only failed jobs that can be retried are counted as failed for this calculation. Job that fails because of bad data is not counted against instance health.
                         if (!failedJob.HasRetriableError)
                         {
                             jobsSuccessCount++;
                         }
-                        break;
+                        continue;
                     }
 
                     // do not count canceled jobs
                     if (jobData.Any(j => j.JobOutputState == JobState.Canceled))
                     {
                         jobsTotalCount--;
-                        finalStateReached = true;
-                        break;
+                        continue;
                     }
 
                     // check if job is stuck
-                    if (!finalStateReached)
-                    {
-                        var firstUpdate = jobData.Min(j => j.EventTime);
-                        var lastUdate = jobData.Max(j => j.EventTime);
-                        var duration = lastUdate - firstUpdate;
+                    var firstUpdate = jobData.Min(j => j.EventTime);
+                    var lastUdate = jobData.Max(j => j.EventTime);
+                    var duration = lastUdate - firstUpdate;
 
-                        // if duration below max threshold, it is "healthy" in progress, otherwise it is counted as "unhealthy"
-                        if (duration.TotalMinutes < this.numberOfMinutesInProcessToMarkJobStuck)
-                        {
-                            jobsInHealthyProgressCount++;
-                        }
+                    // if duration below max threshold, it is "healthy" in progress, otherwise it is counted as "unhealthy"
+                    if (duration.TotalMinutes < this.numberOfMinutesInProcessToMarkJobStuck)
+                    {
+                        jobsInHealthyProgressCount++;
                     }
                 }
 
