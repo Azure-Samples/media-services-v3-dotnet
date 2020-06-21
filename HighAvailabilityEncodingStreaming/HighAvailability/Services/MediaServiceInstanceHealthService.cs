@@ -209,7 +209,7 @@ namespace HighAvailability.Services
                     {
                         finalStateReached = true;
                         // only failed jobs that can be retried are counted as failed for this calculation. Job that fails because of bad data is not counted against instance health.
-                        if (!failedJob.IsSystemError)
+                        if (!failedJob.HasRetriableError)
                         {
                             jobsSuccessCount++;
                         }
