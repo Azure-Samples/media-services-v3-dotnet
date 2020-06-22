@@ -70,8 +70,8 @@ namespace HighAvailability.Tests
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
         {
-            configService = new E2ETestConfigService("amshatest-keyvault");
-            //  configService = new E2ETestConfigService("<enter keyvault name>");
+            // Set the correct keyvault name
+            configService = new E2ETestConfigService("<enter keyvault name>");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
             var storageAccount = CloudStorageAccount.Parse(configService.TableStorageAccountConnectionString);
@@ -169,10 +169,9 @@ namespace HighAvailability.Tests
             var outputAssetName = $"output-{sequenceNumber}-{uniqueness}";
 
             // Add job input for this test
-            // TBD remove following value
             var input = new JobInputHttp(
-                                   baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
-                                   files: new List<string> { "Ignite-short.mp4" },
+                                   baseUri: "<Enter URL>",
+                                   files: new List<string> { "<Enter Filename>" },
                                    label: "input1"
                                    );
 

@@ -36,7 +36,8 @@ namespace HighAvailability.Tests
         /// <returns>Task of async operation</returns>
         [ClassInitialize]
         public static async Task Initialize(TestContext _)
-        {            
+        {
+            // Set the correct keyvault name
             configService = new E2ETestConfigService("<enter keyvault name>");
             await configService.LoadConfigurationAsync().ConfigureAwait(false);
 
