@@ -54,7 +54,7 @@ namespace HighAvailability.Services
         /// <summary>
         /// This value is used to determine when to trigger manual job output status refresh.
         /// </summary>
-        private int timeSinceLastUpdateToForceJobResyncInMinutes = 60;
+        private int timeSinceLastUpdateToForceJobResyncInMinutes = 30;
 
         /// <summary>
         /// Default page size for Azure Media Services paged list APIs.
