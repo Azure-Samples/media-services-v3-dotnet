@@ -17,7 +17,6 @@ This sample demonstrates how to create an encoding Transform that uses a built-i
 
 - Microsoft.Azure.Management.Media -Version 2.0.5
 - Microsoft.Extensions.Configuration -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Extensions.Configuration.Json -Version 3.1.5
 - Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1

@@ -22,7 +22,6 @@ This sample demonstrates how to dynamically package VOD content into HLS/DASH fo
 - Microsoft.Extensions.Configuration -Version 3.1.5
 - Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Extensions.Configuration.Json -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
 - Microsoft.Azure.Storage.Blob -Version 11.1.7
 
