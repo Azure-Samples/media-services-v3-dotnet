@@ -28,7 +28,6 @@ When a user requests Widevine-protected content, the player application requests
 - Microsoft.Extensions.Configuration -Version 3.1.5
 - Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Extensions.Configuration.Json -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
 - Microsoft.Azure.Storage.Blob -Version 11.1.7
 - Microsoft.IdentityModel.Tokens -Version 5.3.0

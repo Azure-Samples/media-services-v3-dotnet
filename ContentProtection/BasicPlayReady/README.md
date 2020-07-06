@@ -26,7 +26,6 @@ When a user requests PlayReady-protected content, the player application request
 - Microsoft.Azure.EventHubs.Processor -Version 3.0.0
 - Microsoft.Azure.Management.Media -Version 2.0.5
 - Microsoft.Extensions.Configuration -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Extensions.Configuration.Json -Version 3.1.5
 - Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1

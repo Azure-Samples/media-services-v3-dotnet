@@ -25,7 +25,6 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 - Microsoft.Azure.EventHubs.Processor -Version 3.0.0
 - Microsoft.Azure.Management.Media -Version 2.0.5
 - Microsoft.Extensions.Configuration -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Extensions.Configuration.Json -Version 3.1.5
 - Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
 - Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
