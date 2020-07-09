@@ -24,13 +24,12 @@ This sample demonstrates how to analyze video in a file. It shows how to perform
 - Microsoft.Azure.EventGrid -Version 3.2.0
 - Microsoft.Azure.EventHubs -Version 3.0.0
 - Microsoft.Azure.EventHubs.Processor -Version 3.0.0
-- Microsoft.Azure.Management.Media -Version 2.0.4
-- Microsoft.Extensions.Configuration -Version 3.1.3
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.3
-- Microsoft.Extensions.Configuration.Json -Version 3.1.3
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.3
-- Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.0
-- Microsoft.Azure.Storage.Blob -Version 11.1.5
+- Microsoft.Azure.Management.Media -Version 2.0.5
+- Microsoft.Extensions.Configuration -Version 3.1.5
+- Microsoft.Extensions.Configuration.Json -Version 3.1.5
+- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
+- Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
+- Microsoft.Azure.Storage.Blob -Version 11.1.7
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 
