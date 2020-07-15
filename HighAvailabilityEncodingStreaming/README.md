@@ -8,7 +8,9 @@ products:
 description: "This high availability (HA) solution covers a Video on Demand (VOD) workflow where a media file is uploaded for encoding to produce a multi-bitrate streaming asset that is then published for end customers to view."  
 ---
 
-# Overview
+# Media Services high availability sample
+
+## Overview
 
 This high availability (HA) solution covers a Video on Demand (VOD) workflow where a media file is uploaded for encoding to produce a multi-bitrate streaming asset that is then published for end customers to view.
 
@@ -18,7 +20,7 @@ Azure Media Services encoding service is a regional batch processing platform an
 
 Following diagram describes main components of this solution.
 
-[diagram goes here]
+![high level architecture diagram](media/high-level-arch.svg)
 
 ### Media services cluster
 
@@ -80,15 +82,9 @@ There are two separate ARM scripts, *main.json* and *Event Gridsetup.json*. They
 - A Key Vault service to store secrets
 - Application Insights to store logs.
 
-<!-- this seems out of place here ><!-->
-Azure functions use managed identities.
-<!-- end of of place><!-->
+Sometimes the script fails to deploy everything correctly from the first try and some errors may be displayed. The reason that script sometimes fails is because we use managed identities for azure functions and that takes a while to provision.  There is retry logic built into the script to retry failed steps. After the *main.json* script is deployed successfully, the sample is compiled and Azure functions are deployed to App Services.
 
-Sometimes the script fails to deploy everything correctly from the first try and some errors may be displayed. There is retry logic built into the script to retry failed steps. After the *main.json* script is deployed successfully, the sample is compiled and Azure functions are deployed to App Services.
-
-### Set up Event Grid event subscriptions and submit test requests
-
-The last step is to set up Event Grid event subscriptions. It is done with the *Event Gridsetup.json* file.
+### Test requests
 
 #### Copy the key vault name
 
@@ -134,7 +130,7 @@ This section describes the entire architecture in more detail. Even though this 
 
 ### Azure Storage
 
-Azure storage is used to host queues and tables. Queues are used to send and receive messages to coordinate activities among different modules. Tables are used to store job output status records and to track health state of each Media Services instance. Classes implementing access to Azure storage can be found in the *HighAvailability/AzureStorage* folder.
+Azure storage is used to host queues. Queues are used to send and receive messages to coordinate activities among different modules. Classes implementing access to Azure storage can be found in the *HighAvailability/AzureStorage* folder.
 
 ### Azure Functions
 
@@ -156,7 +152,7 @@ Azure Functions use managed identities to authenticate to Media Services instanc
 
 This module is responsible for processing incoming job requests.
 
-[Sequence diagram goes here]
+![job scheduling module](media/seq-diagram.svg)
 
 1. A new job request is submitted to the job-requests-queue using the  `JobRequestStorageService` class. This implementation is using the Azure Queue service, but a different service can be implemented using the  `IJobRequestStorageService` interface.
 1. The `JobSchedulingFunction` is triggered to process the new incoming request.
@@ -170,7 +166,7 @@ This module is responsible for processing incoming job requests.
 1. The job output status is stored using `JobOutputStorageService`.
 1. The job verification request is submitted to check the job processing status in the future.
 
-[Components diagram goes here]
+![Azure PaaS components for job requests](media/job-schedule-function.svg)
 
 The following Azure PaaS components are used in this module:
 
@@ -186,7 +182,7 @@ The following Azure PaaS components are used in this module:
 
 This module is responsible for persisting job output status events to storage. It is triggered by events coming from Azure Event Grid service. Storing and reusing the job output status data from Event Grid messages reduces the number of redundant calls to Media Services and improves both reliability and latency.
 
-[Sequence diagram]
+![event sequence diagram](media/eventgrid-seq.svg)
 
 1. The job output status function is triggered by a new event from Azure Event Grid service.
 1. The `Event GridService` class is used to parse event data.
@@ -194,7 +190,7 @@ This module is responsible for persisting job output status events to storage. I
 1. If the output status indicates that the job output has completed, a new provisioning request is submitted to process assets.
 1. The job output status is persisted using the storage service.
 
-[Components diagram]
+![Azure PaaS components](media/azure-paas-comp.svg)
 
 Following Azure PaaS components are used in this module:
 
@@ -207,28 +203,28 @@ Following Azure PaaS components are used in this module:
 
 This module is responsible for the provisioning of processed assets. The `ProvisioningOrchestrator` object contains list of `ProvisioningService` instances and they are called one by one to provision each asset. Three provisioning services are included in this sample: `AssetDataProvisioningService`, `ClearStreamingProvisioningService` and `OutputEncryptionStreamingProvisioningService`. List of services is specified in *HighAvailability.Provisioning/Startup.cs*, provisioning logic can be customized by removing any of the services from the list or adding new services.
 
-### AssetDataProvisioningService
+#### AssetDataProvisioningService
 
 The Media Services job stores asset output to an asset container hosted by the Azure Storage service. Since the processing job is submitted to a single Media Services instance, job output is stored to the Azure Storage associated with that Media Services instance only. At streaming time, if the Azure region that hosts specific Azure Storage instance is not available, assets are also not available from that instance.
 
 `AssetDataProvisioningService` copies processed assets to all Media Services instances to enhance data availability. Azure Front Door service is used to manage traffic among all Media Services instances.
 
-### ClearStreamingProvisioningService
+#### ClearStreamingProvisioningService
 
 The `ClearStreamingProvisioningService` creates streaming locators for clear content in each Media Services instance to enable asset consumption through Azure Front Door service. This enables continuous streaming when Azure region becomes unavailable.
 
-### OutputEncryptionStreamingProvisioningService
+#### OutputEncryptionStreamingProvisioningService
 
 `OutputEncryptionStreamingProvisioningService` creates streaming locators with output encryption in each Media Services instance to enable asset consumption through Azure Front Door service. This enables continuous streaming when Azure region becomes unavailable.
 
-[Sequence diagram]
+![provisioning sequence diagram](media/seq-provisioning.svg)
 
 1. The provisioning function is triggered by the request coming from provisioning-requests queue.
 1. The provisioning function calls the `ProvisioningOrchestrator` to provision assets.
 1. `ProvisioningOrchestrator` iterates through all registered `ProvisioningService` objects to provision assets. It is easy to add or remove `ProvisioningService` in this list to implement custom business logic.
 1. After successful provisioning of assets, a provisioning completed event is created to indicate that assets are ready to be used.
 
-[Components diagram]
+![provisioning with Azure Front Door](media/az-front-door.svg)
 
 1. The provisioning-request queue is Azure Queue.
 1. The provisioning function is an Azure Function that is triggered by messages coming from the provisioning-requests queue.
@@ -244,7 +240,7 @@ This module verifies that jobs are completed successfully. If a job fails, it is
 
 This diagram covers scenario when job is completed successfully.
 
-[Successful diagram]
+![job verification success](media/job-success-seq.svg)
 
 1. The job verification queue message triggers the job verification Azure Function.
 1. The function calls `JobVerificationService` to verify the job.
@@ -254,7 +250,7 @@ This diagram covers scenario when job is completed successfully.
 
 This diagram covers scenario when job has failed.
 
-[Fail diagram]
+![job failure sequence diagram](media/job-fail-seq.svg)
 
 1. The job verification queue message triggers the job verification Azure Function.
 1. The function calls `JobVerificationService` to verify the job.
@@ -265,7 +261,7 @@ This diagram covers scenario when job has failed.
 1. The Media Services API call status is recorded for instance health calculation.
 1. If the job is resubmitted, instance usage is recorded, and a new job verification request is created to run through the same sequence for this new job in the future. The job verification request is created with delayed visibility using Azure Queue.
 
-[Components diagram]
+![Components diagram](media/health-instance.svg)
 
 1. The job-verification-requests queue is an Azure Queue.
 1. The job verification function is an Azure Function that is triggered by a request on job-verification-requests queue.
@@ -290,7 +286,7 @@ This module is also responsible for "re-syncing" missing job output status recor
 
 This diagram covers Media Services instance health status evaluation scenario.
 
-[diagram goes here]
+![media service instance health status sequence](media/health-status-seq.svg)
 
 1. The timer triggers the instance health Azure Function. It runs every 10 minutes by default.
 1. The instance health Azure Function calls the `MediaServiceInstanceHealthService` object to reevaluate the Media Services Health with `ReEvaluationMediaServicesHealth`.
@@ -301,7 +297,7 @@ This diagram covers Media Services instance health status evaluation scenario.
 
 This diagram covers Job Output Status Re-sync scenario. This scenario is important when events from Azure Event Grid service are delayed or lost.
 
-[diagram goes here]
+![media service instance health status sequence](media/health-function-seq.svg)
 
 1. The timer triggers the instance health Azure Function. It runs every fifteen minutes by default.
 1. `JobOutputStatusSyncService` is used to process the re-sync request.
@@ -311,7 +307,7 @@ This diagram covers Job Output Status Re-sync scenario. This scenario is importa
 1. All Media Services API call status records are stored for instance health calculation.
 1. Refreshed job output status records are stored using `JobOutputStatusStorageService`.
 
-[Component diagram]
+![media services health instance](media/timer-trigger.svg)
 
 1. The timer triggers the instance health Azure Function.
 1. The job output status data is stored in an Azure CosmoDB table.
@@ -328,11 +324,11 @@ If the error happens in the timer trigger-based Azure Function, it will rerun th
 
 The job scheduler function will fail if there are no healthy Media Services instances available. If that happens, all incoming job requests will fail and will be moved to the poison queue. After the Media Services instances recover, all failed requests can be moved back to the queue for reprocessing.
 
-### Failure Modes
+## Failure Modes
 
 This section covers different failure scenarios and provides guidance how to improve current solution:
 
-1. **If Media Services batch processing fails in a specific instance/region, Media Services API is still available in failed region.**
+1. **The Media Services batch processing fails in a specific instance/region, Media Services API is still available in failed region.**
     1. If the job processing pipeline is completed before failure, assets have been replicated to other regions, streaming is not impacted, and Azure Front Door routes requests to healthy region.
     1. If the job processing pipeline is not completed before failure, but it marks a job as failed with a system error, the job is resubmitted to healthy region.
     1. If the pipeline doesn't mark the job as failed, the job is stuck. The job verification function checks the stuck job several times and eventually skips the request. A `LogWarning` is logged to telemetry explaining the situation with a suggestion to manually verify if a job was processed correctly.
@@ -346,7 +342,7 @@ This section covers different failure scenarios and provides guidance how to imp
     1. Provision a main storage account to use geo replication. That account hosts all queues (job-requests, job-verification-requests, provisioning-requests and provisioning-completed-events). Manual failover could be used to restore access in a different region. Alternatively, Service Bus can be used to host queues and a Services Bus high availability solution could be implemented.
     1. Either deploy other components ahead of time or set them up after the region fails (App Service plan, App Services, Key Vault, App Insights).
 
-## Manually submit jobs using log data
+### Manually submit jobs using log data
 
 Use these steps to manually resubmit failed or stuck jobs.
 
@@ -362,7 +358,7 @@ There are several different ways how sample can be customized.
 This is the fastest way to start using this sample. All the components are automatically deployed by the script. The following components should be reviewed and updated to address specific business scenarios:
 
 1. Depending on the business scenario, a new transform for processing jobs may need to be created. The initial transform is created in the *E2ETests.cs* file.
-1. **[THIS NEEDS CLARIFICATION]** `ProvisioningOrchestrator` and list of `ProvisioningServices`. Current implementation copies all processed assets to all Media Services instances and sets up streaming locators with and without output encryption.**[END CLARIFICATION]**  
+1. `ProvisioningOrchestrator` has a list of `ProvisioningServices`. Current implementation copies all processed assets to all Media Services instances and sets up streaming locators with and without output encryption. Both of these components can be updated to provision assets in a different way.
 1. Depending on the max job size, `NumberOfMinutesInProcessToMarkJobStuck` and `TimeDurationInMinutesToVerifyJobStatus` configuration values should be updated. (See the Modifying or extending the sample section below for more details.)
 
 ### Implement custom storage for queue and table data
@@ -389,7 +385,7 @@ If *not* using Azure Functions to host modules is a requirement, the following s
 1. `JobVerificationService`
 1. `ProvisioningOrchestrator`
 
-## Modifying or extending the sample
+### Modifying or extending the sample
 
 The following configuration values from `ConfigService` can be updated to fine tune this sample:
 
