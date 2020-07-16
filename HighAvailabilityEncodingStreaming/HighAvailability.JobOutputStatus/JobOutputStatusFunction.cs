@@ -13,7 +13,7 @@ namespace HighAvailability.JobOutputStatus
     /// <summary>
     /// Implements job output status Azure function. It is triggered by EventGrid events
     /// It stores events to event store to minimize number of calls to AMS APIs by rest of the modules.
-    /// See TBD link for more details.
+    /// See README.md for more details.
     /// </summary>
     public class JobOutputStatusFunction
     {

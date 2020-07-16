@@ -15,7 +15,7 @@ namespace HighAvailability.JobOutputStatus
 
     /// <summary>
     /// Implements startup logic for job output status Azure function.
-    /// See TBD link for more details.
+    /// See README.md for more details.
     /// See for more details about dependency injection for Azure Functions
     /// https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-dependency-injection
     /// </summary>
