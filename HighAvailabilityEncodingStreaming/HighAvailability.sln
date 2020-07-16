@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		deploy.ps1 = deploy.ps1
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighAvailability.InstanceHealth", "HighAvailability.InstanceHealth\HighAvailability.InstanceHealth.csproj", "{3C2995C9-4EC1-4DB9-BED8-74A84A83376B}"

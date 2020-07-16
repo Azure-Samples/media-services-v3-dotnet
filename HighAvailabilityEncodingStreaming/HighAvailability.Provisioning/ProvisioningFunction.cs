@@ -16,7 +16,7 @@ namespace HighAvailabikity.Provisioner
     /// This module provisions processed assets. It copies asset data to all AMS instances and sets up Azure Front Door service 
     /// to ensure that assets can be streamed even when some Media Services instances are not available. It also sets up streaming locators. 
     /// It is easy to remove or add provisioning steps to address specific business scenario.
-    /// See TBD link for more details.
+    /// See README.md for more details.
     /// </summary>
     public class ProvisioningFunction
     {
