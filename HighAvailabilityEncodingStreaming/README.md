@@ -28,7 +28,7 @@ The Media Services cluster consists of two or more Media Services accounts. Thes
 
 ### Job scheduling module
 
-The job scheduling module submits new jobs to the Media Services cluster. It tracks the health status of each Media Services instance and submits a new job to the next the healthy instance.
+The job scheduling module submits new jobs to the Media Services cluster. It tracks the health status of each Media Services instance and submits a new job to the next healthy instance.
 
 ### Job status module
 
@@ -62,7 +62,7 @@ Perform following steps:
 1. Clone or download this code.
 1. Modify the deployment script configuration file located in *ARMDeployScripts/all.parameters.json*.
     1. Set the `deploymentNameBase`, for example *contosoha*.
-    1. Set the `deploymentRegionLocation` to the region where all the sample components are installed, for example *eastus*.  
+    1. Set the `deploymentRegionLocation` to the region where all the sample components will be installed, for example *eastus*.  
     1. Set the `keyVaultTenantId` to the Azure tenant Id. It can be found in the Azure AD admin center > properties page > Directory ID.
     1. Set the `amsRegions`. You can have two or more regions specified. List all the regions where you want to install a Media Services instance. One Media Services instance will be installed per region.
     1. Save the file *all.parameters.json*.
@@ -113,7 +113,7 @@ Update the Key Vault configuration to grant access to user submitting test reque
 
 Once the requests are submitted, following actions will happen:
 
-1. The Job scheduling module will read submitted job requests from the job- requests queue and submit them to the Media Services instances.
+1. The Job scheduling module will read submitted job requests from the job-requests queue and submit them to the Media Services instances.
 1. Once the jobs are finished, provisioning requests will be submitted to the provisioning-requests queue.
 1. Once provisioning requests are processed, provisioning completed events are posted to provisioning-completed-events queue.
 
@@ -269,7 +269,7 @@ This diagram covers scenario when job has failed.
 1. The Media Service Instance Health data is stored in an Azure CosmoDB table.
 1. Media Service call history data is stored in an Azure CosmoDB Table.
 
-### Instance Health Module
+### Instance health module details
 
 This module evaluates the health status of each Media Services instance. It uses job output status history to determine if a given Media Services instance is healthy, degraded or unhealthy. This information is used to find the next available Media Services instance when processing new jobs.
 
