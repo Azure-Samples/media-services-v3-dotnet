@@ -13,7 +13,7 @@ using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Text.RegularExpressions;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs;
 
 namespace AssetFilters
 {
@@ -352,12 +352,12 @@ namespace AssetFilters
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
             Console.WriteLine("Uploading a media file to the asset...");
-            await blob.UploadFromFileAsync(fileToUpload);
+            await blob.UploadAsync(fileToUpload);
 
             return asset;
         }

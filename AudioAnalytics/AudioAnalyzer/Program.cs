@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
@@ -305,12 +306,12 @@ namespace AudioAnalyzer
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
-            await blob.UploadFromFileAsync(fileToUpload);
-
+            Console.WriteLine("Uploading a media file to the asset...");
+            await blob.UploadAsync(fileToUpload);
             return asset;
         }
 
@@ -414,7 +415,7 @@ namespace AudioAnalyzer
             string transformName,
             string jobName)
         {
-            const int SleepIntervalMs = 60 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
 
             Job job;
 

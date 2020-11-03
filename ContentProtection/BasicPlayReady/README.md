@@ -9,6 +9,7 @@ products:
 # Dynamically encrypt your content with PlayReady DRM
 
 This sample demonstrates how to dynamically encrypt your content with PlayReady DRM. It shows how to perform the following tasks:
+
 1. Creates a transform with built-in AdaptiveStreaming preset
 1. Submits a job
 1. Creates a ContentKeyPolicy with PlayReady configuration using a secret key
@@ -21,18 +22,18 @@ When a user requests PlayReady-protected content, the player application request
 
 * Required Assemblies
 
-- Microsoft.Azure.EventGrid -Version 3.2.0
-- Microsoft.Azure.EventHubs -Version 3.0.0
-- Microsoft.Azure.EventHubs.Processor -Version 3.0.0
-- Microsoft.Azure.Management.Media -Version 2.0.5
-- Microsoft.Extensions.Configuration -Version 3.1.5
-- Microsoft.Extensions.Configuration.Json -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
-- Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
-- Microsoft.Azure.Storage.Blob -Version 11.1.7
-- Microsoft.IdentityModel.Tokens -Version 5.3.0
-- System.IdentityModel.Tokens.Jwt -Version 5.3.0
-- System.Security.Claims 4.3.0
+- Azure.Storage.Blobs
+- Microsoft.Azure.EventGrid
+- Microsoft.Azure.EventHubs
+- Microsoft.Azure.EventHubs.Processor
+- Microsoft.IdentityModel.Tokens
+- System.IdentityModel.Tokens.Jwt
+- Microsoft.Azure.Management.Media
+- Microsoft.Extensions.Configuration
+- Microsoft.Extensions.Configuration.EnvironmentVariables
+- Microsoft.Extensions.Configuration.Json
+- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- System.Security.Claims
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 

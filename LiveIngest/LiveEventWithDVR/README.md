@@ -18,17 +18,18 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 1. Prints playback urls for the event archive after the LiveEvent stops.
 
 ## Prerequisites
+
 * Required Assemblies
 
-- Microsoft.Azure.EventGrid -Version 3.2.0
-- Microsoft.Azure.EventHubs -Version 3.0.0
-- Microsoft.Azure.EventHubs.Processor -Version 3.0.0
-- Microsoft.Azure.Management.Media -Version 2.0.5
-- Microsoft.Extensions.Configuration -Version 3.1.5
-- Microsoft.Extensions.Configuration.Json -Version 3.1.5
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 3.1.5
-- Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.1
-- Microsoft.Azure.Storage.Blob -Version 11.1.7
+- Microsoft.Azure.EventGrid
+- Microsoft.Azure.EventHubs
+- Microsoft.Azure.EventHubs.Processor
+- Microsoft.Azure.Management.Media
+- Microsoft.Extensions.Configuration
+- Microsoft.Extensions.Configuration.Json
+- Microsoft.Extensions.Configuration.EnvironmentVariables
+- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Azure.Storage.Blobs
 
 * A camera connected to your computer.
 * A media encoder. For a recommended encoder, please visit [Recommended encoders](https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders).

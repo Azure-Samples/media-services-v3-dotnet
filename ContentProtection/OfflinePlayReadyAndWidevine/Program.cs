@@ -21,7 +21,7 @@ namespace OfflinePlayReadyAndWidevine
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private static readonly string ContentKeyPolicyName = "DRMContentKeyPolicy";
-        private static readonly string DefaultStreamingEndpointName = "se";  // Change this to your Endpoint name.
+        private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
@@ -443,7 +443,7 @@ namespace OfflinePlayReadyAndWidevine
             string transformName,
             string jobName)
         {
-            const int SleepIntervalMs = 60 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
 
             Job job;
 
