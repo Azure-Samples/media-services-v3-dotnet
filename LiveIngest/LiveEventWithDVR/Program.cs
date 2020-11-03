@@ -49,7 +49,7 @@ namespace LiveEventWithDVR
             Console.ReadLine();
         }
 
-          /// <summary>
+        /// <summary>
         /// Run the sample async.
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
@@ -77,7 +77,7 @@ namespace LiveEventWithDVR
             string drvStreamingLocatorName = "streamingLocator" + uniqueness;
             string archiveStreamingLocatorName = "fullLocator-" + uniqueness;
             string drvAssetFilterName = "filter-" + uniqueness;
-            string streamingEndpointName = "se";  // Change this to your Endpoint name.
+            string streamingEndpointName = "default";  // Change this to your Endpoint name.
             EventProcessorHost eventProcessorHost = null;
             bool stopEndpoint = false;
 
@@ -125,14 +125,14 @@ namespace LiveEventWithDVR
                 };
 
                 // To get the same ingest URL for the same LiveEvent name:
-                // 1. Set vanityUrl to true so you have ingest like: 
+                // 1. Set useStaticHostname to true so you have ingest like: 
                 //        rtmps://liveevent-hevc12-eventgridmediaservice-usw22.channel.media.azure.net:2935/live/522f9b27dd2d4b26aeb9ef8ab96c5c77           
                 // 2. Set accessToken to a desired GUID string (with or without hyphen)
 
                 LiveEvent liveEvent = new LiveEvent(
                     location: mediaService.Location,
                     description: "Sample LiveEvent for testing",
-                    vanityUrl: false,
+                    useStaticHostname: false,
                     encoding: new LiveEventEncoding(
                                 // Set this to Standard to enable a trans-coding LiveEvent, and None to enable a pass-through LiveEvent
                                 encodingType: LiveEventEncodingType.None,
@@ -201,7 +201,7 @@ namespace LiveEventWithDVR
                 Console.WriteLine();
 
                 Console.WriteLine("Start the live stream now, sending the input to the ingest url and verify that it is arriving with the preview url.");
-                Console.WriteLine("IMPORTANT TIP!: Make ABSOLUTLEY CERTAIN that the video is flowing to the Preview URL before continuing!");
+                Console.WriteLine("IMPORTANT TIP!: Make ABSOLUTLY CERTAIN that the video is flowing to the Preview URL before continuing!");
                 Console.WriteLine("******************************");
                 Console.WriteLine("* Press ENTER to continue... *");
                 Console.WriteLine("******************************");
@@ -217,7 +217,7 @@ namespace LiveEventWithDVR
 
                 AssetFilter drvAssetFilter = new AssetFilter(
                     presentationTimeRange: new PresentationTimeRange(
-                        forceEndTimestamp:false,
+                        forceEndTimestamp: false,
                         // 300 seconds sliding window
                         presentationWindowDuration: 3000000000L,
                         // This value defines the latest live position that a client can seek back to 10 seconds, must be smaller than sliding window.
@@ -244,8 +244,8 @@ namespace LiveEventWithDVR
                 IList<string> filters = new List<string>();
                 filters.Add(drvAssetFilterName);
                 StreamingLocator locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup,
-                    config.AccountName, 
-                    drvStreamingLocatorName, 
+                    config.AccountName,
+                    drvStreamingLocatorName,
                     new StreamingLocator
                     {
                         AssetName = assetName,
@@ -260,7 +260,7 @@ namespace LiveEventWithDVR
                 if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                 {
                     Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                    await client.StreamingEndpoints.StartAsync (config.ResourceGroup, config.AccountName, streamingEndpointName);
+                    await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, streamingEndpointName);
 
                     // Since we started the endpoint, we should stop it in cleanup.
                     stopEndpoint = true;

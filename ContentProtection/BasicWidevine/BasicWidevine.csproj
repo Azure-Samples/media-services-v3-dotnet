@@ -11,24 +11,22 @@
   </PropertyGroup>
 
  <ItemGroup>
-   <PackageReference Include="Microsoft.Azure.EventGrid" Version="3.2.0" />
-   <PackageReference Include="Microsoft.Azure.EventHubs" Version="3.0.0" />
-   <PackageReference Include="Microsoft.Azure.EventHubs.Processor" Version="3.0.0" />
-   <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.1.7" />
-   <PackageReference Include="System.IdentityModel.Tokens.Jwt " Version="5.3.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="5.3.0" />
-    <PackageReference Include="Microsoft.Azure.Management.Media" Version="2.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.5" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.6.0" />
+    <PackageReference Include="Microsoft.Azure.EventGrid" Version="3.2.0" />
+    <PackageReference Include="Microsoft.Azure.EventHubs" Version="4.3.1" />
+    <PackageReference Include="Microsoft.Azure.EventHubs.Processor" Version="4.3.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.8.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt " Version="6.8.0" />
+    <PackageReference Include="Microsoft.Azure.Management.Media" Version="3.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.9" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication" Version="2.4.1" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
@@ -15,7 +17,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace VideoAnalyzer
 {
@@ -306,12 +307,12 @@ namespace VideoAnalyzer
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
-            await blob.UploadFromFileAsync(fileToUpload);
-
+            Console.WriteLine("Uploading a media file to the asset...");
+            await blob.UploadAsync(fileToUpload);
             return asset;
         }
 
@@ -415,7 +416,7 @@ namespace VideoAnalyzer
             string transformName,
             string jobName)
         {
-            const int SleepIntervalMs = 60 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
 
             Job job;
 
@@ -456,7 +457,7 @@ namespace VideoAnalyzer
         /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
         private static async Task DownloadOutputAssetAsync(
             IAzureMediaServicesClient client,
-            string resourceGroup,
+            string resourceGroupName,
             string accountName,
             string assetName,
             string outputFolderName)
@@ -466,47 +467,47 @@ namespace VideoAnalyzer
                 Directory.CreateDirectory(outputFolderName);
             }
 
-            AssetContainerSas assetContainerSas = await client.Assets.ListContainerSasAsync(
-                resourceGroup,
-                accountName,
-                assetName,
-                permissions: AssetContainerPermission.Read,
-                expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
+            // Use Media Service and Storage APIs to download the output files to a local folder
+            AssetContainerSas assetContainerSas = client.Assets.ListContainerSas(
+                            resourceGroupName,
+                            accountName,
+                            assetName,
+                            permissions: AssetContainerPermission.Read,
+                            expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
+                            );
 
             Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
+            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
-            Console.WriteLine($"Downloading output results to '{directory}'...");
+            Console.WriteLine("Downloading results to {0}.", directory);
 
-            BlobContinuationToken continuationToken = null;
-            IList<Task> downloadTasks = new List<Task>();
+            string continuationToken = null;
 
+            // Call the listing operation and enumerate the result segment.
+            // When the continuation token is empty, the last segment has been returned
+            // and execution can exit the loop.
             do
             {
-                // A non-negative integer value that indicates the maximum number of results to be returned at a time,
-                // up to the per-operation limit of 5000. If this value is null, the maximum possible number of results
-                // will be returned, up to 5000.
-                int? ListBlobsSegmentMaxResult = null;
-                BlobResultSegment segment = await container.ListBlobsSegmentedAsync(null, true, BlobListingDetails.None, ListBlobsSegmentMaxResult, continuationToken, null, null);
+                var resultSegment = container.GetBlobs().AsPages(continuationToken);
 
-                foreach (IListBlobItem blobItem in segment.Results)
+                foreach (Azure.Page<BlobItem> blobPage in resultSegment)
                 {
-                    if (blobItem is CloudBlockBlob blob)
+                    foreach (BlobItem blobItem in blobPage.Values)
                     {
-                        string path = Path.Combine(directory, blob.Name);
 
-                        downloadTasks.Add(blob.DownloadToFileAsync(path, FileMode.Create));
+                        var blobClient = container.GetBlobClient(blobItem.Name);
+                        string filename = Path.Combine(directory, blobItem.Name);
+                        await blobClient.DownloadToAsync(filename);
                     }
+
+                    // Get the continuation token and loop until it is empty.
+                    continuationToken = blobPage.ContinuationToken;
                 }
 
-                continuationToken = segment.ContinuationToken;
-            }
-            while (continuationToken != null);
-
-            await Task.WhenAll(downloadTasks);
+            } while (continuationToken != "");
 
             Console.WriteLine("Download complete.");
         }

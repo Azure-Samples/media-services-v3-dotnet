@@ -25,16 +25,18 @@ When a user requests PlayReady or Widevine protected content for the first time,
 
 * Required Assemblies
 
-- Microsoft.Azure.EventGrid -Version 3.2.0
-- Microsoft.Azure.EventHubs -Version 3.0.0
-- Microsoft.Azure.EventHubs.Processor -Version 3.0.0
-- Microsoft.Azure.Management.Media -Version 2.0.0
-- Microsoft.Extensions.Configuration -Version 2.1.1
-- Microsoft.Extensions.Configuration.EnvironmentVariables -Version 2.1.1
-- Microsoft.Extensions.Configuration.Json -Version 2.1.1
-- Microsoft.Rest.ClientRuntime.Azure.Authentication -Version 2.4.0
-- WindowsAzure.Storage -Version 9.3.3
-- System.Security.Claims 4.3.0
+- Azure.Storage.Blobs
+- Microsoft.Azure.EventGrid
+- Microsoft.Azure.EventHubs
+- Microsoft.Azure.EventHubs.Processor
+- Microsoft.IdentityModel.Tokens
+- System.IdentityModel.Tokens.Jwt
+- Microsoft.Azure.Management.Media
+- Microsoft.Extensions.Configuration
+- Microsoft.Extensions.Configuration.EnvironmentVariables
+- Microsoft.Extensions.Configuration.Json
+- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- System.Security.Claims
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 

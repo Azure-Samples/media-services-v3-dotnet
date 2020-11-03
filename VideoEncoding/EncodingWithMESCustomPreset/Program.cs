@@ -12,7 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace EncodingWithMESCustomPreset
 {
@@ -100,7 +101,7 @@ namespace EncodingWithMESCustomPreset
                 Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAsset.Name, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
-                
+
                 // In this demo code, we will poll for Job status. Polling is not a recommended best practice for production
                 // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
                 // should instead use Event Grid. To see how to implement the event grid, see the sample
@@ -153,7 +154,7 @@ namespace EncodingWithMESCustomPreset
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch(ApiErrorException e)
+            catch (ApiErrorException e)
             {
                 Console.WriteLine("ApiErrorException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
@@ -249,7 +250,7 @@ namespace EncodingWithMESCustomPreset
                                             label: "HD" // This label is used to modify the file name in the output formats
                                         ),
                                         new H264Layer (
-                                            bitrate: 600000, 
+                                            bitrate: 600000,
                                             width: "640",
                                             height: "360",
                                             label: "SD"
@@ -263,7 +264,7 @@ namespace EncodingWithMESCustomPreset
                                     range: "80%",
                                     layers: new PngLayer[]{
                                         new PngLayer(
-                                            width: "50%", 
+                                            width: "50%",
                                             height: "50%"
                                         )
                                     }
@@ -402,7 +403,7 @@ namespace EncodingWithMESCustomPreset
             do
             {
                 job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
-                
+
                 if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
                 {
                     exit = true;
@@ -486,13 +487,12 @@ namespace EncodingWithMESCustomPreset
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
-            Console.WriteLine("Uploading a video file...");
-            await blob.UploadFromFileAsync(fileToUpload);
-
+            Console.WriteLine("Uploading a media file to the asset...");
+            await blob.UploadAsync(fileToUpload);
             return asset;
         }
 
@@ -510,33 +510,45 @@ namespace EncodingWithMESCustomPreset
         {
             // Use Media Service and Storage APIs to download the output files to a local folder
             AssetContainerSas assetContainerSas = client.Assets.ListContainerSas(
-                            resourceGroupName, 
-                            accountName, 
+                            resourceGroupName,
+                            accountName,
                             assetName,
-                            permissions: AssetContainerPermission.Read, 
+                            permissions: AssetContainerPermission.Read,
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
             Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
+            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
             Console.WriteLine("Downloading results to {0}.", directory);
-            
-            var blobs = container.ListBlobsSegmentedAsync(null,true, BlobListingDetails.None,200,null,null,null).Result;
-            
-            foreach (var blobItem in blobs.Results)
-            {
-                if (blobItem is CloudBlockBlob)
-                {
-                    CloudBlockBlob blob = blobItem as CloudBlockBlob;
-                    string filename = Path.Combine(directory, blob.Name);
 
-                    await blob.DownloadToFileAsync(filename, FileMode.Create);
+            string continuationToken = null;
+
+            // Call the listing operation and enumerate the result segment.
+            // When the continuation token is empty, the last segment has been returned
+            // and execution can exit the loop.
+            do
+            {
+                var resultSegment = container.GetBlobs().AsPages(continuationToken);
+
+                foreach (Azure.Page<BlobItem> blobPage in resultSegment)
+                {
+                    foreach (BlobItem blobItem in blobPage.Values)
+                    {
+
+                        var blobClient = container.GetBlobClient(blobItem.Name);
+                        string filename = Path.Combine(directory, blobItem.Name);
+                        await blobClient.DownloadToAsync(filename);
+                    }
+
+                    // Get the continuation token and loop until it is empty.
+                    continuationToken = blobPage.ContinuationToken;
                 }
-            }
+
+            } while (continuationToken != "");
 
             Console.WriteLine("Download complete.");
         }

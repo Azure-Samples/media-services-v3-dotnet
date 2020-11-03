@@ -459,7 +459,7 @@ namespace BasicAESClearKey
             string transformName,
             string jobName)
         {
-            const int SleepIntervalMs = 60 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
 
             Job job;
 

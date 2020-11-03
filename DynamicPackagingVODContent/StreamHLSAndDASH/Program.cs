@@ -6,10 +6,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
@@ -237,12 +236,12 @@ namespace StreamHLSAndDASH
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            CloudBlobContainer container = new CloudBlobContainer(sasUri);
-            var blob = container.GetBlockBlobReference(Path.GetFileName(fileToUpload));
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
-            Console.WriteLine("Uploading a media file to the input asset.");
-            await blob.UploadFromFileAsync(fileToUpload);
+            Console.WriteLine("Uploading a media file to the asset...");
+            await blob.UploadAsync(fileToUpload);
 
             return asset;
         }
@@ -395,7 +394,7 @@ namespace StreamHLSAndDASH
             string transformName,
             string jobName)
         {
-            const int SleepIntervalMs = 60 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
 
             Job job;
 
