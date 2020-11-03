@@ -12,7 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs;
 
 namespace EncodingWithMESPredefinedPreset
 {
@@ -92,8 +93,8 @@ namespace EncodingWithMESPredefinedPreset
 
                 var input = new JobInputHttp(
                                     baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
-                                    files: new List<String> {"Ignite-short.mp4"},
-                                    label:"input1"
+                                    files: new List<String> { "Ignite-short.mp4" },
+                                    label: "input1"
                                     );
 
                 // Output from the encoding Job must be written to an Asset, so let's create one. Note that we
@@ -167,7 +168,7 @@ namespace EncodingWithMESPredefinedPreset
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch(ApiErrorException e)
+            catch (ApiErrorException e)
             {
                 Console.WriteLine("Hit ApiErrorException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
@@ -285,14 +286,14 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="jobInput">The input to the job.</param>
         /// <param name="outputAssetName">The name of the asset that the job writes to.</param>
         /// <returns>The job created.</returns>
-        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,  string transformName,
+        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName,
             string jobName, JobInput jobInput, string outputAssetName)
         {
             Console.WriteLine("Creating a job...");
 
             JobOutput[] jobOutputs =
             {
-                new JobOutputAsset(outputAssetName), 
+                new JobOutputAsset(outputAssetName),
             };
 
             Job job;
@@ -331,7 +332,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job.</param>
         /// <returns></returns>
-        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName,  string transformName, string jobName)
+        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, string jobName)
         {
             const int SleepInterval = 10 * 1000;
 
@@ -341,7 +342,7 @@ namespace EncodingWithMESPredefinedPreset
             do
             {
                 job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
-                
+
                 if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
                 {
                     exit = true;
@@ -373,44 +374,58 @@ namespace EncodingWithMESPredefinedPreset
         }
 
         /// <summary>
-        /// Use Media Service and Storage APIs to download the output files to a local folder
+        /// Downloads the specified output asset.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
-        /// <param name="assetName">The asset name.</param>
-        /// <param name="resultsFolder">The output folder name for downloaded files.</param>
-        /// <returns>A task.</returns>
-        private async static Task DownloadResults(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName, string resultsFolder)
+        /// <param name="accountName"> The Media Services account name.</param>
+        /// <param name="assetName">The output asset.</param>
+        /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
+        /// <returns></returns>
+        private async static Task DownloadResults(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
+            string assetName, string outputFolderName)
         {
+            // Use Media Service and Storage APIs to download the output files to a local folder
             AssetContainerSas assetContainerSas = client.Assets.ListContainerSas(
-                            resourceGroupName, 
-                            accountName, 
+                            resourceGroupName,
+                            accountName,
                             assetName,
-                            permissions: AssetContainerPermission.Read, 
+                            permissions: AssetContainerPermission.Read,
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
             Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
+            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
 
-            string directory = Path.Combine(resultsFolder, assetName);
+            string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
             Console.WriteLine("Downloading results to {0}.", directory);
-            
-            var blobs = container.ListBlobsSegmentedAsync(null,true, BlobListingDetails.None,200,null,null,null).Result;
-            
-            foreach (var blobItem in blobs.Results)
-            {
-                if (blobItem is CloudBlockBlob)
-                {
-                    CloudBlockBlob blob = blobItem as CloudBlockBlob;
-                    string filename = Path.Combine(directory, blob.Name);
 
-                    await blob.DownloadToFileAsync(filename, FileMode.Create);
+            string continuationToken = null;
+
+            // Call the listing operation and enumerate the result segment.
+            // When the continuation token is empty, the last segment has been returned
+            // and execution can exit the loop.
+            do
+            {
+                var resultSegment = container.GetBlobs().AsPages(continuationToken);
+
+                foreach (Azure.Page<BlobItem> blobPage in resultSegment)
+                {
+                    foreach (BlobItem blobItem in blobPage.Values)
+                    {
+
+                        var blobClient = container.GetBlobClient(blobItem.Name);
+                        string filename = Path.Combine(directory, blobItem.Name);
+                        await blobClient.DownloadToAsync(filename);
+                    }
+
+                    // Get the continuation token and loop until it is empty.
+                    continuationToken = blobPage.ContinuationToken;
                 }
-            }
+
+            } while (continuationToken != "");
 
             Console.WriteLine("Download complete.");
         }
