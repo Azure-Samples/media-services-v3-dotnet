@@ -88,8 +88,8 @@ namespace AudioAnalyzer
             string outputAssetName = $"output-{uniqueness}";
             string inputAssetName = $"input-{uniqueness}";
 
-            // Create an analyzer preset with audio insights.
-            Preset preset = new VideoAnalyzerPreset(audioLanguage: "en-US", insightsToExtract: InsightsType.AudioInsightsOnly);
+            // Create an analyzer preset with audio insights and standard audio mode.
+            Preset preset = new VideoAnalyzerPreset(audioLanguage: "en-US", mode: AudioAnalysisMode.Standard, insightsToExtract: InsightsType.AudioInsightsOnly);
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
@@ -501,7 +501,7 @@ namespace AudioAnalyzer
                     continuationToken = blobPage.ContinuationToken;
                 }
 
-                
+
             } while (continuationToken != "");
 
             await Task.WhenAll(downloadTasks);
