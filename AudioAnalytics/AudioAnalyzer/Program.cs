@@ -8,11 +8,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
-using Microsoft.Azure.Storage.Blob;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
@@ -474,37 +474,35 @@ namespace AudioAnalyzer
                 expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
 
             Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            CloudBlobContainer container = new CloudBlobContainer(containerSasUrl);
+            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
             Console.WriteLine($"Downloading output results to '{directory}'...");
 
-            BlobContinuationToken continuationToken = null;
+            string continuationToken = null;
             IList<Task> downloadTasks = new List<Task>();
 
             do
             {
-                // A non-negative integer value that indicates the maximum number of results to be returned at a time,
-                // up to the per-operation limit of 5000. If this value is null, the maximum possible number of results
-                // will be returned, up to 5000.
-                int? ListBlobsSegmentMaxResult = null;
-                BlobResultSegment segment = await container.ListBlobsSegmentedAsync(null, true, BlobListingDetails.None, ListBlobsSegmentMaxResult, continuationToken, null, null);
+                var resultSegment = container.GetBlobs().AsPages(continuationToken);
 
-                foreach (IListBlobItem blobItem in segment.Results)
+                foreach (Azure.Page<BlobItem> blobPage in resultSegment)
                 {
-                    if (blobItem is CloudBlockBlob blob)
+                    foreach (BlobItem blobItem in blobPage.Values)
                     {
-                        string path = Path.Combine(directory, blob.Name);
+                        var blobClient = container.GetBlobClient(blobItem.Name);
+                        string filename = Path.Combine(directory, blobItem.Name);
 
-                        downloadTasks.Add(blob.DownloadToFileAsync(path, FileMode.Create));
+                        downloadTasks.Add(blobClient.DownloadToAsync(filename));
                     }
+                    // Get the continuation token and loop until it is empty.
+                    continuationToken = blobPage.ContinuationToken;
                 }
 
-                continuationToken = segment.ContinuationToken;
-            }
-            while (continuationToken != null);
+                
+            } while (continuationToken != "");
 
             await Task.WhenAll(downloadTasks);
 
