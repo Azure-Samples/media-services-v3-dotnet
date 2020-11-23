@@ -1,4 +1,4 @@
-# Encode with a custom Transform and thumbnail sprite
+# Encode with a custom Transform and a thumbnail sprite
 
 This sample shows how to create a custom encoding Transform using the StandardEncoderPreset settings. It shows how to perform the following tasks:
 
