@@ -18,6 +18,7 @@ The samples in this repo show how to encode, package, protect your videos with A
 |-------------|-------------|
 | VideoEncoding/EncodingWithMESPredefinedPreset|The sample shows how to submit a job using a built-in preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | VideoEncoding/EncodingWithMESCustomPreset|The sample shows how to submit a job using a custom preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
+| VideoEncoding/EncodingWithMESCustomPresetAndSprite|The sample shows how to submit a job using a custom preset with a thumbnail sprite and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | LiveIngest/LiveEventWithDVR|This sample first shows how to create a LiveEvent with a full archive up to 25 hours and an filter on the asset with 5 minutes DVR window, then it shows how to use the filter to create a locator for streaming.|
 | VideoAnalytics/VideoAnalyzer|This sample illustrates how to create a video analyzer transform, upload a video file to an input asset, submit a job with the transform and download the results for verification.|
 | AudioAnalytics/AudioAnalyzer|This sample illustrates how to create a audio analyzer transform, upload a media file to an input asset, submit a job with the transform and download the results for verification.|
@@ -41,9 +42,9 @@ The samples in this repo show how to encode, package, protect your videos with A
 
 ## See also
 
-Java samples: https://github.com/Azure-Samples/media-services-v3-java
+Java samples: <https://github.com/Azure-Samples/media-services-v3-java>
 
 ## Next steps
 
-- Azure Media Services documentation: https://docs.microsoft.com/en-us/azure/media-services/
-- Azure Media Services pricing: https://azure.microsoft.com/en-in/pricing/details/media-services/
+- Azure Media Services documentation: <https://docs.microsoft.com/en-us/azure/media-services/>
+- Azure Media Services pricing: <https://azure.microsoft.com/en-in/pricing/details/media-services/>
