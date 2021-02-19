@@ -5,15 +5,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 
 namespace EncodingWithMESCustomPreset
 {
@@ -106,7 +109,81 @@ namespace EncodingWithMESCustomPreset
                 // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
                 // should instead use Event Grid. To see how to implement the event grid, see the sample
                 // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
-                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName);
+
+                EventProcessorHost eventProcessorHost = null;
+                try
+                {
+                    // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
+                    // we will fall-back on polling Job status instead.
+
+                    // Please refer README for Event Hub and storage settings.
+                    // A storage account is required to process the Event Hub events from the Event Grid subscription in this sample.
+                    string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                        config.StorageAccountName, config.StorageAccountKey);
+
+                    // Create a new host to process events from an Event Hub.
+                    Console.WriteLine("Creating a new host to process events from an Event Hub...");
+                    eventProcessorHost = new EventProcessorHost(config.EventHubName,
+                        PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
+                        storageConnectionString, config.StorageContainerName);
+
+                    // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
+                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+
+                    // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
+                    await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
+                        EventProcessorOptions.DefaultOptions);
+
+                    // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
+                    IList<Task> tasks = new List<Task>();
+
+                    // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
+                    Task jobTask = Task.Run(() =>
+                    jobWaitingEvent.WaitOne());
+                    tasks.Add(jobTask);
+
+                    // 30 minutes timeout.
+                    var tokenSource = new CancellationTokenSource();
+                    var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
+                    tasks.Add(timeout);
+
+                    // Wait for tasks.
+                    if (await Task.WhenAny(tasks) == jobTask)
+                    {
+                        // Job finished. Cancel the timer.
+                        tokenSource.Cancel();
+                        // Get the latest status of the job.
+                        job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, CustomTransform, jobName);
+                    }
+                    else
+                    {
+                        // Timeout happened, Something might be wrong with job events. Fall-back on polling instead.
+                        jobWaitingEvent.Set();
+                        throw new Exception("Timeout occurred.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
+                    Console.WriteLine(e.Message);
+
+                    // Polling is not a recommended best practice for production applications because of the latency it introduces.
+                    // Overuse of this API may trigger throttling. Developers should instead use Event Grid and listen for the status events on the jobs
+                    Console.WriteLine("Polling job status...");
+                    job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName);
+                }
+                finally
+                {
+                    if (eventProcessorHost != null)
+                    {
+                        Console.WriteLine("Job final state received, removing the event processor...");
+
+                        // Disposes of the Event Processor Host.
+                        await eventProcessorHost.UnregisterEventProcessorAsync();
+                        Console.WriteLine();
+                    }
+                }
+
 
                 TimeSpan elapsed = DateTime.Now - startedTime;
 
@@ -394,42 +471,39 @@ namespace EncodingWithMESCustomPreset
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job you submitted.</param>
         /// <returns></returns>
-        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, string jobName)
+        private static async Task<Job> WaitForJobToFinishAsync(IAzureMediaServicesClient client,
+            string resourceGroupName,
+            string accountName,
+            string transformName,
+            string jobName)
         {
-            const int SleepInterval = 10 * 1000;
+            const int SleepIntervalMs = 30 * 1000;
+
             Job job;
-            bool exit = false;
 
             do
             {
-                job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
+                job = await client.Jobs.GetAsync(resourceGroupName, accountName, transformName, jobName);
 
-                if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
+                Console.WriteLine($"Job is '{job.State}'.");
+                for (int i = 0; i < job.Outputs.Count; i++)
                 {
-                    exit = true;
-                }
-                else
-                {
-                    Console.WriteLine($"Job is {job.State}.");
-
-                    for (int i = 0; i < job.Outputs.Count; i++)
+                    JobOutput output = job.Outputs[i];
+                    Console.Write($"\tJobOutput[{i}] is '{output.State}'.");
+                    if (output.State == JobState.Processing)
                     {
-                        JobOutput output = job.Outputs[i];
-
-                        Console.Write($"\tJobOutput[{i}] is {output.State}.");
-
-                        if (output.State == JobState.Processing)
-                        {
-                            Console.Write($"  Progress: {output.Progress}");
-                        }
-
-                        Console.WriteLine();
+                        Console.Write($"  Progress: '{output.Progress}'.");
                     }
 
-                    System.Threading.Thread.Sleep(SleepInterval);
+                    Console.WriteLine();
+                }
+
+                if (job.State != JobState.Finished && job.State != JobState.Error && job.State != JobState.Canceled)
+                {
+                    await Task.Delay(SleepIntervalMs);
                 }
             }
-            while (!exit);
+            while (job.State != JobState.Finished && job.State != JobState.Error && job.State != JobState.Canceled);
 
             return job;
         }

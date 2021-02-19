@@ -28,16 +28,18 @@ This sample demonstrates how to create an encoding Transform that uses a built-i
 
 * Update appsettings.json with your account settings The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
+```bash
     #!/bin/bash
-    
-    resourceGroup=&lt;your resource group&gt;\
-    amsAccountName=&lt;your AMS Account name&gt;\
-    amsSPName=&lt;your AAD application&gt; 
 
-    # Create a service principal with password and configure its access to an Azure Media Services account.
-    az ams account sp create  \\\
-    --account-name $amsAccountName  \\\
-    --name $amsSPName  \\\
-    --resource-group $resourceGroup  \\\
-    --role Owner  \\\
-    --years 2
+    resourceGroup= <your resource group>
+    amsAccountName= <your ams account name>
+    amsSPName= <your AAD application>
+
+    #Create a service principal with password and configure its access to an Azure Media Services account.
+    az ams account sp create
+    --account-name $amsAccountName` \\
+    --name $amsSPName` \\
+    --resource-group $resourceGroup` \\
+    --role Owner` \\
+    --years 2`
+```

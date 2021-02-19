@@ -44,54 +44,64 @@ When a user requests PlayReady or Widevine protected content for the first time,
 
 * Configure `appsettings.json` with appropriate access values. The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
-    `#!/bin/bash`
+```bash
+    #!/bin/bash
 
-    `resourceGroup=&lt;your resource group&gt;`\
-    `amsAccountName=&lt;your ams account name&gt;`\
-    `amsSPName=&lt;your AAD application&gt;`
+    resourceGroup= <your resource group>
+    amsAccountName= <your ams account name>
+    amsSPName= <your AAD application>
 
-    `#Create a service principal with password and configure its access to an Azure Media Services account.`
-    `az ams account sp create` \\\
-    `--account-name $amsAccountName` \\\
-    `--name $amsSPName` \\\
-    `--resource-group $resourceGroup` \\\
-    `--role Owner` \\\
-    `--years 2`
+    #Create a service principal with password and configure its access to an Azure Media Services account.
+    az ams account sp create
+    --account-name $amsAccountName` \\
+    --name $amsSPName` \\
+    --resource-group $resourceGroup` \\
+    --role Owner` \\
+    --years 2`
+```
 
 * Build and run the sample in Visual Studio.
 
-* Optional, do the following steps if you want to use Event Grid for job monitoring. Please note, there are costs for using Event Hub. For more details, refer https://azure.microsoft.com/en-in/pricing/details/event-hubs/ and https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing.
+### Optional - Use Event Grid instead of polling (recommended for production code)
 
-- Enable Event Grid resource provider
+* The following steps should be used if you want to test Event Grid for job monitoring. Please note, there are costs for using Event Hub. For more details, refer to [Event Hubs overview](https://azure.microsoft.com/en-in/pricing/details/event-hubs/) and [Event Hubs pricing](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing).
+
+#### Enable Event Grid resource provider
 
   `az provider register --namespace Microsoft.EventGrid`
 
-- To check if registered, run the next command. You should see "Registered".
+#### To check if registered, run the next command. You should see "Registered".
 
   `az provider show --namespace Microsoft.EventGrid --query "registrationState"`
 
-- Create an Event Hub
+#### Create an Event Hub
 
-  `namespace=&lt;unique-namespace-name&gt;`\
-  `hubname=&lt;event-hub-name&gt;`\
-  `az eventhubs namespace create --name $namespace --resource-group &lt;resource-group&gt;`\
-  `az eventhubs eventhub create --name $hubname --namespace-name $namespace --resource-group &lt;resource-group&gt;`
+```bash
+  namespace=<unique-namespace-name>
+  hubname=<event-hub-name>
+  az eventhubs namespace create --name $namespace --resource-group <resource-group>
+  az eventhubs eventhub create --name $hubname --namespace-name $namespace --resource-group <resource-group>
+```
 
-- Subscribe to Media Services events
+#### Subscribe to Media Services events
 
-  `hubid=$(az eventhubs eventhub show --name $hubname --namespace-name $namespace --resource-group &lt;resource-group&gt; --query id --output tsv)`\
-  `amsResourceId=$(az ams account show --name &lt;ams-account&gt; --resource-group &lt;resource-group&gt; --query id --output tsv)`\
-  `az eventgrid event-subscription create --resource-id $amsResourceId --name &lt;event-subscription-name&gt; --endpoint-type eventhub --endpoint $hubid`
+```bash
+  hubid=$(az eventhubs eventhub show --name $hubname --namespace-name $namespace --resource-group <resource-group> --query id --output tsv)\
+  
+  amsResourceId=$(az ams account show --name <ams-account> --resource-group <resource-group> --query id --output tsv)\
+  
+  az eventgrid event-subscription create --source-resource-id $amsResourceId --name &lt;event-subscription-name&gt; --endpoint-type eventhub --endpoint $hubid
+```
 
-- Create a storage account and container for Event Processor Host if you don't have one
-  https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host
 
-- Update appsettings.json with your Event Hub and Storage information
-  StorageAccountName: The name of your storage account.\
-  StorageAccountKey: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.\
-  StorageContainerName: The name of your container. Click Blobs in your storage account, find you container and copy the name.\
-  EventHubConnectionString: The Event Hub connection string. search your namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key.\
-  EventHubName: The Event Hub name.  &lt;your namespace&gt; -&gt; Event Hubs.
+- Create a storage account and container for Event Processor Host if you don't have one - see [Create a Storage account for event processor host](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host)
+
+- Update *appsettings.json* or *.env* (at root of solution) with your Event Hub and Storage information
+  - **StorageAccountName**: The name of your storage account.
+  - **StorageAccountKey**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
+  - **StorageContainerName**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
+  - **EventHubConnectionString**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
+  - **EventHubName**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
 
 ## Key concepts
 
