@@ -120,6 +120,7 @@ namespace AudioAnalyzer
                 // we will fall-back on polling Job status instead.
 
                 // Please refer README for Event Hub and storage settings.
+                // A storage account is required to process the Event Hub events from the Event Grid subscription in this sample.
                 string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                     config.StorageAccountName, config.StorageAccountKey);
 
@@ -161,15 +162,16 @@ namespace AudioAnalyzer
                 {
                     // Timeout happened, Something might be wrong with job events. Fall-back on polling instead.
                     jobWaitingEvent.Set();
-                    throw new Exception("Timeout happened.");
+                    throw new Exception("Timeout occurred.");
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
+                Console.WriteLine(e.Message);
 
                 // Polling is not a recommended best practice for production applications because of the latency it introduces.
-                // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
+                // Overuse of this API may trigger throttling. Developers should instead use Event Grid and listen for the status events on the jobs
                 Console.WriteLine("Polling job status...");
                 job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, AudioAnalyzerTransformName, jobName);
             }

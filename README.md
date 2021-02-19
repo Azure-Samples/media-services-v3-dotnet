@@ -51,6 +51,14 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 - Read sample's README.md to see what key concepts to review and how to set up and run the sample.
 - Select the project to Run in the Debugger (ctrl-shift-D in VS Code on Window) and press F5 to launch
 
+## Troubleshooting and known issues
+
+| Issue or Error message | Notes |
+|-------------|-----------|
+|"Encountered error while fetching the list of EventHub PartitionIds" | Make sure that you are using the SAS policy for the EventHub and not the EventHub namespace. Also make sure that your .env or appsettings.json file is pointing to the name of the EventHub (instance) and not the EventHub namespace (which is higher level entity in the portal).|
+
+
+
 ## See also
 
 Nodejs samples : <https://github.com/Azure-Samples/media-services-v3-node-tutorials>
