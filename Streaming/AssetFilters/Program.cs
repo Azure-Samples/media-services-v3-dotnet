@@ -30,7 +30,7 @@ namespace AssetFilters
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
+                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
                 .Build());
 
             try
