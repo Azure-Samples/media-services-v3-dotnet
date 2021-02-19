@@ -9,6 +9,12 @@
 *.userosscache
 *.sln.docstates
 
+# Ignore .env files
+.env
+
+# Media Download and Output Folders
+**/Output/*
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

@@ -153,10 +153,9 @@ namespace BasicAESClearKey
                         throw new Exception("Timeout happened.");
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("Warning: Failed to connect to Event Hub, please refer README for Event Hub and storage settings.");
-
                     // Polling is not a recommended best practice for production applications because of the latency it introduces.
                     // Overuse of this API may trigger throttling. Developers should instead use Event Grid.
                     Console.WriteLine("Polling job status...");
@@ -232,7 +231,7 @@ namespace BasicAESClearKey
 
                 if (eventProcessorHost != null)
                 {
-                    Console.WriteLine("Unregistering event processor...");
+                    Console.WriteLine("Removing the event processor...");
 
                     // Disposes of the Event Processor Host.
                     await eventProcessorHost.UnregisterEventProcessorAsync();

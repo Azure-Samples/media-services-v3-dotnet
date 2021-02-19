@@ -36,7 +36,7 @@ namespace AudioAnalyzer
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables()
+                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
                 .Build());
 
             try
@@ -88,8 +88,18 @@ namespace AudioAnalyzer
             string outputAssetName = $"output-{uniqueness}";
             string inputAssetName = $"input-{uniqueness}";
 
-            // Create an analyzer preset with audio insights and standard audio mode.
-            Preset preset = new VideoAnalyzerPreset(audioLanguage: "en-US", mode: AudioAnalysisMode.Standard, insightsToExtract: InsightsType.AudioInsightsOnly);
+            // Create an AudioAnalyzer preset with audio insights and Basic audio mode.
+            Preset preset = new AudioAnalyzerPreset(
+                audioLanguage: "en-US", 
+                //
+                // There are two modes available, Basic and Standard
+                // Basic : This mode performs speech-to-text transcription and generation of a VTT subtitle/caption file. 
+                //         The output of this mode includes an Insights JSON file including only the keywords, transcription,and timing information. 
+                //         Automatic language detection and speaker diarization are not included in this mode.
+                // Standard : Performs all operations included in the Basic mode, additionally performing language detection and speaker diarization.
+                //
+                mode: AudioAnalysisMode.Basic
+            );
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
@@ -167,7 +177,7 @@ namespace AudioAnalyzer
             {
                 if (eventProcessorHost != null)
                 {
-                    Console.WriteLine("Job final state received, unregistering event processor...");
+                    Console.WriteLine("Job final state received, removing the event processor...");
 
                     // Disposes of the Event Processor Host.
                     await eventProcessorHost.UnregisterEventProcessorAsync();
