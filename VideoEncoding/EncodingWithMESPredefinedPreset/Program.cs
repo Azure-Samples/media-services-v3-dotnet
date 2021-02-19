@@ -138,11 +138,7 @@ namespace EncodingWithMESPredefinedPreset
                     }
 
                     IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
-                    foreach (var url in urls)
-                    {
-                        Console.WriteLine(url);
-                        Console.WriteLine();
-                    }
+
 
                     Console.WriteLine("To stream, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
                     Console.WriteLine("When finished, press ENTER to continue.");
@@ -482,16 +478,21 @@ namespace EncodingWithMESPredefinedPreset
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
-            foreach (StreamingPath path in paths.StreamingPaths)
+           foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
-                {
-                    Scheme = "https",
-                    Host = streamingEndpoint.HostName,
+                Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
+                foreach (string streamingFormatPath in path.Paths){
+                    UriBuilder uriBuilder = new UriBuilder
+                    {
+                        Scheme = "https",
+                        Host = streamingEndpoint.HostName,
 
-                    Path = path.Paths[0]
-                };
-                streamingUrls.Add(uriBuilder.ToString());
+                        Path = streamingFormatPath
+                    };
+                    Console.WriteLine($"\t{uriBuilder.ToString()}");
+                    streamingUrls.Add(uriBuilder.ToString());
+                }
+                 Console.WriteLine();
             }
 
             return streamingUrls;

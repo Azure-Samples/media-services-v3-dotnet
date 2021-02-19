@@ -105,11 +105,9 @@ namespace EncodingWithMESCustomPreset
 
                 DateTime startedTime = DateTime.Now;
 
-                // In this demo code, we will poll for Job status. Polling is not a recommended best practice for production
-                // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
-                // should instead use Event Grid. To see how to implement the event grid, see the sample
-                // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
-
+                // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
+                // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
+                // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
                 EventProcessorHost eventProcessorHost = null;
                 try
                 {
@@ -212,12 +210,9 @@ namespace EncodingWithMESCustomPreset
                     }
 
                     Console.WriteLine();
-                    Console.WriteLine("Streaming urls:");
+                    Console.WriteLine("Getting the Streaming manifest URLs for HLS and DASH:");
                     IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
-                    foreach (var url in urls)
-                    {
-                        Console.WriteLine(url);
-                    }
+
 
                     Console.WriteLine("To try streaming, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
                     Console.WriteLine("When finished, press ENTER to cleanup.");
@@ -447,6 +442,7 @@ namespace EncodingWithMESCustomPreset
                              Input = jobInput,
                              Outputs = jobOutputs,
                          });
+                         
             }
             catch (Exception exception)
             {
@@ -681,14 +677,19 @@ namespace EncodingWithMESCustomPreset
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
-                {
-                    Scheme = "https",
-                    Host = streamingEndpoint.HostName,
+                Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
+                foreach (string streamingFormatPath in path.Paths){
+                    UriBuilder uriBuilder = new UriBuilder
+                    {
+                        Scheme = "https",
+                        Host = streamingEndpoint.HostName,
 
-                    Path = path.Paths[0]
-                };
-                streamingUrls.Add(uriBuilder.ToString());
+                        Path = streamingFormatPath
+                    };
+                    Console.WriteLine($"\t{uriBuilder.ToString()}");
+                    streamingUrls.Add(uriBuilder.ToString());
+                }
+                 Console.WriteLine();
             }
 
             return streamingUrls;
