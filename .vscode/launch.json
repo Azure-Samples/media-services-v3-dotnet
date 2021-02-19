@@ -135,6 +135,30 @@
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Launch Encoding Custom With Sprite",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPresetAndSprite/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPresetAndSprite.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPresetAndSprite",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Launch Encoding Predefined Preset",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESPredefinedPreset/bin/Debug/netcoreapp3.1/EncodingWithMESPredefinedPreset.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESPredefinedPreset",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
