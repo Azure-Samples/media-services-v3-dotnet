@@ -12,6 +12,9 @@ description: "The samples in this repo show how to encode, package, protect, ana
 
 The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using .NET SDK. The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.  
 
+To install the latest version of the Microsoft.Azure.Management.Media client SDK go to the Nuget package (Microsoft.Azure.Management.Media)[https://www.nuget.org/packages/Microsoft.Azure.Management.Media]
+
+
 ## .NET solution files and how to launch projects
 
 Open the root /Media-services-v3-dotnet.sln (or just open the folder in VS Code).
