@@ -119,7 +119,7 @@
             "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/netcoreapp3.1/AnalyzeVideos.exe",
             "preLaunchTask": "build",
             "args": [],
-            "cwd": "${workspaceFolder}/AnalyzeVideos/VideoAnalyzer",
+            "cwd": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer",
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env"
