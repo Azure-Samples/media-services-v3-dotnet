@@ -81,10 +81,10 @@ namespace EncodingWithMESCustomPreset
             // Creating a unique suffix so that we don't have name collisions if you run the sample
             // multiple times without cleaning up.
             string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-            string jobName = "job-" + uniqueness;
-            string locatorName = "locator-" + uniqueness;
-            string inputAssetName = "input-" + uniqueness;
-            string outputAssetName = "output-" + uniqueness;
+            string jobName = $"job-{uniqueness}";
+            string locatorName = $"locator-{uniqueness}";
+            string inputAssetName = $"input-{uniqueness}";
+            string outputAssetName = $"output-{uniqueness}";
             bool stopEndpoint = false;
 
             try

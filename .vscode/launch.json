@@ -149,6 +149,18 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
+            "name": "Launch Encoding Custom Stitch Two Assets",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomStitchTwoAssets/bin/Debug/netcoreapp3.1/EncodingWithMESCustomStitchTwoAssets.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomStitchTwoAssets",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
             "name": "Launch Encoding Predefined Preset",
             "type": "coreclr",
             "request": "launch",
