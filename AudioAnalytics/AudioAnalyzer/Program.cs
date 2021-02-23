@@ -27,12 +27,21 @@ namespace AudioAnalyzer
         private const string OutputFolderName = @"Output";
 
         /// <summary>
-        /// The main method of the sample. Please make sure you have set settings in appsettings.json
+        /// The main method of the sample. Please make sure you have set settings in appsettings.json or in the .env file in the root folder
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
+            try
+            {
+                DotEnv.Load(Path.Combine(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName, ".env"));
+            }
+            catch
+            {
+                // In VS Code, this will launch an exception which is ok as we use launch.json to specify the .env file.
+            }
+
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -90,7 +99,7 @@ namespace AudioAnalyzer
 
             // Create an AudioAnalyzer preset with audio insights and Basic audio mode.
             Preset preset = new AudioAnalyzerPreset(
-                audioLanguage: "en-US", 
+                audioLanguage: "en-US",
                 //
                 // There are two modes available, Basic and Standard
                 // Basic : This mode performs speech-to-text transcription and generation of a VTT subtitle/caption file. 
