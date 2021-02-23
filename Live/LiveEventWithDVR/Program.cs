@@ -329,8 +329,8 @@ namespace LiveEventWithDVR
                 LiveOutput liveOutput = new LiveOutput(
                     assetName: asset.Name,
                     manifestName: manifestName, // The HLS and DASH manifest file name. This is recommended to set if you want a deterministic manifest path up front.
-                    // archive window can be set from 3 minutes to 25 hours. Content that falls outside of ArchiveWindowLength
-                    // is continuously discarded from storage and is non-recoverable. For a full event archive, set to the maximum, 25 hours.
+                                                // archive window can be set from 3 minutes to 25 hours. Content that falls outside of ArchiveWindowLength
+                                                // is continuously discarded from storage and is non-recoverable. For a full event archive, set to the maximum, 25 hours.
                     archiveWindowLength: TimeSpan.FromHours(1)
                 );
                 liveOutput = await client.LiveOutputs.CreateAsync(
@@ -435,9 +435,6 @@ namespace LiveEventWithDVR
                 }
                 #endregion
 
-                // Get the url to stream the output
-                var paths = await client.StreamingLocators.ListPathsAsync(config.ResourceGroup, config.AccountName, streamingLocatorName);
-
                 Console.WriteLine("The urls to stream the output from a client:");
                 Console.WriteLine();
 
@@ -448,14 +445,22 @@ namespace LiveEventWithDVR
 
                 var hostname = streamingEndpoint.HostName;
                 var scheme = "https";
-                BuildManifestPaths(scheme, hostname, locator.StreamingLocatorId.ToString(), manifestName);
+                List<string> manifests = BuildManifestPaths(scheme, hostname, locator.StreamingLocatorId.ToString(), manifestName);
 
+                Console.WriteLine($"The HLS (MP4) manifest for the Live stream  : {manifests[0]}");
+                Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
+                Console.WriteLine($"{manifests[0]}");
+                Console.WriteLine();
+                Console.WriteLine($"The DASH manifest for the Live stream is : {manifests[1]}");
+                Console.WriteLine("Open the following URL to playback the live stream from the LiveOutput in the Azure Media Player");
+                Console.WriteLine($"https://ampdemo.azureedge.net/?url={manifests[1]}&heuristicprofile=lowlatency");
+                Console.WriteLine();
                 Console.WriteLine("Continue experimenting with the stream until you are ready to finish.");
                 Console.WriteLine("Press enter to stop the LiveOutput...");
                 Console.Out.Flush();
                 ignoredInput = Console.ReadLine();
 
-                 // If we started the endpoint, we'll stop it. Otherwise, we'll keep the endpoint running and print urls
+                // If we started the endpoint, we'll stop it. Otherwise, we'll keep the endpoint running and print urls
                 // that can be played even after this sample ends.
                 if (!stopEndpoint)
                 {
@@ -468,7 +473,19 @@ namespace LiveEventWithDVR
                             StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
                         });
                     Console.WriteLine("To playback the archived on-demand asset, Use the following urls:");
-                    BuildManifestPaths(scheme, hostname, archiveLocator.StreamingLocatorId.ToString(), manifestName);
+                    manifests = BuildManifestPaths(scheme, hostname, archiveLocator.StreamingLocatorId.ToString(), manifestName);
+                    Console.WriteLine($"The HLS (MP4) manifest for the archived asset without a DVR filter is : {manifests[0]}");
+                    Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
+                    Console.WriteLine($"{manifests[0]}");
+                    Console.WriteLine();
+                    Console.WriteLine($"The DASH manifest URL for the archived asset without a DVR filter  : {manifests[1]}");
+                    Console.WriteLine("Open the following URL to playback the live stream from the LiveOutput in the Azure Media Player");
+                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={manifests[1]}&heuristicprofile=lowlatency");
+                    Console.WriteLine();
+                    Console.WriteLine("Continue experimenting with the stream until you are ready to finish.");
+                    Console.WriteLine("Press enter to stop the LiveOutput...");
+                    Console.Out.Flush();
+                    ignoredInput = Console.ReadLine();
 
                     Console.WriteLine("Experiment with playback of the live archive showing the full asset duration with the filter removed from the Streaming Locator");
                     Console.WriteLine("Press enter to stop and cleanup the sample...");
@@ -518,23 +535,21 @@ namespace LiveEventWithDVR
             }
         }
 
-        private static void BuildManifestPaths(string scheme, string hostname, string streamingLocatorId, string manifestName)
+        private static List<string> BuildManifestPaths(string scheme, string hostname, string streamingLocatorId, string manifestName)
         {
             const string hlsFormat = "format=m3u8-cmaf";
             const string dashFormat = "format=mpd-time-cmaf";
 
+            List<string> manifests = new List<string>();
+
             var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}.ism/manifest";
             var hlsManifest = $"{manifestBase}({hlsFormat})";
-            Console.WriteLine($"The HLS (MP4) manifest URL is : {hlsManifest}");
-            Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
-            Console.WriteLine($"{hlsManifest}");
-            Console.WriteLine();
+            manifests.Add(hlsManifest);
 
             var dashManifest = $"{manifestBase}({dashFormat})";
-            Console.WriteLine($"The DASH manifest URL is : {dashManifest}");
-            Console.WriteLine("Open the following URL to playback the live stream from the LiveOutput in the Azure Media Player");
-            Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashManifest}&heuristicprofile=lowlatency");
-            Console.WriteLine();
+            manifests.Add(dashManifest);
+
+            return manifests;
         }
 
         /// <summary>
