@@ -112,11 +112,13 @@ namespace EncodingWithMESCustomStitchTwoAssets
                     inputs: new JobInputAsset[]{
                         new JobInputAsset(
                             assetName: inputAsset1.Name,
-                            start: new AbsoluteClipTime(new TimeSpan(0, 0, 0))
+                            start: new AbsoluteClipTime(new TimeSpan(0, 0, 0)),
+                            label:"Bumper"
                         ),
                         new JobInputAsset(
                             assetName: inputAsset2.Name,
-                            start: new AbsoluteClipTime(new TimeSpan(0, 0, 0))
+                            start: new AbsoluteClipTime(new TimeSpan(0, 0, 0)),
+                            label:"Main"
                         )
                     }
                 );
@@ -308,12 +310,10 @@ namespace EncodingWithMESCustomStitchTwoAssets
             // also uses the same recipe or Preset for processing content.
             Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            Console.WriteLine("Creating a custom transform...");
+            // Create a new Transform Outputs array - this defines the set of outputs for the Transform
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                Console.WriteLine("Creating a custom transform...");
-                // Create a new Transform Outputs array - this defines the set of outputs for the Transform
-                TransformOutput[] outputs = new TransformOutput[]
-                {
                     // Create a new TransformOutput with a custom Standard Encoder Preset
                     // This demonstrates how to create custom codec and layer output settings
 
@@ -370,22 +370,21 @@ namespace EncodingWithMESCustomStitchTwoAssets
                                 // Either {Label} or {Bitrate} should suffice
                                  
                                 new Mp4Format(
-                                    filenamePattern:"Video-withBumper-{Basename}-{Label}-{Bitrate}{Extension}"
+                                    filenamePattern:"Stitched-{Label}-{Bitrate}{Extension}"
                                 ),
                                 new PngFormat(
-                                    filenamePattern:"Thumbnail-{Basename}-{Index}{Extension}"
+                                    filenamePattern:"Thumbnail-{Basename}-{Label}-{Index}{Extension}"
                                 )
                             }
                         ),
                         onError: OnErrorType.StopProcessingJob,
                         relativePriority: Priority.Normal
                     )
-                };
+            };
 
-                string description = "A simple custom encoding transform with 2 MP4 bitrates";
-                // Create the custom Transform with the outputs defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
-            }
+            string description = "A simple custom encoding transform with 2 MP4 bitrates";
+            // Create the custom Transform with the outputs defined above
+            transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
 
             return transform;
         }
