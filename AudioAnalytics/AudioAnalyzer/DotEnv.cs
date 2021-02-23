@@ -4,12 +4,12 @@ using System.IO;
 namespace AudioAnalyzer
 {
     /// <summary>
-    /// This class is use to read the .env file if the IDE is Visual Studio. (VS Code has its own way to read it using launch.json)
+    /// This class is used to read the ".env" file if the IDE is Visual Studio. (VS Code has its own way to read it using launch.json)
     /// </summary>
     public static class DotEnv
     {
         /// <summary>
-        /// Load the .env file and store the values as variables
+        /// Loads the .env file and stores the values as variables
         /// </summary>
         /// <param name="filePath"></param>
         public static void Load(string filePath)
