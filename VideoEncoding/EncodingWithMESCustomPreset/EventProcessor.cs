@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.IdentityModel.Tokens;
 
-namespace EncodingWithMESCustomPreset
+namespace EncodingWithMESCustomPresetAndSprite
 {
     /// <summary>
     /// Implementation of IEventProcessor to handle events from Event Hub.
