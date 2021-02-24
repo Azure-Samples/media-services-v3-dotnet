@@ -34,14 +34,15 @@ namespace AudioAnalyzer
         public static async Task Main(string[] args)
         {
             // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
+            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
             // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
             try
             {
-                DotEnv.Load(Path.Combine(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.Parent.Parent.Parent.FullName, ".env"));
+                DotEnv.Load(".env");
             }
             catch
             {
-                // In VS Code, this will launch an exception which is ok as VS Code will use launch.json to get the .env file.
+                
             }
 
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
