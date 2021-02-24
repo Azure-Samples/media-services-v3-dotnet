@@ -12,8 +12,14 @@ namespace AudioAnalyzer
         /// Loads the .env file and stores the values as variables
         /// </summary>
         /// <param name="filePath"></param>
-        public static void Load(string filePath)
+        public static void Load(string envFileName)
         {
+            // let's find the root folder where the .env file can be found
+            var rootPath = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase))))));
+            var filePath = Path.Combine(rootPath, envFileName);
+            // let's remove file://
+            filePath = new Uri(filePath).LocalPath;
+
             if (!File.Exists(filePath))
                 return;
 
