@@ -19,6 +19,12 @@ namespace AudioAnalyzer
 
             foreach (var line in File.ReadAllLines(filePath))
             {
+                if (line.StartsWith("#"))
+                {
+                    // It's a comment
+                    continue;
+                }
+
                 var parts = line.Split(
                     '=',
                     StringSplitOptions.RemoveEmptyEntries);
@@ -26,9 +32,15 @@ namespace AudioAnalyzer
                 if (parts.Length != 2)
                     continue;
 
-                var p1 = parts[1].Trim()[1..^1];
+                var p0 = parts[0].Trim();
+                var p1 = parts[1].Trim();
 
-                Environment.SetEnvironmentVariable(parts[0], p1);
+                if (p1.StartsWith("\""))
+                {
+                    p1 = p1[1..^1];
+                }
+
+                Environment.SetEnvironmentVariable(p0, p1);
             }
         }
     }
