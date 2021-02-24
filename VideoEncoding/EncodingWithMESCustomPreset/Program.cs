@@ -272,6 +272,7 @@ namespace EncodingWithMESCustomPreset
             };
         }
 
+        #region EnsureTransformExists
         /// <summary>
         /// If the specified transform exists, return that transform. If the it does not
         /// exist, creates a new transform with the specified output. In this case, the
@@ -369,6 +370,7 @@ namespace EncodingWithMESCustomPreset
 
             return transform;
         }
+         #endregion EnsureTransformExists
 
         /// <summary>
         /// Creates an output asset. The output from the encoding Job must be written to an Asset.
