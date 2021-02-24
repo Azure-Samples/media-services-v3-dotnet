@@ -4,7 +4,7 @@
 using System;
 using Microsoft.Extensions.Configuration;
 
-namespace EncodingWithMESCustomPreset
+namespace EncodingWithMESCustomPresetAndSprite
 {
     /// <summary>
     /// This class reads values from local configuration file appsettings.json

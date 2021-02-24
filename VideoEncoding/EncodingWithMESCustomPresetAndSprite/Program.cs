@@ -15,7 +15,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
-namespace EncodingWithMESCustomPreset
+namespace EncodingWithMESCustomPresetAndSprite
 {
     public class Program
     {
@@ -26,6 +26,18 @@ namespace EncodingWithMESCustomPreset
 
         public static async Task Main(string[] args)
         {
+            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
+            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
+            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
+            try
+            {
+                DotEnv.Load(".env");
+            }
+            catch
+            {
+
+            }
+
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -606,7 +618,8 @@ namespace EncodingWithMESCustomPreset
             foreach (StreamingPath path in paths.StreamingPaths)
             {
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
-                foreach (string streamingFormatPath in path.Paths){
+                foreach (string streamingFormatPath in path.Paths)
+                {
                     UriBuilder uriBuilder = new UriBuilder
                     {
                         Scheme = "https",
@@ -616,7 +629,7 @@ namespace EncodingWithMESCustomPreset
                     Console.WriteLine($"\t{uriBuilder.ToString()}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
-                 Console.WriteLine();
+                Console.WriteLine();
             }
 
             return streamingUrls;
