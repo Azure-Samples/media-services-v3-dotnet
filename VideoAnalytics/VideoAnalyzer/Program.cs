@@ -33,11 +33,24 @@ namespace VideoAnalyzer
         /// <returns></returns>
         public static async Task Main(string[] args)
         {
+            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
+            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
+            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
+            try
+            {
+                DotEnv.Load(".env");
+            }
+            catch
+            {
+
+            }
+
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
                 .Build());
+
 
             try
             {
@@ -130,7 +143,7 @@ namespace VideoAnalyzer
                 IList<Task> tasks = new List<Task>();
 
                 // Add a task to wait for the job to finish. The AutoResetEvent will be set when a final state is received by EventProcessor.
-                Task jobTask = Task.Run(() => 
+                Task jobTask = Task.Run(() =>
                 jobWaitingEvent.WaitOne());
                 tasks.Add(jobTask);
 
@@ -174,7 +187,7 @@ namespace VideoAnalyzer
                     Console.WriteLine();
                 }
             }
-            
+
             if (job.State == JobState.Finished)
             {
                 Console.WriteLine("Job finished.");
@@ -230,10 +243,10 @@ namespace VideoAnalyzer
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
         /// <returns></returns>
-        private static async Task<Transform> GetOrCreateTransformAsync(IAzureMediaServicesClient client, 
-            string resourceGroupName, 
-            string accountName, 
-            string transformName, 
+        private static async Task<Transform> GetOrCreateTransformAsync(IAzureMediaServicesClient client,
+            string resourceGroupName,
+            string accountName,
+            string transformName,
             Preset preset)
         {
             // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
@@ -377,16 +390,16 @@ namespace VideoAnalyzer
             Job job;
             try
             {
-               job = await client.Jobs.CreateAsync(
-                        resourceGroupName,
-                        accountName,
-                        transformName,
-                        jobName,
-                        new Job
-                        {
-                            Input = jobInput,
-                            Outputs = jobOutputs,
-                        });
+                job = await client.Jobs.CreateAsync(
+                         resourceGroupName,
+                         accountName,
+                         transformName,
+                         jobName,
+                         new Job
+                         {
+                             Input = jobInput,
+                             Outputs = jobOutputs,
+                         });
             }
             catch (Exception exception)
             {

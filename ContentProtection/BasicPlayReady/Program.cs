@@ -33,8 +33,18 @@ namespace BasicPlayReady
 
         public static async Task Main(string[] args)
         {
-            // Please make sure you have set configuration in appsettings.json.For more information, see
-            // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
+            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
+            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
+            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
+            try
+            {
+                DotEnv.Load(".env");
+            }
+            catch
+            {
+
+            }
+
             ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -295,7 +305,7 @@ namespace BasicPlayReady
                     ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim
                 };
                 List<ContentKeyPolicyRestrictionTokenKey> alternateKeys = null;
-                ContentKeyPolicyTokenRestriction restriction 
+                ContentKeyPolicyTokenRestriction restriction
                     = new ContentKeyPolicyTokenRestriction(Issuer, Audience, primaryKey, ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims);
 
                 ContentKeyPolicyPlayReadyConfiguration playReadyConfig = ConfigurePlayReadyLicenseTemplate();
