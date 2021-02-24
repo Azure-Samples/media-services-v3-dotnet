@@ -185,6 +185,7 @@ namespace LiveEventWithDVR
                     )
                 };
 
+                #region NewLiveEvent
                 // To get the same ingest URL for the same LiveEvent name:
                 // 1. Set useStaticHostname to true so you have ingest like: 
                 //        rtmps://liveevent-hevc12-eventgridmediaservice-usw22.channel.media.azure.net:2935/live/522f9b27dd2d4b26aeb9ef8ab96c5c77           
@@ -246,7 +247,7 @@ namespace LiveEventWithDVR
                     )
                 }*/
                 );
-
+                #endregion NewLiveEvent
 
                 // Start monitoring LiveEvent events using Event Grid and Event Hub
                 try
