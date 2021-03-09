@@ -125,13 +125,25 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
-            "name": "Launch Encoding Custom Preset",
+            "name": "Launch Encoding Custom Preset H264",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPreset.exe",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_H264/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPreset.exe",
             "preLaunchTask": "build",
             "args": [],
-            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset",
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_H264",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Launch Encoding Custom Preset HEVC",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_HEVC/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPreset.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_HEVC",
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env"

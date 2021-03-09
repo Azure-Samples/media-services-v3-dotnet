@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveEventWithDVR", "Live\Li
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoEncoding", "VideoEncoding", "{83997E86-616B-4C40-9BB3-77AA805BDD4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset", "VideoEncoding\EncodingWithMESCustomPreset\EncodingWithMESCustomPreset.csproj", "{157992D6-AB19-4683-8AF4-E5B98E24DEE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset_H264", "VideoEncoding\EncodingWithMESCustomPreset_H264\EncodingWithMESCustomPreset.csproj", "{157992D6-AB19-4683-8AF4-E5B98E24DEE9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AudioAnalytics", "AudioAnalytics", "{3A74015A-1282-4F3E-8A14-B302FB8CFFA9}"
 EndProject
@@ -42,6 +42,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESPredefinedPreset", "VideoEncoding\EncodingWithMESPredefinedPreset\EncodingWithMESPredefinedPreset.csproj", "{DD33D855-0231-4F60-B58F-6BFBA43C301F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomStitchTwoAssets", "VideoEncoding\EncodingWithMESCustomStitchTwoAssets\EncodingWithMESCustomStitchTwoAssets.csproj", "{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset", "VideoEncoding\EncodingWithMESCustomPreset_HEVC\EncodingWithMESCustomPreset.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -224,6 +226,18 @@ Global
 		{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}.Release|x64.Build.0 = Release|Any CPU
 		{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}.Release|x86.ActiveCfg = Release|Any CPU
 		{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}.Release|x86.Build.0 = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|x64.Build.0 = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Debug|x86.Build.0 = Debug|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|x64.ActiveCfg = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|x64.Build.0 = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|x86.ActiveCfg = Release|Any CPU
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FE1891F5-A9C2-4E31-ABFD-10109B36BBB8} = {90E8A277-9D6C-4434-8A8C-12286472BD55}
@@ -240,5 +254,6 @@ Global
 		{893785D6-C17E-4472-A2D8-C3F6AA44EAD5} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 		{DD33D855-0231-4F60-B58F-6BFBA43C301F} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 		{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
+		{EA4CE1B9-6A25-4491-8B87-421F63521C92} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 	EndGlobalSection
 EndGlobal

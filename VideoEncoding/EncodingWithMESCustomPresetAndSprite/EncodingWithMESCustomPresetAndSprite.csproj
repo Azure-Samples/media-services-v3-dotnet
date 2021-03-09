@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodeCustomTransform</RootNamespace>
+    <RootNamespace>EncodingWithMESCustomPresetAndSprite</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
