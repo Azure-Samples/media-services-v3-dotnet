@@ -323,8 +323,9 @@ namespace EncodingWithMESCustomHEVC
                                 ),
                                 // Next, add a HEVC (H.265) for the video encoding
                                new H265Video (
+                                   // Set the GOP interval to 2 seconds for all H265Layers
                                     keyFrameInterval: TimeSpan.FromSeconds(2),
-                                     // Add H264Layers, one at HD and the other at SD. Assign a label that you can use for the output filename
+                                     // Add H265Layers. Assign a label that you can use for the output filename
                                     layers:  new H265Layer[]
                                     {
                                         new H265Layer (
