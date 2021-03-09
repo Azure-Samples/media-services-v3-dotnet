@@ -52,7 +52,6 @@ namespace LiveEventWithDVR
 {
     class Program
     {
-        private static string liveEventName;
 
         public static async Task Main(string[] args)
         {
