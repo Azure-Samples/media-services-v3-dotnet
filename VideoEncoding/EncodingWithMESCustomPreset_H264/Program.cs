@@ -329,22 +329,22 @@ namespace EncodingWithMESCustomH264
                                     layers:  new H264Layer[]
                                     {
                                         new H264Layer (
-                                            bitrate: 1800000, // Units are in bits per second and not kbps or Mbps - 1.8 Mbps or 1,800 kbps
+                                            bitrate: 3600000, // Units are in bits per second and not kbps or Mbps - 3.6 Mbps or 3,600 kbps
                                             width: "1280",
                                             height: "720",
-                                            label: "HD-1800kbps" // This label is used to modify the file name in the output formats
+                                            label: "HD-3600kbps" // This label is used to modify the file name in the output formats
                                         ),
                                         new H264Layer (
-                                            bitrate: 800000, // Units are in bits per second and not kbps or Mbps - 0.8 Mbps or 800 kbps
+                                            bitrate: 1600000, // Units are in bits per second and not kbps or Mbps - 1.6 Mbps or 1600 kbps
                                             width: "960",
                                             height: "540",
-                                            label: "SD-800kbps" // This label is used to modify the file name in the output formats
+                                            label: "SD-1600kbps" // This label is used to modify the file name in the output formats
                                         ),
                                         new H264Layer (
-                                            bitrate: 300000, // Units are in bits per second and not kbps or Mbps - 0.3 Mbps or 300 kbps
+                                            bitrate: 600000, // Units are in bits per second and not kbps or Mbps - 0.6 Mbps or 600 kbps
                                             width: "640",
                                             height: "360",
-                                            label: "SD-300kbps" // This label is used to modify the file name in the output formats
+                                            label: "SD-600kbps" // This label is used to modify the file name in the output formats
                                         ),
                                     }
                                 ),
