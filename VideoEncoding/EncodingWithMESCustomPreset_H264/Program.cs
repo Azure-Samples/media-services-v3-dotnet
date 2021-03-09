@@ -323,9 +323,9 @@ namespace EncodingWithMESCustomH264
                                 ),
                                 // Next, add a H264Video for the video encoding
                                new H264Video (
-                                    // Set the GOP interval to 2 seconds for both H264Layers
+                                    // Set the GOP interval to 2 seconds for all H264Layers
                                     keyFrameInterval:TimeSpan.FromSeconds(2),
-                                     // Add H264Layers, one at HD and the other at SD. Assign a label that you can use for the output filename
+                                     // Add H264Layers. Assign a label that you can use for the output filename
                                     layers:  new H264Layer[]
                                     {
                                         new H264Layer (
