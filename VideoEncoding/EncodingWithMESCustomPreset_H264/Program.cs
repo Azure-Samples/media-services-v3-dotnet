@@ -23,7 +23,7 @@ namespace EncodingWithMESCustomH264
     public class Program
     {
         private const string OutputFolder = @"Output";
-        private const string CustomTransform = "Custom_TwoLayerMp4_Png";
+        private const string CustomTransform = "Custom_H264_3Layer";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
@@ -329,17 +329,23 @@ namespace EncodingWithMESCustomH264
                                     layers:  new H264Layer[]
                                     {
                                         new H264Layer (
-                                            bitrate: 1000000, // Units are in bits per second
+                                            bitrate: 1800000, // Units are in bits per second and not kbps or Mbps - 1.8 Mbps or 1,800 kbps
                                             width: "1280",
                                             height: "720",
-                                            label: "HD" // This label is used to modify the file name in the output formats
+                                            label: "HD-1800kbps" // This label is used to modify the file name in the output formats
                                         ),
                                         new H264Layer (
-                                            bitrate: 600000,
+                                            bitrate: 800000, // Units are in bits per second and not kbps or Mbps - 0.8 Mbps or 800 kbps
+                                            width: "960",
+                                            height: "540",
+                                            label: "SD-800kbps" // This label is used to modify the file name in the output formats
+                                        ),
+                                        new H264Layer (
+                                            bitrate: 300000, // Units are in bits per second and not kbps or Mbps - 0.3 Mbps or 300 kbps
                                             width: "640",
                                             height: "360",
-                                            label: "SD"
-                                        )
+                                            label: "SD-300kbps" // This label is used to modify the file name in the output formats
+                                        ),
                                     }
                                 ),
                                 // Also generate a set of PNG thumbnails
