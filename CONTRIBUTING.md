@@ -59,8 +59,18 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 * Search the repository (https://github.com/[organization-name]/[repository-name]/pulls) for an open or closed PR
   that relates to your submission. You don't want to duplicate effort.
 
-* Make your changes in a new git fork:
+#### Make your sample:
+* Make your changes in a new git fork. Copy an existing sample folder and modify it or create a new one from scratch using dotnet CLI.
 
+* Add a new folder for each new sample to an appropriate directory. For example /VideoEncoding/**NewFeatureName**, LIve, Streaming, ContentProtection or Video and Audio Analytics.
+* Add your new project to the solution using the command 
+
+```dotnetcli
+dotnet sln ./media-services-v3-dotnet-sln add <PATH TO YOUR PROJECT FILE>
+```
+* Add your porject to the launch.json file to make it easy for customers to debug using the launch menu
+
+#### Submit the PR
 * Commit your changes using a descriptive commit message
 * Push your fork to GitHub:
 * In GitHub, create a pull request
