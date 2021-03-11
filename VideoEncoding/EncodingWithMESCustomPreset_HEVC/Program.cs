@@ -325,6 +325,7 @@ namespace EncodingWithMESCustomHEVC
                                new H265Video (
                                    // Set the GOP interval to 2 seconds for all H265Layers
                                     keyFrameInterval: TimeSpan.FromSeconds(2),
+                                    complexity: H265Complexity.Speed, // HEVC encoding is priced at 3 complexity levels. Speed, Balanced, and Quality
                                      // Add H265Layers. Assign a label that you can use for the output filename
                                     layers:  new H265Layer[]
                                     {
