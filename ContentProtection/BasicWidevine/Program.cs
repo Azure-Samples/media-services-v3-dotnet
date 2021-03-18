@@ -521,6 +521,9 @@ namespace BasicWidevine
                         RequiredOutputProtection = new OutputProtection()
                         {
                             HDCP = "HDCP_NONE"
+                            // NOTE: the policy should be set to "HDCP_V1" (or greater) if you need to disable screen capture. The Widevine desktop
+                            // browser CDM module only blocks screen capture when HDCP is enabled and the screen capture application is using
+                            // Chromes screen capture APIs. 
                         }
                     }
                 },
