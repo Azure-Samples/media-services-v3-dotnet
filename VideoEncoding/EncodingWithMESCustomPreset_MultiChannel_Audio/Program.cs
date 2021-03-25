@@ -26,23 +26,19 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
         private const string CustomTransform = "Custom_H264_MultiChannel_2";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
-        // The Multi-track audio source file supplied with this sample is an MP4 with 16 discrete audio tracks containing different languages
-        // The track layout is as follows:
-        //      1.	English L
-        //      2.	English R
-        //      3.	English AD L
-        //      4.	English AD R
-        //      5.	French Mono
-        //      6.	German Mono 
-        //      7.	Japanese Mono
-        //      8.	Mandarin Mono
-        //      9.	Spanish Mono
-        //      10.	Dry French (EVS Recorded only for Edit)
-        //      11.	Dry German (EVS Recorded only for Edit)
-        //      12.	Dry Japanese (EVS Recorded only for Edit)
-        //      13.	Dry Mandarin (EVS Recorded only for Edit)
-        //      14.	Dry Spanish (EVS Recorded only for Edit)
-        private const string InputMP4FileName = @"ignite-multi-track-sample.mp4";
+        // The multi-channel audio file should contain a stereo pair on tracks 1 and 2, followed by multi channel 5.1 discrete tracks in the following layout
+        // 1. Left stereo
+        // 2. Right stereo
+        // 3. Left front surround
+        // 4. Right front surround
+        // 5. Center surround
+        // 6. Low frequency
+        // 7. Back left 
+        // 8. Back right
+        //
+        // The channel mapping support is limited to only outputing a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
+
+        private const string InputMP4FileName = @"ignite-multi-track-sample.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
 
 
         public static async Task Main(string[] args)
@@ -131,20 +127,50 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                 // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-                
-                // The Transform we created contains 3 audio outputs configured for stereo. We will use the English L+R tracks to output one stereo file, and then select two alternate languages to output as well. 
+
+                // The Transform we created outputs two tracks, the first track is mapped to the 2 stereo inputs followed by the 5.1 audio tracks. 
                 var trackList = new List<TrackDescriptor>
                 {
-                    new SelectAudioTrackById() // Here we use an audio track selector to map channels from the input source file before submitting the Job.
-                    {
-                        TrackId = 7,
-                        ChannelMapping = ChannelMapping.StereoLeft // Track Id #7 in the source file audio track mapping for this sample is Japanese Mono
-                    },
-                     new SelectAudioTrackById()
-                    {
-                        TrackId = 7,
-                        ChannelMapping = ChannelMapping.StereoRight // Track Id #7 in the source file audio track mapping for this sample is Japanese Mono
-                    }
+                       new SelectAudioTrackById()
+                        {
+                            TrackId = 1,
+                            ChannelMapping = ChannelMapping.StereoLeft
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 2,
+                            ChannelMapping = ChannelMapping.StereoRight
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 3,
+                            ChannelMapping = ChannelMapping.FrontLeft
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 4,
+                            ChannelMapping = ChannelMapping.FrontRight
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 5,
+                            ChannelMapping = ChannelMapping.Center
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 6,
+                            ChannelMapping = ChannelMapping.LowFrequencyEffects
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 7,
+                            ChannelMapping = ChannelMapping.BackLeft
+                        },
+                        new SelectAudioTrackById()
+                        {
+                            TrackId = 8,
+                            ChannelMapping = ChannelMapping.BackRight
+                        }
                 };
 
                 var inputDefinitions = new List<InputDefinition>()
@@ -360,15 +386,19 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                         new StandardEncoderPreset(
                             codecs: new Codec[]
                             {
-                                // Add an AAC Audio layer for the audio encoding of the Japanese audio mono tracks to be mapped to.
+                                // Add an AAC Audio layer for the audio encoding of the Stereo tracks to be mapped to.
                                 new AacAudio(
-                                    channels: 2,
+                                    channels: 2, // stereo track
                                     samplingRate: 48000,
                                     bitrate: 128000,
-                                    profile: AacAudioProfile.AacLc,
-                                    label: "Japanese"
+                                    profile: AacAudioProfile.AacLc
                                 ),
-                    
+                                 new AacAudio(
+                                    channels: 6, // 5.1 surround sound track 
+                                    samplingRate: 48000,
+                                    bitrate: 128000,
+                                    profile: AacAudioProfile.AacLc
+                                ),
                                 // Next, add a H264Video for the video encoding
                                new H264Video (
                                     // Set the GOP interval to 2 seconds for all H264Layers
