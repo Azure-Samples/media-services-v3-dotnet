@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System;
-
 using Microsoft.Extensions.Configuration;
 
-namespace StreamHLSAndDASH
+namespace FaceRedactor
 {
     /// <summary>
     /// This class reads values from local configuration file appsettings.json
@@ -67,5 +66,29 @@ namespace StreamHLSAndDASH
             get { return new Uri(_config["ArmEndpoint"]); }
         }
 
+        public string EventHubConnectionString
+        {
+            get { return _config["EventHubConnectionString"]; }
+        }
+
+        public string EventHubName
+        {
+            get { return _config["EventHubName"]; }
+        }
+
+        public string StorageContainerName
+        {
+            get { return _config["StorageContainerName"]; }
+        }
+
+        public string StorageAccountName
+        {
+            get { return _config["StorageAccountName"]; }
+        }
+
+        public string StorageAccountKey
+        {
+            get { return _config["StorageAccountKey"]; }
+        }
     }
 }
