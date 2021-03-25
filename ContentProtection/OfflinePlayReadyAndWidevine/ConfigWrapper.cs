@@ -67,11 +67,6 @@ namespace OfflinePlayReadyAndWidevine
             get { return new Uri(_config["ArmEndpoint"]); }
         }
 
-        public string Location
-        {
-            get { return _config["Location"]; }
-        }
-
         public string SymmetricKey
         {
             get { return _config["SymmetricKey"]; }

@@ -66,11 +66,6 @@ namespace EncodingWithMESCustomStitchTwoAssets
             get { return new Uri(_config["ArmEndpoint"]); }
         }
 
-        public string Location
-        {
-            get { return _config["Location"]; }
-        }
-
         public string EventHubConnectionString
         {
             get { return _config["EventHubConnectionString"]; }
