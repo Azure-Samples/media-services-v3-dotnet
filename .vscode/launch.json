@@ -125,6 +125,18 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
+            "name": "Launch Face Redactor",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoAnalytics/FaceRedactor/bin/Debug/netcoreapp3.1/FaceRedactor.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoAnalytics/FaceRedactor",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
             "name": "Launch Encoding Custom Preset H264",
             "type": "coreclr",
             "request": "launch",
