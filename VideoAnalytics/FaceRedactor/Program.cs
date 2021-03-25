@@ -101,6 +101,8 @@ namespace FaceRedactor
             string outputAssetName = $"output-{uniqueness}";
             string inputAssetName = $"input-{uniqueness}";
 
+            #region FaceDetectorPreset
+
             // Create a Face Detector preset and enable redaction/blurring of the faces.
             Preset faceRedactionPreset = new FaceDetectorPreset(
                 resolution: AnalysisResolution.SourceResolution,
@@ -111,6 +113,8 @@ namespace FaceRedactor
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
             // Once it is created, we won't delete it.
             Transform videoAnalyzerTransform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName, FaceRedactorTransformName, faceRedactionPreset);
+
+            #endregion FaceDetectorPreset
 
             // Create a new input Asset and upload the specified local video file into it.
             await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
@@ -253,6 +257,8 @@ namespace FaceRedactor
             string transformName,
             Preset preset)
         {
+
+            #region FaceDetectorPresetTransform
             // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
             // also uses the same recipe or Preset for processing content.
             Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
@@ -270,6 +276,8 @@ namespace FaceRedactor
             }
 
             return transform;
+
+            #endregion FaceDetectorPresetTransform
         }
 
         /// <summary>
