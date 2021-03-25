@@ -195,6 +195,18 @@
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Launch Encoding Custom Multi-channel Audio",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_MultiChannel_Audio/bin/Debug/netcoreapp3.1/EncodingWithMES_MultiChannel.exe",
+            "preLaunchTask": "build",
+            "args": [],
+            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_MultiChannel_Audio",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
