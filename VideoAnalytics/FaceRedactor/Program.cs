@@ -106,7 +106,7 @@ namespace FaceRedactor
             // Create a Face Detector preset and enable redaction/blurring of the faces.
             Preset faceRedactionPreset = new FaceDetectorPreset(
                 resolution: AnalysisResolution.SourceResolution,
-                mode: FaceRedactorMode.Combined, // This is the single pass mode where detection and blurring happens as one pass - if you want to analyze and get JSON results first before blur, use Analyze mode, followed by Redact mode. 
+                mode: FaceRedactorMode.Redact, // This is the single pass mode where detection and blurring happens as one pass - if you want to analyze and get JSON results first before blur, use Analyze mode, followed by Redact mode. 
                 blurType: BlurType.Med // Sets the amount of blur. For debugging purposes you can set this to Box to just see the outlines of the faces.
             );
 
