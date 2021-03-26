@@ -12,7 +12,7 @@ description: "This sample demonstrates how to create an encoding Transform that 
 This sample demonstrates how to create an encoding Transform that uses channel mapping and audio track selection from the input source to output two new AAC audio tracks.
 The standard encoder is limited to outputting 1 Stereo track, followed by a 5.1 surround sound audio track in AAC format.
 
-In this example we input a source file with the following track layout of discreet audio tracks.
+In this example we input an audio only source file with the following track layout of discreet audio tracks. The file is named "surround-audio.mp4" in the project folder.
 
 1) Left stereo
 2) Right stereo
@@ -71,7 +71,7 @@ We then create a list of TrackDescriptor type to allow us to selectively map the
                 };
 ```
 
-A Transform is then created to generate the Stereo and 5.1 surround sound tracks from the track descriptor list. The first two tracks in the track descriptor list will be output to the Stereo AAC output defined as 2 channels in the Transform. The remaining 6 tracks will go into the second AAC output defined in the transform as using 6 channels. 
+A Transform is then created to generate the Stereo and 5.1 surround sound tracks from the track descriptor list. The first two tracks in the track descriptor list will be output to the Stereo AAC output defined as 2 channels in the Transform. The remaining 6 tracks will go into the second AAC output defined in the transform as using 6 channels.
 
 ```csharp
                   new TransformOutput(
@@ -88,11 +88,12 @@ A Transform is then created to generate the Stereo and 5.1 surround sound tracks
                                  new AacAudio(
                                     channels: 6, // 5.1 surround sound track 
                                     samplingRate: 48000,
-                                    bitrate: 128000,
+                                    bitrate: 320000,
                                     profile: AacAudioProfile.AacLc
                                 ),
 ```
 
+After encoding, you will be able to playback the asset in the Azure Media Player and select from two track options.  One stereo track and one 5.1 surround sound AAC track.
 ## Prerequisites
 
 * Required Assemblies

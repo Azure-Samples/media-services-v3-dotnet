@@ -23,7 +23,7 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
     public class Program
     {
         private const string OutputFolder = @"Output";
-        private const string CustomTransform = "Custom_H264_MultiChannel_2";
+        private const string CustomTransform = "Custom_H264_MultiChannel_5";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         // The multi-channel audio file should contain a stereo pair on tracks 1 and 2, followed by multi channel 5.1 discrete tracks in the following layout
@@ -38,7 +38,7 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
         //
         // The channel mapping support is limited to only outputing a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
 
-        private const string InputMP4FileName = @"ignite-multi-track-sample.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
+        private const string InputFileName = @"surround-audio.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
 
 
         public static async Task Main(string[] args)
@@ -122,7 +122,7 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                 Transform transform = await CreateCustomTransform(client, config.ResourceGroup, config.AccountName, CustomTransform);
 
                 // Create a new input Asset and upload the specified local video file into it.
-                Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
+                Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputFileName);
 
                 // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
@@ -133,42 +133,42 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                 {
                        new SelectAudioTrackById()
                         {
-                            TrackId = 1,
+                            TrackId =0,
                             ChannelMapping = ChannelMapping.StereoLeft
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 2,
+                            TrackId = 1,
                             ChannelMapping = ChannelMapping.StereoRight
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 3,
+                            TrackId = 2,
                             ChannelMapping = ChannelMapping.FrontLeft
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 4,
+                            TrackId = 3,
                             ChannelMapping = ChannelMapping.FrontRight
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 5,
+                            TrackId = 4,
                             ChannelMapping = ChannelMapping.Center
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 6,
+                            TrackId = 5,
                             ChannelMapping = ChannelMapping.LowFrequencyEffects
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 7,
+                            TrackId = 6,
                             ChannelMapping = ChannelMapping.BackLeft
                         },
                         new SelectAudioTrackById()
                         {
-                            TrackId = 8,
+                            TrackId = 7,
                             ChannelMapping = ChannelMapping.BackRight
                         }
                 };
@@ -177,7 +177,7 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                 {
                     new InputFile()
                     {
-                        Filename = @"ignite-multi-track-sample.mp4",
+                        Filename = @"surround-audio.mp4",
                         IncludedTracks = trackList
                     }
                 };
@@ -261,7 +261,7 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                         Console.WriteLine("Job final state received, removing the event processor...");
 
                         // Disposes of the Event Processor Host.
-                        await eventProcessorHost.UnregisterEventProcessorAsync();
+                        eventProcessorHost.UnregisterEventProcessorAsync();
                         Console.WriteLine();
                     }
                 }
@@ -396,61 +396,16 @@ namespace EncodingWithMESCustomPreset_MultiChannel_Audio
                                  new AacAudio(
                                     channels: 6, // 5.1 surround sound track 
                                     samplingRate: 48000,
-                                    bitrate: 128000,
+                                    bitrate: 320000,
                                     profile: AacAudioProfile.AacLc
-                                ),
-                                // Next, add a H264Video for the video encoding
-                               new H264Video (
-                                    // Set the GOP interval to 2 seconds for all H264Layers
-                                    keyFrameInterval:TimeSpan.FromSeconds(2),
-                                     // Add H264Layers. Assign a label that you can use for the output filename
-                                    layers:  new H264Layer[]
-                                    {
-                                        new H264Layer (
-                                            bitrate: 3600000, // Units are in bits per second and not kbps or Mbps - 3.6 Mbps or 3,600 kbps
-                                            width: "1280",
-                                            height: "720",
-                                            label: "HD-3600kbps" // This label is used to modify the file name in the output formats
-                                        ),
-                                        new H264Layer (
-                                            bitrate: 1600000, // Units are in bits per second and not kbps or Mbps - 1.6 Mbps or 1600 kbps
-                                            width: "960",
-                                            height: "540",
-                                            label: "SD-1600kbps" // This label is used to modify the file name in the output formats
-                                        ),
-                                        new H264Layer (
-                                            bitrate: 600000, // Units are in bits per second and not kbps or Mbps - 0.6 Mbps or 600 kbps
-                                            width: "640",
-                                            height: "360",
-                                            label: "SD-600kbps" // This label is used to modify the file name in the output formats
-                                        ),
-                                    }
-                                ),
-                                // Also generate a set of PNG thumbnails
-                                new PngImage(
-                                    start: "25%",
-                                    step: "25%",
-                                    range: "80%",
-                                    layers: new PngLayer[]{
-                                        new PngLayer(
-                                            width: "50%",
-                                            height: "50%"
-                                        )
-                                    }
                                 )
                             },
-                            // Specify the format for the output files - one for video+audio, and another for the thumbnails
+                            // Specify the format for the output files
                             formats: new Format[]
                             {
-                                // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                                // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
-                                // Either {Label} or {Bitrate} should suffice
-                                 
+                                // Mux the AAC audio into MP4 files, using basename, label, bitrate and extension macros       
                                 new Mp4Format(
                                     filenamePattern:"Video-{Basename}-{Label}-{Bitrate}{Extension}"
-                                ),
-                                new PngFormat(
-                                    filenamePattern:"Thumbnail-{Basename}-{Index}{Extension}"
                                 )
                             }
                         ),
