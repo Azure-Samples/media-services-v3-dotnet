@@ -1,3 +1,0 @@
-Create an AMS account (or use an existing one).  Make sure that the "Enable Classic APIs" checkbox is checked if creating a new one so that the V2 APIs are available.
-Go to the API Access page in the portal.  Setup a service principal and select the v2 (classic) Media Services API version to get the settings.
-
