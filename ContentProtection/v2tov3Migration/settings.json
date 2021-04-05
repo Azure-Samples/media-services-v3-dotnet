@@ -1,0 +1,15 @@
+{
+  "AadClientId": "",
+  "AadSecret": "",
+  "AadTenantDomain": "microsoft.onmicrosoft.com",
+  "AadTenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
+  "AccountName": "",
+  "Location": "",
+  "ResourceGroup": "",
+  "SubscriptionId": "",
+  "AmsApiResource": "https://rest.media.azure.net",
+  "AmsRestApiEndpoint": "",
+  "ArmEndpoint": "https://management.azure.com",
+  "ArmAadAudience": "https://management.core.windows.net",
+  "FilePathToUpload": "c:\\data\\testcontent\\input.mp4"
+}
