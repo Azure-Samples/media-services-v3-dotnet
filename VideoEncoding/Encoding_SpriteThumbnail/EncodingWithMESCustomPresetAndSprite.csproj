@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodingWithMESCustomPresetAndSprite</RootNamespace>
+    <RootNamespace>Encoding_SpriteThumbnail</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

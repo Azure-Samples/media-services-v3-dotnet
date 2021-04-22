@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodingWithMESCustomStitchTwoAssets</RootNamespace>
+    <RootNamespace>Encoding_StitchTwoAssets</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

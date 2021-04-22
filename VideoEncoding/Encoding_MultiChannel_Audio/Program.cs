@@ -18,7 +18,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 
-namespace EncodingWithMESCustomPreset_MultiChannel_Audio
+namespace Encoding_MultiChannel_Audio
 {
     public class Program
     {

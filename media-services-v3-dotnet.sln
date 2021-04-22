@@ -37,17 +37,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoAnalytics", "VideoAnal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeVideos", "VideoAnalytics\VideoAnalyzer\AnalyzeVideos.csproj", "{51C8945C-DF87-4651-8F05-7924B7C564B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPresetAndSprite", "VideoEncoding\EncodingWithMESCustomPresetAndSprite\EncodingWithMESCustomPresetAndSprite.csproj", "{893785D6-C17E-4472-A2D8-C3F6AA44EAD5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encoding_SpriteThumbnail", "VideoEncoding\Encoding_SpriteThumbnail\Encoding_SpriteThumbnail.csproj", "{893785D6-C17E-4472-A2D8-C3F6AA44EAD5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESPredefinedPreset", "VideoEncoding\EncodingWithMESPredefinedPreset\EncodingWithMESPredefinedPreset.csproj", "{DD33D855-0231-4F60-B58F-6BFBA43C301F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encoding_PredefinedPreset", "VideoEncoding\Encoding_PredefinedPreset\Encoding_PredefinedPreset.csproj", "{DD33D855-0231-4F60-B58F-6BFBA43C301F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomStitchTwoAssets", "VideoEncoding\EncodingWithMESCustomStitchTwoAssets\EncodingWithMESCustomStitchTwoAssets.csproj", "{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encoding_StitchTwoAssets", "VideoEncoding\Encoding_StitchTwoAssets\Encoding_StitchTwoAssets.csproj", "{060333AA-B8DB-4554-8BC3-8A3D9EEB23AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset", "VideoEncoding\EncodingWithMESCustomPreset_HEVC\EncodingWithMESCustomPreset.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset", "VideoEncoding\Encoding_HEVC\EncodingWithMESCustomPreset.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceRedactor", "VideoAnalytics\FaceRedactor\FaceRedactor.csproj", "{815185F5-CC4B-4748-A089-C6E808EEE0FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMES_MultiChannel", "VideoEncoding\EncodingWithMESCustomPreset_MultiChannel_Audio\EncodingWithMES_MultiChannel.csproj", "{8673C10B-0E8E-4061-BC51-453DB6B80E0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMES_MultiChannel", "VideoEncoding\Encoding_MultiChannel_Audio\EncodingWithMES_MultiChannel.csproj", "{8673C10B-0E8E-4061-BC51-453DB6B80E0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
