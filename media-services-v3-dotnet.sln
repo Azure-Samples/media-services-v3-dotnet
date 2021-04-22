@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveEventWithDVR", "Live\Li
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoEncoding", "VideoEncoding", "{83997E86-616B-4C40-9BB3-77AA805BDD4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncodingWithMESCustomPreset_H264", "VideoEncoding\EncodingWithMESCustomPreset_H264\EncodingWithMESCustomPreset.csproj", "{157992D6-AB19-4683-8AF4-E5B98E24DEE9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encoding_H264", "VideoEncoding\Encoding_H264\EncodingWithMESCustomPreset.csproj", "{157992D6-AB19-4683-8AF4-E5B98E24DEE9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AudioAnalytics", "AudioAnalytics", "{3A74015A-1282-4F3E-8A14-B302FB8CFFA9}"
 EndProject
