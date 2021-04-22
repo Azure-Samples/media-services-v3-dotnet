@@ -140,10 +140,10 @@
             "name": "Launch Encoding Custom Preset H264",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_H264/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPreset.exe",
+            "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/netcoreapp3.1/EncodingWithMESCustomPreset.exe",
             "preLaunchTask": "build",
             "args": [],
-            "cwd": "${workspaceFolder}/VideoEncoding/EncodingWithMESCustomPreset_H264",
+            "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264",
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/.env"
