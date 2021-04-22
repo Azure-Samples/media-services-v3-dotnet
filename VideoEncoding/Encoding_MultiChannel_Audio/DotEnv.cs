@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace EncodingWithMESPredefinedPreset
+namespace Encoding_MultiChannel_Audio
 {
     /// <summary>
     /// This class is used to read the ".env" file if the IDE is Visual Studio. (VS Code has its own way to read it using launch.json)

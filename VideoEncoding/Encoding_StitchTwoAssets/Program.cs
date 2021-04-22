@@ -18,7 +18,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 
-namespace EncodingWithMESCustomStitchTwoAssets
+namespace Encoding_StitchTwoAssets
 {
     public class Program
     {

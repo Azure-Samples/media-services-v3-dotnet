@@ -12,16 +12,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure.Authentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
-namespace EncodingWithMESPredefinedPreset
+namespace Encoding_SpriteThumbnail
 {
-    class Program
+    public class Program
     {
         private const string OutputFolder = @"Output";
-        private const string TransformName = "AdaptiveBitrate";
-        private const string DefaultStreamingEndpointName = "default";
+        private const string CustomTransform = "Custom_TwoLayerMp4_SpriteJpg";
+        private const string InputMP4FileName = @"ignite.mp4";
+        private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
@@ -65,8 +66,8 @@ namespace EncodingWithMESPredefinedPreset
         /// <summary>
         /// Run the sample async.
         /// </summary>
-        /// <param name="config">This param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
         private static async Task RunAsync(ConfigWrapper config)
         {
             IAzureMediaServicesClient client;
@@ -101,20 +102,15 @@ namespace EncodingWithMESPredefinedPreset
             try
             {
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform adaptiveEncodeTransform = await EnsureTransformExists(client, config.ResourceGroup, config.AccountName,
-                    TransformName, preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
+                Transform transform = await CreateCustomTransform(client, config.ResourceGroup, config.AccountName, CustomTransform);
 
-                var input = new JobInputHttp(
-                                    baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
-                                    files: new List<String> { "Ignite-short.mp4" },
-                                    label: "input1"
-                                    );
+                // Create a new input Asset and upload the specified local video file into it.
+                Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
 
-                // Output from the encoding Job must be written to an Asset, so let's create one. Note that we
-                // are using a unique asset name, there should not be a name collision.
+                // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, TransformName, jobName, input, outputAsset.Name);
+                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAsset.Name, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
 
@@ -122,19 +118,18 @@ namespace EncodingWithMESPredefinedPreset
                 // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
                 // should instead use Event Grid. To see how to implement the event grid, see the sample
                 // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
-                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, TransformName, jobName);
+                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName);
 
                 TimeSpan elapsed = DateTime.Now - startedTime;
-                Console.WriteLine($"Job elapsed time: {elapsed}");
 
                 if (job.State == JobState.Finished)
                 {
                     Console.WriteLine("Job finished.");
+                    if (!Directory.Exists(OutputFolder))
+                        Directory.CreateDirectory(OutputFolder);
+                    DownloadResults(client, config.ResourceGroup, config.AccountName, outputAsset.Name, OutputFolder).Wait();
 
-                    // Now that the content has been encoded, publish it for Streaming by creating
-                    // a StreamingLocator.
-                    StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName,
-                        outputAsset.Name, locatorName);
+                    StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
 
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName,
                         DefaultStreamingEndpointName);
@@ -143,31 +138,21 @@ namespace EncodingWithMESPredefinedPreset
                     {
                         if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                         {
+                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
                             await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // We started the endpoint, we should stop it in cleanup.
+                            // Since we started the endpoint, we should stop it in cleanup.
                             stopEndpoint = true;
                         }
                     }
 
+                    Console.WriteLine();
+                    Console.WriteLine("Getting the streaming manifest urls:");
                     IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
 
-
-                    Console.WriteLine("To stream, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                    Console.WriteLine("When finished, press ENTER to continue.");
-                    Console.WriteLine();
-                    Console.Out.Flush();
-                    Console.ReadLine();
-
-                    // Download output asset for verification.
-                    Console.WriteLine("Downloading output asset...");
-                    Console.WriteLine();
-                    if (!Directory.Exists(OutputFolder))
-                        Directory.CreateDirectory(OutputFolder);
-                    DownloadResults(client, config.ResourceGroup, config.AccountName, outputAsset.Name, OutputFolder).Wait();
-
-                    Console.WriteLine("Please check the files in the output folder.");
+                    Console.WriteLine("To try streaming, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
                     Console.WriteLine("When finished, press ENTER to cleanup.");
+                    Console.WriteLine();
                     Console.Out.Flush();
                     Console.ReadLine();
                 }
@@ -179,7 +164,7 @@ namespace EncodingWithMESPredefinedPreset
             }
             catch (ApiErrorException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("ApiErrorException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -188,9 +173,9 @@ namespace EncodingWithMESPredefinedPreset
             }
             finally
             {
-                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, TransformName, jobName, outputAssetName, locatorName,
-                    stopEndpoint, DefaultStreamingEndpointName);
-                Console.WriteLine("Done.");
+                Console.WriteLine("Cleaning up...");
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, CustomTransform, jobName, inputAssetName, outputAssetName,
+                    locatorName, stopEndpoint, DefaultStreamingEndpointName);
             }
         }
 
@@ -198,14 +183,10 @@ namespace EncodingWithMESPredefinedPreset
         /// Create the ServiceClientCredentials object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentWithCertificateAsync or UserTokenProvider.LoginSilentAsync to get a token using service principal with certificate
-            //// ClientAssertionCertificate
-            //// ApplicationTokenProvider.LoginSilentWithCertificateAsync
-
             // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
             ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
             return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
@@ -215,8 +196,8 @@ namespace EncodingWithMESPredefinedPreset
         /// Creates the AzureMediaServicesClient object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
         private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
         {
             var credentials = await GetCredentialsAsync(config);
@@ -228,29 +209,100 @@ namespace EncodingWithMESPredefinedPreset
         }
 
         /// <summary>
-        /// If the specified transform exists, get that transform. If the it does not exist, creates a new transform
-        /// with the specified output. In this case, the output is set to encode a video using the passed in preset.
+        /// If the specified transform exists, return that transform. If the it does not
+        /// exist, creates a new transform with the specified output. In this case, the
+        /// output is set to encode a video using a custom preset.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
-        /// <param name="transformName">The name of the transform.</param>
-        /// <param name="preset">The preset.</param>
-        /// <returns>The transform found or created.</returns>
-        private static async Task<Transform> EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string transformName, Preset preset)
+        /// <param name="accountName"> The Media Services account name.</param>
+        /// <param name="transformName">The transform name.</param>
+        /// <returns></returns>
+        private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
+            // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
+            // also uses the same recipe or Preset for processing content.
             Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
             if (transform == null)
             {
+                Console.WriteLine("Creating a custom transform...");
+                // Create a new Transform Outputs array - this defines the set of outputs for the Transform
                 TransformOutput[] outputs = new TransformOutput[]
                 {
-                    new TransformOutput(preset),
+                    // Create a new TransformOutput with a custom Standard Encoder Preset
+                    // This demonstrates how to create custom codec and layer output settings
+
+                  new TransformOutput(
+                        new StandardEncoderPreset(
+                            codecs: new Codec[]
+                            {
+                                // Add an AAC Audio layer for the audio encoding
+                                new AacAudio(
+                                    channels: 2,
+                                    samplingRate: 48000,
+                                    bitrate: 128000,
+                                    profile: AacAudioProfile.AacLc
+                                ),
+                                // Next, add a H264Video for the video encoding
+                               new H264Video (
+                                    // Set the GOP interval to 2 seconds for both H264Layers
+                                    keyFrameInterval:TimeSpan.FromSeconds(2),
+                                     // Add H264Layers, one at HD and the other at SD. Assign a label that you can use for the output filename
+                                    layers:  new H264Layer[]
+                                    {
+                                        new H264Layer (
+                                            bitrate: 1000000, // Units are in bits per second
+                                            width: "1280",
+                                            height: "720",
+                                            label: "HD" // This label is used to modify the file name in the output formats
+                                        ),
+                                        new H264Layer (
+                                            bitrate: 600000,
+                                            width: "640",
+                                            height: "360",
+                                            label: "SD"
+                                        )
+                                    }
+                                ),
+                                // Also generate a set of thumbnails in one Jpg file (thumbnail sprite)
+                                new JpgImage(
+                                    start: "0%",
+                                    step: "5%",
+                                    range: "100%",
+                                    spriteColumn: 10,
+                                    layers: new JpgLayer[]{
+                                        new JpgLayer(
+                                            width: "20%",
+                                            height: "20%",
+                                            quality : 90
+                                        )
+                                    }
+                                )
+                            },
+                            // Specify the format for the output files - one for video+audio, and another for the thumbnail sprite
+                            formats: new Format[]
+                            {
+                                // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
+                                // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
+                                // Either {Label} or {Bitrate} should suffice
+                                 
+                                new Mp4Format(
+                                    filenamePattern:"Video-{Basename}-{Label}-{Bitrate}{Extension}"
+                                ),
+                                new JpgFormat(
+                                    filenamePattern:"ThumbnailSprite-{Basename}-{Index}{Extension}"
+                                )
+                            }
+                        ),
+                        onError: OnErrorType.StopProcessingJob,
+                        relativePriority: Priority.Normal
+                    )
                 };
 
-                Console.WriteLine("Creating a transform...");
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
+                string description = "A simple custom encoding transform with 2 MP4 bitrates and thumbnail sprite";
+                // Create the custom Transform with the outputs defined above
+                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
             }
 
             return transform;
@@ -285,39 +337,49 @@ namespace EncodingWithMESPredefinedPreset
         }
 
         /// <summary>
-        /// Create and submit a job.
+        /// Submits a request to Media Services to apply the specified Transform to a given input video.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
+        /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
-        /// <param name="jobName">The name of the job to be created.</param>
-        /// <param name="jobInput">The input to the job.</param>
-        /// <param name="outputAssetName">The name of the asset that the job writes to.</param>
-        /// <returns>The job created.</returns>
-        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName,
-            string jobName, JobInput jobInput, string outputAssetName)
+        /// <param name="jobName">The (unique) name of the job.</param>
+        /// <param name="inputAssetName"></param>
+        /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
+        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
+            string resourceGroupName,
+            string accountName,
+            string transformName,
+            string jobName,
+            string inputAssetName,
+            string outputAssetName)
         {
-            Console.WriteLine("Creating a job...");
+            JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
 
             JobOutput[] jobOutputs =
             {
                 new JobOutputAsset(outputAssetName),
             };
 
+            // In this example, we are assuming that the job name is unique.
+            //
+            // If you already have a job with the desired name, use the Jobs.Get method
+            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try
             {
+                Console.WriteLine("Creating a job...");
                 job = await client.Jobs.CreateAsync(
-                    resourceGroupName,
-                    accountName,
-                    transformName,
-                    jobName,
-                    new Job
-                    {
-                        Input = jobInput,
-                        Outputs = jobOutputs,
-                    });
+                         resourceGroupName,
+                         accountName,
+                         transformName,
+                         jobName,
+                         new Job
+                         {
+                             Input = jobInput,
+                             Outputs = jobOutputs,
+                         });
             }
             catch (Exception exception)
             {
@@ -332,19 +394,19 @@ namespace EncodingWithMESPredefinedPreset
             return job;
         }
 
+
         /// <summary>
-        /// Wait for the job to finish.
+        /// Polls Media Services for the status of the Job.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
+        /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The name of the transform.</param>
-        /// <param name="jobName">The name of the job.</param>
+        /// <param name="jobName">The name of the job you submitted.</param>
         /// <returns></returns>
         private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName, string jobName)
         {
             const int SleepInterval = 10 * 1000;
-
             Job job;
             bool exit = false;
 
@@ -380,6 +442,68 @@ namespace EncodingWithMESPredefinedPreset
             while (!exit);
 
             return job;
+        }
+
+        /// <summary>
+        /// Creates a new input Asset and uploads the specified local video file into it.
+        /// </summary>
+        /// <param name="client">The Media Services client.</param>
+        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
+        /// <param name="accountName"> The Media Services account name.</param>
+        /// <param name="assetName">The asset name.</param>
+        /// <param name="fileToUpload">The file you want to upload into the asset.</param>
+        /// <returns></returns>
+        private static async Task<Asset> CreateInputAssetAsync(
+            IAzureMediaServicesClient client,
+            string resourceGroupName,
+            string accountName,
+            string assetName,
+            string fileToUpload)
+        {
+            // In this example, we are assuming that the asset name is unique.
+            //
+            // If you already have an asset with the desired name, use the Assets.Get method
+            // to get the existing asset. In Media Services v3, the Get method on entities returns null 
+            // if the entity doesn't exist (a case-insensitive check on the name).
+            Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
+
+            if (asset == null)
+            {
+                // Call Media Services API to create an Asset.
+                // This method creates a container in storage for the Asset.
+                // The files (blobs) associated with the asset will be stored in this container.
+                Console.WriteLine("Creating an input asset...");
+                asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+            }
+            else
+            {
+                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+                // an existing asset, use an unique name.
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
+            }
+
+            // Use Media Services API to get back a response that contains
+            // SAS URL for the Asset container into which to upload blobs.
+            // That is where you would specify read-write permissions 
+            // and the expiration time for the SAS URL.
+            var response = await client.Assets.ListContainerSasAsync(
+                resourceGroupName,
+                accountName,
+                assetName,
+                permissions: AssetContainerPermission.ReadWrite,
+                expiryTime: DateTime.UtcNow.AddHours(4).ToUniversalTime());
+
+            var sasUri = new Uri(response.AssetContainerSasUrls.First());
+
+            // Use Storage API to get a reference to the Asset container
+            // that was created by calling Asset's CreateOrUpdate method.  
+            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
+
+            // Use Storage API to upload the file into the container in storage.
+            Console.WriteLine("Uploading a media file to the asset...");
+            await blob.UploadAsync(fileToUpload);
+            return asset;
         }
 
         /// <summary>
@@ -448,7 +572,7 @@ namespace EncodingWithMESPredefinedPreset
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="assetName">The name of the output asset.</param>
         /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
-        /// <returns>A task.</returns>
+        /// <returns></returns>
         private static async Task<StreamingLocator> CreateStreamingLocatorAsync(
             IAzureMediaServicesClient client,
             string resourceGroup,
@@ -456,7 +580,6 @@ namespace EncodingWithMESPredefinedPreset
             string assetName,
             string locatorName)
         {
-            Console.WriteLine("Creating a streaming locator...");
             StreamingLocator locator = await client.StreamingLocators.CreateAsync(
                 resourceGroup,
                 accountName,
@@ -472,14 +595,15 @@ namespace EncodingWithMESPredefinedPreset
 
         /// <summary>
         /// Checks if the streaming endpoint is in the running state,
-        /// if not, starts it. Then, builds the streaming URLs.
+        /// if not, starts it.
+        /// Then, builds the streaming URLs.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <param name="streamingEndpoint">The streaming endpoint.</param>
-        /// <returns>A task.</returns>
+        /// <returns></returns>
         private static async Task<IList<string>> GetStreamingUrlsAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
@@ -491,45 +615,47 @@ namespace EncodingWithMESPredefinedPreset
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
-           foreach (StreamingPath path in paths.StreamingPaths)
+            foreach (StreamingPath path in paths.StreamingPaths)
             {
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
-                foreach (string streamingFormatPath in path.Paths){
+                foreach (string streamingFormatPath in path.Paths)
+                {
                     UriBuilder uriBuilder = new UriBuilder
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,
-
                         Path = streamingFormatPath
                     };
                     Console.WriteLine($"\t{uriBuilder.ToString()}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
-                 Console.WriteLine();
+                Console.WriteLine();
             }
 
             return streamingUrls;
         }
 
         /// <summary>
-        /// Delete the job and asset and streaming locator that were created.
+        /// Delete the job and assets and streaming locator that were created.
         /// </summary>
         /// <param name="client">The Media Services client.</param>
         /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="transformName">The transform name.</param>
         /// <param name="jobName">The job name.</param>
-        /// <param name="assetName">The asset name.</param>
+        /// <param name="inputAssetName">The input asset name.</param>
+        /// <param name="outputAssetName">The output asset name.</param>
         /// <param name="streamingLocatorName">The streaming locator name. </param>
+        /// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+        /// <param name="streamingEndpointName">The endpoint name.</param>
         /// <returns>A task.</returns>
         private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
-            string transformName, string jobName, string assetName, string streamingLocatorName,
+            string transformName, string jobName, string inputAssetName, string outputAssetName, string streamingLocatorName,
             bool stopEndpoint, string streamingEndpointName)
         {
-            Console.WriteLine("Cleaning up...");
-
             await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
-            await client.Assets.DeleteAsync(resourceGroupName, accountName, assetName);
+            await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
+            await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
             await client.StreamingLocators.DeleteAsync(resourceGroupName, accountName, streamingLocatorName);
 
             if (stopEndpoint)

@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.IdentityModel.Tokens;
 
-namespace EncodingWithMESCustomPreset_MultiChannel_Audio
+namespace Encoding_StitchTwoAssets
 {
     /// <summary>
     /// Implementation of IEventProcessor to handle events from Event Hub.
