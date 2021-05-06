@@ -96,7 +96,6 @@ namespace Encoding_PredefinedPreset
             string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
             string jobName = $"job-{uniqueness}";
             string locatorName = $"locator-{uniqueness}";
-            string inputAssetName = $"input-{uniqueness}";
             string outputAssetName = $"output-{uniqueness}";
             bool stopEndpoint = false;
 
