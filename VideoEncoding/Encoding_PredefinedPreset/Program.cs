@@ -25,6 +25,9 @@ namespace Encoding_PredefinedPreset
         private const string BaseSourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/";
         private const string FileSourceUri = "Ignite-short.mp4";
 
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
         public static async Task Main(string[] args)
         {
             // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
@@ -74,7 +77,7 @@ namespace Encoding_PredefinedPreset
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -222,14 +225,62 @@ namespace Encoding_PredefinedPreset
         // </GetCredentialsAsync>
 
         /// <summary>
+        /// Create the ServiceClientCredentials object based on interactive authentication done in the browser
+        /// </summary>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
+        private static async Task<ServiceClientCredentials> GetCredentialsInteractiveAuthAsync(ConfigWrapper config)
+        {
+            var scopes = new[] { config.ArmAadAudience + "/user_impersonation" };
+
+            // client application of Az Cli
+            string ClientApplicationId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
+
+            AuthenticationResult result = null;
+
+            IPublicClientApplication app = PublicClientApplicationBuilder.Create(ClientApplicationId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithRedirectUri("http://localhost")
+                .Build();
+
+            var accounts = await app.GetAccountsAsync();
+
+            try
+            {
+                result = await app.AcquireTokenSilent(scopes, accounts.FirstOrDefault()).ExecuteAsync();
+            }
+            catch (MsalUiRequiredException ex)
+            {
+                try
+                {
+                    result = await app.AcquireTokenInteractive(scopes).ExecuteAsync();
+                }
+                catch (MsalException maslException)
+                {
+                    Console.Error.WriteLine($"ERROR: MSAL interactive authentication exception with code '{maslException.ErrorCode}' and message '{maslException.Message}'.");
+                }
+            }
+            catch (MsalException maslException)
+            {
+                Console.Error.WriteLine($"ERROR: MSAL silent authentication exception with code '{maslException.ErrorCode}' and message '{maslException.Message}'.");
+            }
+
+            return new TokenCredentials(result.AccessToken, TokenType);
+        }
+
+        /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
         /// <returns>A task.</returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
+        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config, bool interactive = false)
         {
-            var credentials = await GetCredentialsAsync(config);
+            ServiceClientCredentials credentials;
+            if (interactive)
+                credentials = await GetCredentialsInteractiveAuthAsync(config);
+            else
+                credentials = await GetCredentialsAsync(config);
 
             return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
             {
@@ -501,10 +552,11 @@ namespace Encoding_PredefinedPreset
 
             ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
 
-           foreach (StreamingPath path in paths.StreamingPaths)
+            foreach (StreamingPath path in paths.StreamingPaths)
             {
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
-                foreach (string streamingFormatPath in path.Paths){
+                foreach (string streamingFormatPath in path.Paths)
+                {
                     UriBuilder uriBuilder = new()
                     {
                         Scheme = "https",
@@ -515,7 +567,7 @@ namespace Encoding_PredefinedPreset
                     Console.WriteLine($"\t{uriBuilder}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
-                 Console.WriteLine();
+                Console.WriteLine();
             }
 
             return streamingUrls;
