@@ -65,7 +65,7 @@ namespace LiveEventWithDVR
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -84,8 +84,7 @@ namespace LiveEventWithDVR
 
                 Console.Error.WriteLine($"{exception.Message}");
 
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -156,7 +155,7 @@ namespace LiveEventWithDVR
                 //      IpV4 address with 4 numbers
                 //      CIDR address range  
 
-                IPRange allAllowIPRange = new IPRange(
+                IPRange allAllowIPRange = new(
                     name: "AllowAll",
                     address: "0.0.0.0",
                     subnetPrefixLength: 0
@@ -164,7 +163,7 @@ namespace LiveEventWithDVR
 
                 // Create the LiveEvent input IP access control object
                 // this will control the IP that the encoder is running on and restrict access to only that encoder IP range.
-                LiveEventInputAccessControl liveEventInputAccess = new LiveEventInputAccessControl
+                LiveEventInputAccessControl liveEventInputAccess = new()
                 {
                     Ip = new IPAccessControl(
                             allow: new IPRange[]
@@ -180,7 +179,7 @@ namespace LiveEventWithDVR
 
                 // Create the LiveEvent Preview IP access control object. 
                 // This will restrict which clients can view the preview endpoint
-                LiveEventPreview liveEventPreview = new LiveEventPreview
+                LiveEventPreview liveEventPreview = new()
                 {
                     AccessControl = new LiveEventPreviewAccessControl(
                         ip: new IPAccessControl(
@@ -203,7 +202,7 @@ namespace LiveEventWithDVR
                 // See REST API documentation for details on each setting value
                 // https://docs.microsoft.com/rest/api/media/liveevents/create 
 
-                LiveEvent liveEvent = new LiveEvent(
+                LiveEvent liveEvent = new(
                     location: mediaService.Location,
                     description: "Sample LiveEvent from .NET SDK sample",
                     // Set useStaticHostname to true to make the ingest and preview URL host name the same. 
@@ -336,7 +335,7 @@ namespace LiveEventWithDVR
                 watch = Stopwatch.StartNew();
                 // See the REST API for details on each of the settings on Live Output
                 // https://docs.microsoft.com/rest/api/media/liveoutputs/create
-                LiveOutput liveOutput = new LiveOutput(
+                LiveOutput liveOutput = new(
                     assetName: asset.Name,
                     manifestName: manifestName, // The HLS and DASH manifest file name. This is recommended to set if you want a deterministic manifest path up front.
                                                 // archive window can be set from 3 minutes to 25 hours. Content that falls outside of ArchiveWindowLength
@@ -401,7 +400,7 @@ namespace LiveEventWithDVR
                 var ignoredInput = Console.ReadLine();
 
 
-                AssetFilter drvAssetFilter = new AssetFilter(
+                AssetFilter drvAssetFilter = new(
                    presentationTimeRange: new PresentationTimeRange(
                        forceEndTimestamp: false,
                        // 10 minute (600) seconds sliding window
@@ -419,8 +418,10 @@ namespace LiveEventWithDVR
                 Console.WriteLine($"Creating a streaming locator named {streamingLocatorName}");
                 Console.WriteLine();
 
-                IList<string> filters = new List<string>();
-                filters.Add(drvAssetFilterName);
+                IList<string> filters = new List<string>
+                {
+                    drvAssetFilterName
+                };
                 StreamingLocator locator = await client.StreamingLocators.CreateAsync(config.ResourceGroup,
                     config.AccountName,
                     drvStreamingLocatorName,
@@ -550,7 +551,7 @@ namespace LiveEventWithDVR
             const string hlsFormat = "format=m3u8-cmaf";
             const string dashFormat = "format=mpd-time-cmaf";
 
-            List<string> manifests = new List<string>();
+            List<string> manifests = new();
 
             var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}.ism/manifest";
             var hlsManifest = $"{manifestBase}({hlsFormat})";
@@ -566,7 +567,7 @@ namespace LiveEventWithDVR
         /// Create the ServiceClientCredentials object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The parm is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
         // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
@@ -577,9 +578,8 @@ namespace LiveEventWithDVR
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()

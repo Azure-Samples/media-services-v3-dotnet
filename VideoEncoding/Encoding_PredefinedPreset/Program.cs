@@ -10,10 +10,9 @@ using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs;
+using Microsoft.Identity.Client;
 
 namespace Encoding_PredefinedPreset
 {
@@ -37,7 +36,7 @@ namespace Encoding_PredefinedPreset
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -198,18 +197,27 @@ namespace Encoding_PredefinedPreset
         /// Create the ServiceClientCredentials object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentWithCertificateAsync or UserTokenProvider.LoginSilentAsync to get a token using service principal with certificate
-            //// ClientAssertionCertificate
-            //// ApplicationTokenProvider.LoginSilentWithCertificateAsync
+            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
 
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
+            var scopes = new[] { config.ArmAadAudience + "/.default" };
+
+            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
+                .WithClientSecret(config.AadSecret)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .Build();
+
+            var authResult = await app.AcquireTokenForClient(scopes)
+                                                     .ExecuteAsync()
+                                                     .ConfigureAwait(false);
+
+            return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -403,8 +411,8 @@ namespace Encoding_PredefinedPreset
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
+            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            BlobContainerClient container = new(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -495,14 +503,14 @@ namespace Encoding_PredefinedPreset
             {
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths){
-                    UriBuilder uriBuilder = new UriBuilder
+                    UriBuilder uriBuilder = new()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,
 
                         Path = streamingFormatPath
                     };
-                    Console.WriteLine($"\t{uriBuilder.ToString()}");
+                    Console.WriteLine($"\t{uriBuilder}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
                  Console.WriteLine();

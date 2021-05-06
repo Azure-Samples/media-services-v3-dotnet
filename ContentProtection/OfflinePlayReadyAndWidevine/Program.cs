@@ -36,7 +36,7 @@ namespace OfflinePlayReadyAndWidevine
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -119,7 +119,7 @@ namespace OfflinePlayReadyAndWidevine
                         StorageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -234,6 +234,7 @@ namespace OfflinePlayReadyAndWidevine
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
             // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
@@ -242,9 +243,8 @@ namespace OfflinePlayReadyAndWidevine
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()
@@ -252,6 +252,7 @@ namespace OfflinePlayReadyAndWidevine
 
             return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -288,12 +289,12 @@ namespace OfflinePlayReadyAndWidevine
 
             if (policy == null)
             {
-                ContentKeyPolicyOpenRestriction restriction = new ContentKeyPolicyOpenRestriction();
+                ContentKeyPolicyOpenRestriction restriction = new();
 
                 ContentKeyPolicyPlayReadyConfiguration playReadyConfig = ConfigurePlayReadyLicenseTemplate();
                 ContentKeyPolicyWidevineConfiguration widevineConfig = ConfigureWidevineLicenseTempate();
 
-                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>
+                List<ContentKeyPolicyOption> options = new()
                 {
                     new ContentKeyPolicyOption()
                     {
@@ -408,7 +409,7 @@ namespace OfflinePlayReadyAndWidevine
             // This example shows how to encode from any HTTPs source URL - a new feature of the v3 API.  
             // Change the URL to any accessible HTTPs URL or SAS URL from Azure.
             JobInputHttp jobInput =
-                new JobInputHttp(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
+                new(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
 
             JobOutput[] jobOutputs =
             {
@@ -518,7 +519,7 @@ namespace OfflinePlayReadyAndWidevine
                 }
             };
 
-            ContentKeyPolicyPlayReadyConfiguration objContentKeyPolicyPlayReadyConfiguration = new ContentKeyPolicyPlayReadyConfiguration
+            ContentKeyPolicyPlayReadyConfiguration objContentKeyPolicyPlayReadyConfiguration = new()
             {
                 Licenses = new List<ContentKeyPolicyPlayReadyLicense> { objContentKeyPolicyPlayReadyLicense }
             };
@@ -560,7 +561,7 @@ namespace OfflinePlayReadyAndWidevine
                 // You may want to update this part to throw an Exception instead, and handle name collisions differently.
                 Console.WriteLine("Warning – found an existing Streaming Locator with name = " + locatorName);
 
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
+                string uniqueness = $"-{Guid.NewGuid():N}";
                 locatorName += uniqueness;
 
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
@@ -600,7 +601,7 @@ namespace OfflinePlayReadyAndWidevine
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName
@@ -668,7 +669,7 @@ namespace OfflinePlayReadyAndWidevine
         /// <returns></returns>
         private static ContentKeyPolicyWidevineConfiguration ConfigureWidevineLicenseTempate()
         {
-            WidevineTemplate template = new WidevineTemplate()
+            WidevineTemplate template = new()
             {
                 AllowedTrackTypes = "SD_HD",
                 ContentKeySpecs = new ContentKeySpec[]
@@ -694,7 +695,7 @@ namespace OfflinePlayReadyAndWidevine
                 }
             };
 
-            ContentKeyPolicyWidevineConfiguration objContentKeyPolicyWidevineConfiguration = new ContentKeyPolicyWidevineConfiguration
+            ContentKeyPolicyWidevineConfiguration objContentKeyPolicyWidevineConfiguration = new()
             {
                 WidevineTemplate = Newtonsoft.Json.JsonConvert.SerializeObject(template)
             };
