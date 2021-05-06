@@ -22,6 +22,8 @@ namespace Encoding_PredefinedPreset
         private const string TransformName = "AdaptiveBitrate";
         private const string DefaultStreamingEndpointName = "default";
         private const string TokenType = "Bearer";
+        private const string BaseSourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/";
+        private const string FileSourceUri = "Ignite-short.mp4";
 
         public static async Task Main(string[] args)
         {
@@ -105,8 +107,8 @@ namespace Encoding_PredefinedPreset
                     TransformName, preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
 
                 var input = new JobInputHttp(
-                                    baseUri: "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/",
-                                    files: new List<String> { "Ignite-short.mp4" },
+                                    baseUri: BaseSourceUri,
+                                    files: new List<String> { FileSourceUri },
                                     label: "input1"
                                     );
 

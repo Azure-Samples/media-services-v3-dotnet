@@ -20,6 +20,7 @@ namespace OfflinePlayReadyAndWidevine
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string TokenType = "Bearer";
+        private const string SourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4";
         private static readonly string ContentKeyPolicyName = "DRMContentKeyPolicy";
         private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
@@ -410,7 +411,7 @@ namespace OfflinePlayReadyAndWidevine
             // This example shows how to encode from any HTTPs source URL - a new feature of the v3 API.  
             // Change the URL to any accessible HTTPs URL or SAS URL from Azure.
             JobInputHttp jobInput =
-                new(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
+                new(files: new[] { SourceUri });
 
             JobOutput[] jobOutputs =
             {
