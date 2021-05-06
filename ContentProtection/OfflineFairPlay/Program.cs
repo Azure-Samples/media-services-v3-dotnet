@@ -19,6 +19,7 @@ namespace OfflineFairPlay
 {
     class Program
     {
+        private const string TokenType = "Bearer";
         private static readonly string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private static readonly string ContentKeyPolicyName = "FairPlayContentKeyPolicy";
         private static readonly string FairPlayStreamingPolicyName = "FairPlayCustomStreamingPolicyName";
@@ -237,7 +238,7 @@ namespace OfflineFairPlay
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

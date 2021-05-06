@@ -19,6 +19,7 @@ namespace OfflinePlayReadyAndWidevine
     class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
+        private const string TokenType = "Bearer";
         private static readonly string ContentKeyPolicyName = "DRMContentKeyPolicy";
         private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
@@ -250,7 +251,7 @@ namespace OfflinePlayReadyAndWidevine
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

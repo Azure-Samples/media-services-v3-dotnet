@@ -23,6 +23,7 @@ namespace BasicWidevine
     class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
+        private const string TokenType = "Bearer";
         private static readonly string Issuer = "myIssuer";
         private static readonly string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
@@ -211,7 +212,7 @@ namespace BasicWidevine
                     Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
                     Console.WriteLine("You can use Chrome/Firefox for Widevine.");
                     Console.WriteLine();
-                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&widevine=true&token=Bearer%3D{token}");
+                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&widevine=true&token={TokenType}%3D{token}");
                     Console.WriteLine();
                 }
 
@@ -267,7 +268,7 @@ namespace BasicWidevine
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 
