@@ -25,6 +25,7 @@ namespace EncodingWithMESCustomHEVC
         private const string CustomTransform = "Custom_HEVC_3_layers";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
+        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -276,7 +277,7 @@ namespace EncodingWithMESCustomHEVC
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

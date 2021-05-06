@@ -24,6 +24,7 @@ namespace AudioAnalyzer
         private const string AudioAnalyzerTransformName = "MyAudioAnalyzerTransformName";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string OutputFolderName = @"Output";
+        private const string TokenType = "Bearer";
 
         /// <summary>
         /// The main method of the sample. Please make sure you have set settings in appsettings.json or in the .env file in the root folder
@@ -232,7 +233,7 @@ namespace AudioAnalyzer
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

@@ -25,6 +25,7 @@ namespace BasicAESClearKey
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string OutputFolderName = @"Output";
+        private const string TokenType = "Bearer";
         private static readonly string Issuer = "myIssuer";
         private static readonly string Audience = "myAudience";
         private static readonly byte[] TokenSigningKey = new byte[40];
@@ -214,7 +215,7 @@ namespace BasicAESClearKey
                     Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
                     Console.WriteLine("Note, the player is set to use the AES token and the Bearer token is specified. ");
                     Console.WriteLine();
-                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&aes=true&aestoken=Bearer%3D{token}");
+                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&aes=true&aestoken={TokenType}%3D{token}");
                     Console.WriteLine();
                 }
 
@@ -270,7 +271,7 @@ namespace BasicAESClearKey
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

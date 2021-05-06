@@ -21,6 +21,7 @@ namespace Encoding_PredefinedPreset
         private const string OutputFolder = @"Output";
         private const string TransformName = "AdaptiveBitrate";
         private const string DefaultStreamingEndpointName = "default";
+        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -215,7 +216,7 @@ namespace Encoding_PredefinedPreset
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

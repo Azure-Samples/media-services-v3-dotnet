@@ -24,6 +24,7 @@ namespace VideoAnalyzer
         private const string VideoAnalyzerTransformName = "MyVideoAnalyzerTransformName";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string OutputFolderName = @"Output";
+        private const string TokenType = "Bearer";
 
         /// <summary>
         /// The main method of the sample. Please make sure you have set settings in appsettings.json
@@ -220,7 +221,7 @@ namespace VideoAnalyzer
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

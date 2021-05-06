@@ -20,6 +20,7 @@ namespace StreamHLSAndDASH
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";
+        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -185,7 +186,7 @@ namespace StreamHLSAndDASH
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

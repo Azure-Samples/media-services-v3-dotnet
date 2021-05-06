@@ -38,7 +38,7 @@ namespace Encoding_MultiChannel_Audio
         // The channel mapping support is limited to only outputing a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
 
         private const string InputFileName = @"surround-audio.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
-
+        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -348,7 +348,7 @@ namespace Encoding_MultiChannel_Audio
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 

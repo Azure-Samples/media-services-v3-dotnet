@@ -50,6 +50,7 @@ namespace LiveEventWithDVR
 {
     class Program
     {
+        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -585,7 +586,7 @@ namespace LiveEventWithDVR
                                                      .ExecuteAsync()
                                                      .ConfigureAwait(false);
 
-            return new TokenCredentials(authResult.AccessToken, "Bearer");
+            return new TokenCredentials(authResult.AccessToken, TokenType);
         }
         // </GetCredentialsAsync>
 
