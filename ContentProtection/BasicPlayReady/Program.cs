@@ -12,13 +12,12 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Identity.Client;
 
 namespace BasicPlayReady
 {
@@ -258,9 +257,21 @@ namespace BasicPlayReady
         /// <returns></returns>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
+            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
+
+            var scopes = new[] { config.ArmAadAudience + "/.default" };
+
+            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
+                .WithClientSecret(config.AadSecret)
+                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .Build();
+
+
+            var authResult = await app.AcquireTokenForClient(scopes)
+                                                     .ExecuteAsync()
+                                                     .ConfigureAwait(false);
+
+            return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
 
         /// <summary>
