@@ -14,9 +14,8 @@ using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
 
 namespace Encoding_StitchTwoAssets
 {
@@ -42,7 +41,7 @@ namespace Encoding_StitchTwoAssets
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -120,7 +119,7 @@ namespace Encoding_StitchTwoAssets
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
                 // Create a Job Input Sequence with the two assets to stitch together
-                JobInputSequence inputSequence = new JobInputSequence(
+                JobInputSequence inputSequence = new(
                     inputs: new JobInputAsset[]{
                         new JobInputAsset(
                             assetName: inputAsset1.Name,
@@ -160,7 +159,7 @@ namespace Encoding_StitchTwoAssets
                         storageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -283,12 +282,25 @@ namespace Encoding_StitchTwoAssets
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
+            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
+
+            var scopes = new[] { config.ArmAadAudience + "/.default" };
+
+            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
+                .WithClientSecret(config.AadSecret)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .Build();
+
+            var authResult = await app.AcquireTokenForClient(scopes)
+                                                     .ExecuteAsync()
+                                                     .ConfigureAwait(false);
+
+            return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -587,7 +599,7 @@ namespace Encoding_StitchTwoAssets
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -617,8 +629,8 @@ namespace Encoding_StitchTwoAssets
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
+            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            BlobContainerClient container = new(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -710,14 +722,14 @@ namespace Encoding_StitchTwoAssets
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new UriBuilder
+                    UriBuilder uriBuilder = new()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,
 
                         Path = streamingFormatPath
                     };
-                    Console.WriteLine($"\t{uriBuilder.ToString()}");
+                    Console.WriteLine($"\t{uriBuilder}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
                 Console.WriteLine();

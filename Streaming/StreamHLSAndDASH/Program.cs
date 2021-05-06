@@ -35,7 +35,7 @@ namespace StreamHLSAndDASH
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -169,6 +169,7 @@ namespace StreamHLSAndDASH
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
             // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
@@ -177,9 +178,8 @@ namespace StreamHLSAndDASH
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()
@@ -187,6 +187,7 @@ namespace StreamHLSAndDASH
 
             return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -257,7 +258,7 @@ namespace StreamHLSAndDASH
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -500,7 +501,7 @@ namespace StreamHLSAndDASH
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName,
@@ -508,11 +509,11 @@ namespace StreamHLSAndDASH
                 };
                 if (path.StreamingProtocol == StreamingPolicyStreamingProtocol.Hls)
                 {
-                    streamingUrls.Add($"HLS url: {uriBuilder.ToString()}");
+                    streamingUrls.Add($"HLS url: {uriBuilder}");
                 }
                 else if (path.StreamingProtocol == StreamingPolicyStreamingProtocol.Dash)
                 {
-                    streamingUrls.Add($"DASH url: {uriBuilder.ToString()}");
+                    streamingUrls.Add($"DASH url: {uriBuilder}");
                 }
             }
 

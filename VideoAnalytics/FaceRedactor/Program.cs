@@ -44,7 +44,7 @@ namespace FaceRedactor
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -140,7 +140,7 @@ namespace FaceRedactor
                     storageConnectionString, config.StorageContainerName);
 
                 // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                AutoResetEvent jobWaitingEvent = new(false);
 
                 // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                 await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -213,6 +213,7 @@ namespace FaceRedactor
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
             // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
@@ -221,9 +222,8 @@ namespace FaceRedactor
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()
@@ -231,6 +231,7 @@ namespace FaceRedactor
 
             return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -339,7 +340,7 @@ namespace FaceRedactor
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -508,8 +509,8 @@ namespace FaceRedactor
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
+            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            BlobContainerClient container = new(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);

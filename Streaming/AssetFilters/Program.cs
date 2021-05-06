@@ -36,7 +36,7 @@ namespace AssetFilters
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -247,8 +247,9 @@ namespace AssetFilters
         /// Create the ServiceClientCredentials object based on the credentials
         /// supplied in local configuration file.
         /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
+        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
+        /// <returns></returns>
+        // <GetCredentialsAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
             // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
@@ -257,9 +258,8 @@ namespace AssetFilters
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()
@@ -267,6 +267,7 @@ namespace AssetFilters
 
             return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -373,7 +374,7 @@ namespace AssetFilters
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -567,7 +568,7 @@ namespace AssetFilters
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Bitrate, "0-1000000", FilterTrackPropertyCompareOperation.Equal)
             };
 
-            List<FilterTrackSelection> includedTracks = new List<FilterTrackSelection>()
+            List<FilterTrackSelection> includedTracks = new()
             {
                 new FilterTrackSelection(audioConditions),
                 new FilterTrackSelection(videoConditions)
@@ -601,7 +602,7 @@ namespace AssetFilters
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName,

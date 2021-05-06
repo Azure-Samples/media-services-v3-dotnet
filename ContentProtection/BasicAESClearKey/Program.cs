@@ -25,11 +25,11 @@ namespace BasicAESClearKey
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string OutputFolderName = @"Output";
-        private static string Issuer = "myIssuer";
-        private static string Audience = "myAudience";
-        private static byte[] TokenSigningKey = new byte[40];
-        private static string ContentKeyPolicyName = "SharedContentKeyPolicyUsedByAllAssets";
-        private static string MyStreamingEndpointName = "default";   // Change this to your Endpoint name.
+        private static readonly string Issuer = "myIssuer";
+        private static readonly string Audience = "myAudience";
+        private static readonly byte[] TokenSigningKey = new byte[40];
+        private static readonly string ContentKeyPolicyName = "SharedContentKeyPolicyUsedByAllAssets";
+        private static readonly string MyStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         public static async Task Main(string[] args)
         {
@@ -45,7 +45,7 @@ namespace BasicAESClearKey
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -59,8 +59,7 @@ namespace BasicAESClearKey
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -129,7 +128,7 @@ namespace BasicAESClearKey
                         StorageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -178,7 +177,7 @@ namespace BasicAESClearKey
                         Directory.CreateDirectory(OutputFolderName);
 
                     // Generate a new random token signing key to use
-                    RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+                    RNGCryptoServiceProvider rng = new();
                     rng.GetBytes(TokenSigningKey);
 
                     //Create the content key policy that configures how the content key is delivered to end clients
@@ -264,9 +263,8 @@ namespace BasicAESClearKey
 
             var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
                 .WithClientSecret(config.AadSecret)
-                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
                 .Build();
-
 
             var authResult = await app.AcquireTokenForClient(scopes)
                                                      .ExecuteAsync()
@@ -274,6 +272,7 @@ namespace BasicAESClearKey
 
             return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
+        // </GetCredentialsAsync>
 
         /// <summary>
         /// Creates the AzureMediaServicesClient object based on the credentials
@@ -311,14 +310,14 @@ namespace BasicAESClearKey
             if (policy == null)
             {
 
-                ContentKeyPolicySymmetricTokenKey primaryKey = new ContentKeyPolicySymmetricTokenKey(TokenSigningKey);
+                ContentKeyPolicySymmetricTokenKey primaryKey = new(TokenSigningKey);
                 List<ContentKeyPolicyRestrictionTokenKey> alternateKeys = null;
-                List<ContentKeyPolicyTokenClaim> requiredClaims = new List<ContentKeyPolicyTokenClaim>()
+                List<ContentKeyPolicyTokenClaim> requiredClaims = new()
                 {
                     ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim
                 };
 
-                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>()
+                List<ContentKeyPolicyOption> options = new()
                 {
                     new ContentKeyPolicyOption(
                         new ContentKeyPolicyClearKeyConfiguration(),
@@ -426,7 +425,7 @@ namespace BasicAESClearKey
             // This example shows how to encode from any HTTPs source URL - a new feature of the v3 API.  
             // Change the URL to any accessible HTTPs URL or SAS URL from Azure.
             JobInputHttp jobInput =
-                new JobInputHttp(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
+                new(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
 
             JobOutput[] jobOutputs =
             {
@@ -453,8 +452,7 @@ namespace BasicAESClearKey
             }
             catch (Exception exception)
             {
-                ApiErrorException apiException = exception.GetBaseException() as ApiErrorException;
-                if (apiException != null)
+                if (exception.GetBaseException() is ApiErrorException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -556,7 +554,7 @@ namespace BasicAESClearKey
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
 
-            SigningCredentials cred = new SigningCredentials(
+            SigningCredentials cred = new(
                 tokenSigningKey,
                 // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
                 SecurityAlgorithms.HmacSha256,
@@ -567,7 +565,7 @@ namespace BasicAESClearKey
                 new Claim(ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim.ClaimType, keyIdentifier)
             };
 
-            JwtSecurityToken token = new JwtSecurityToken(
+            JwtSecurityToken token = new(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
@@ -575,7 +573,7 @@ namespace BasicAESClearKey
                 expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: cred);
 
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            JwtSecurityTokenHandler handler = new();
 
             return handler.WriteToken(token);
         }
@@ -599,7 +597,7 @@ namespace BasicAESClearKey
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder();
+                UriBuilder uriBuilder = new();
                 uriBuilder.Scheme = "https";
                 uriBuilder.Host = streamingEndpoint.HostName;
 
