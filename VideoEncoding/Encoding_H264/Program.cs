@@ -14,9 +14,8 @@ using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
 
 namespace EncodingWithMESCustomH264
 {
@@ -263,9 +262,21 @@ namespace EncodingWithMESCustomH264
         /// <returns></returns>
         private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
         {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
+            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
+
+            var scopes = new[] { config.ArmAadAudience + "/.default" };
+
+            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
+                .WithClientSecret(config.AadSecret)
+                 .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
+                .Build();
+
+
+            var authResult = await app.AcquireTokenForClient(scopes)
+                                                     .ExecuteAsync()
+                                                     .ConfigureAwait(false);
+
+            return new TokenCredentials(authResult.AccessToken, "Bearer");
         }
 
         /// <summary>
