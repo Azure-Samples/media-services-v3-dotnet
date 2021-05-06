@@ -261,7 +261,7 @@ namespace Encoding_MultiChannel_Audio
                         Console.WriteLine("Job final state received, removing the event processor...");
 
                         // Disposes of the Event Processor Host.
-                        eventProcessorHost.UnregisterEventProcessorAsync();
+                        await eventProcessorHost.UnregisterEventProcessorAsync();
                         Console.WriteLine();
                     }
                 }
