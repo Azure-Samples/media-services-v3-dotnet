@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace BasicWidevine
 {
-     /// <summary>
+    /// <summary>
     /// Widevine PolicyOverrides class.
     /// </summary>
     public class PolicyOverrides
