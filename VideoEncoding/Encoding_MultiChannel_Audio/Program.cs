@@ -14,8 +14,8 @@ using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Client;
-using Microsoft.Rest;
+using Common_Authentication;
+
 
 namespace Encoding_MultiChannel_Audio
 {
@@ -24,6 +24,10 @@ namespace Encoding_MultiChannel_Audio
         private const string OutputFolder = @"Output";
         private const string CustomTransform = "Custom_H264_MultiChannel_5";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
+
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
 
         // The multi-channel audio file should contain a stereo pair on tracks 1 and 2, followed by multi channel 5.1 discrete tracks in the following layout
         // 1. Left stereo
@@ -38,7 +42,6 @@ namespace Encoding_MultiChannel_Audio
         // The channel mapping support is limited to only outputing a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
 
         private const string InputFileName = @"surround-audio.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
-        private const string TokenType = "Bearer";
 
         public static async Task Main(string[] args)
         {
@@ -89,7 +92,7 @@ namespace Encoding_MultiChannel_Audio
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -326,47 +329,6 @@ namespace Encoding_MultiChannel_Audio
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <GetCredentialsAsync>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
-
-            var scopes = new[] { config.ArmAadAudience + "/.default" };
-
-            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
-                .WithClientSecret(config.AadSecret)
-                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
-                .Build();
-
-            var authResult = await app.AcquireTokenForClient(scopes)
-                                                     .ExecuteAsync()
-                                                     .ConfigureAwait(false);
-
-            return new TokenCredentials(authResult.AccessToken, TokenType);
-        }
-        // </GetCredentialsAsync>
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         #region EnsureTransformExists
         /// <summary>

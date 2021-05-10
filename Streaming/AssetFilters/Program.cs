@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Rest;
 using System.Text.RegularExpressions;
 using Azure.Storage.Blobs;
-using Microsoft.Identity.Client;
+using Common_Authentication;
+
 
 namespace AssetFilters
 {
@@ -21,7 +21,10 @@ namespace AssetFilters
         private const string adaptiveTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name.
-        private const string TokenType = "Bearer";
+
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
 
         public static async Task Main(string[] args)
         {
@@ -72,7 +75,7 @@ namespace AssetFilters
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -244,47 +247,6 @@ namespace AssetFilters
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <GetCredentialsAsync>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
-
-            var scopes = new[] { config.ArmAadAudience + "/.default" };
-
-            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
-                .WithClientSecret(config.AadSecret)
-                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
-                .Build();
-
-            var authResult = await app.AcquireTokenForClient(scopes)
-                                                     .ExecuteAsync()
-                                                     .ConfigureAwait(false);
-
-            return new TokenCredentials(authResult.AccessToken, TokenType);
-        }
-        // </GetCredentialsAsync>
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         /// <summary>
         /// If the specified transform exists, get that transform.
@@ -475,7 +437,7 @@ namespace AssetFilters
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job.</param>
         /// <returns></returns>
-        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, 
+        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
             string transformName, string jobName)
         {
             const int SleepInterval = 10 * 1000;
@@ -486,7 +448,7 @@ namespace AssetFilters
             do
             {
                 job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
-                
+
                 if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
                 {
                     exit = true;

@@ -10,13 +10,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common-Authentication\Common_Authentication.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ignite.mp4">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodeHttp</RootNamespace>
+    <RootNamespace>Encoding_SpriteThumbnail</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

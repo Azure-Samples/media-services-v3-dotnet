@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Rest;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.EventHubs;
 using System.Diagnostics;
-using Microsoft.Identity.Client;
+using Common_Authentication;
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 //  Azure Media Services Live streaming sample 
@@ -50,7 +50,8 @@ namespace LiveEventWithDVR
 {
     class Program
     {
-        private const string TokenType = "Bearer";
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
 
         public static async Task Main(string[] args)
         {
@@ -106,7 +107,7 @@ namespace LiveEventWithDVR
         private static async Task RunAsync(ConfigWrapper config)
         {
 
-            IAzureMediaServicesClient client = await CreateMediaServicesClientAsync(config);
+            IAzureMediaServicesClient client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
 
             // Creating a unique suffix so that we don't have name collisions if you run the sample
             // multiple times without cleaning up.
@@ -563,53 +564,7 @@ namespace LiveEventWithDVR
 
             return manifests;
         }
-
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <GetCredentialsAsync>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ConfidentialClientApplicationBuilder.AcquireTokenForClient to get a token using a service principal with symmetric key
-
-            var scopes = new[] { config.ArmAadAudience + "/.default" };
-
-            var app = ConfidentialClientApplicationBuilder.Create(config.AadClientId)
-                .WithClientSecret(config.AadSecret)
-                .WithAuthority(AzureCloudInstance.AzurePublic, config.AadTenantId)
-                .Build();
-
-            var authResult = await app.AcquireTokenForClient(scopes)
-                                                     .ExecuteAsync()
-                                                     .ConfigureAwait(false);
-
-            return new TokenCredentials(authResult.AccessToken, TokenType);
-        }
-        // </GetCredentialsAsync>
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The parm is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        // <CreateMediaServicesClient>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-                // Set to poll long running operations every 2 seconds. Default is 30. 
-                // This helps speed up all code when creating Live Events and Live Outputs.
-                LongRunningOperationRetryTimeout = 2
-            };
-        }
-        // </CreateMediaServicesClient>
+              
 
         // <CleanupLiveEventAndOutput>
         private static async Task CleanupLiveEventAndOutputAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, string liveEventName, string liveOutputName)
