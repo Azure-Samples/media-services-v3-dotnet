@@ -91,7 +91,7 @@ namespace BasicWidevine
                             MediaJobStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobStateChangeEventData>();
 
                             Console.WriteLine($"Job state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} State: {jobEventData.State}");
-                            
+
                             // For final states, send a message to notify that the job has finished.
                             if (eventType == "Microsoft.Media.JobFinished" || eventType == "Microsoft.Media.JobCanceled" || eventType == "Microsoft.Media.JobErrored")
                             {
@@ -114,7 +114,7 @@ namespace BasicWidevine
                     case "Microsoft.Media.JobOutputErrored":
                         {
                             MediaJobOutputStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputStateChangeEventData>();
-     
+
                             Console.WriteLine($"Job output state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} " +
                                 $"State: {jobEventData.Output.State} Progress: {jobEventData.Output.Progress}%");
                         }
@@ -124,7 +124,7 @@ namespace BasicWidevine
                     case "Microsoft.Media.JobOutputProgress":
                         {
                             MediaJobOutputProgressEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputProgressEventData>();
- 
+
                             Console.WriteLine($"Job output progress changed for JobId: {eventName} Progress: {jobEventData.Progress}%");
                         }
                         break;

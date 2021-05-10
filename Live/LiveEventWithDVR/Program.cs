@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using Common_Authentication;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Azure.EventHubs.Processor;
-using Microsoft.Azure.EventHubs;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using Common_Authentication;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -564,7 +564,7 @@ namespace LiveEventWithDVR
 
             return manifests;
         }
-              
+
 
         // <CleanupLiveEventAndOutput>
         private static async Task CleanupLiveEventAndOutputAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, string liveEventName, string liveOutputName)
