@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System;
-
 using Microsoft.Extensions.Configuration;
 
-namespace StreamHLSAndDASH
+namespace Common_Authentication
 {
     /// <summary>
-    /// This class reads values from local configuration file appsettings.json
+    /// This class reads values from local configuration file resources/conf/appsettings.json.
     /// Please change the configuration using your account information. For more information, see
     /// https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to. For security
     /// reasons, do not check in the configuration file to source control.
@@ -67,5 +66,54 @@ namespace StreamHLSAndDASH
             get { return new Uri(_config["ArmEndpoint"]); }
         }
 
+        public string EventHubConnectionString
+        {
+            get { return _config["EventHubConnectionString"]; }
+        }
+
+        public string EventHubName
+        {
+            get { return _config["EventHubName"]; }
+        }
+
+        public string StorageContainerName
+        {
+            get { return _config["StorageContainerName"]; }
+        }
+
+        public string StorageAccountName
+        {
+            get { return _config["StorageAccountName"]; }
+        }
+
+        public string StorageAccountKey
+        {
+            get { return _config["StorageAccountKey"]; }
+        }
+
+        public string SymmetricKey
+        {
+            get { return _config["SymmetricKey"]; }
+        }
+
+        public string AskHex
+        {
+            get { return _config["AskHex"]; }
+        }
+
+        public string FairPlayPfxPath
+        {
+            get { return _config["FairPlayPfxPath"]; }
+        }
+
+        public string FairPlayPfxPassword
+        {
+            get { return _config["FairPlayPfxPassword"]; }
+        }
     }
 }
+
+
+
+
+
