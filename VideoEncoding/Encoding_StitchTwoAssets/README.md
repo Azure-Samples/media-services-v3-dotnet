@@ -24,8 +24,16 @@ This sample shows how to create a custom encoding Transform using the StandardEn
 
 ## Build and run
 
-* Update appsettings.json with your account settings The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
+Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
 
+(The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
+
+Then build and run the sample in Visual Studio or VS Code.
+
+### appsettings.json
+
+The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
 ```bash
     #!/bin/bash
@@ -43,7 +51,10 @@ This sample shows how to create a custom encoding Transform using the StandardEn
     --years 2`
 ```
 
-* Build and run the sample in Visual Studio.
+### .env
+
+Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
+Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
 
 ### Optional - Use Event Grid instead of polling (recommended for production code)
 
