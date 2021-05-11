@@ -22,11 +22,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.30.1" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\Common-Authentication\Common_Authentication.csproj" />
+    <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

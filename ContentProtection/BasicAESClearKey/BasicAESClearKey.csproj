@@ -23,8 +23,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
-    <ProjectReference Include="..\..\Common-Authentication\Common_Authentication.csproj" />
     <PackageReference Update="System.IdentityModel.Tokens.Jwt" Version="6.11.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

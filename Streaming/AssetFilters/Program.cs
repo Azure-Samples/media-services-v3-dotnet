@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Storage.Blobs;
-using Common_Authentication;
+using Common_Utils;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;

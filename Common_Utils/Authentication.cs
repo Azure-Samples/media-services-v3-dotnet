@@ -8,7 +8,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Common_Authentication
+namespace Common_Utils
 {
     public class Authentication
     {
