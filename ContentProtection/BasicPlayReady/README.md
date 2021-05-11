@@ -32,7 +32,7 @@ When a user requests PlayReady-protected content, the player application request
 - Microsoft.Extensions.Configuration
 - Microsoft.Extensions.Configuration.EnvironmentVariables
 - Microsoft.Extensions.Configuration.Json
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Microsoft.Identity.Client
 - System.Security.Claims
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).

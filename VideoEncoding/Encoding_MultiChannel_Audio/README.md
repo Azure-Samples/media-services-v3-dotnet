@@ -103,7 +103,7 @@ After encoding, you will be able to playback the asset in the Azure Media Player
 - Microsoft.Extensions.Configuration
 - Microsoft.Extensions.Configuration.EnvironmentVariables
 - Microsoft.Extensions.Configuration.Json
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Microsoft.Identity.Client
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 

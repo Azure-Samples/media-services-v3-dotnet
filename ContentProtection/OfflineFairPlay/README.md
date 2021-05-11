@@ -36,7 +36,7 @@ When a user requests FairPlay protected content for the first time, the player a
 - Microsoft.Extensions.Configuration
 - Microsoft.Extensions.Configuration.EnvironmentVariables
 - Microsoft.Extensions.Configuration.Json
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Microsoft.Identity.Client
 - System.Security.Claims
 
 
