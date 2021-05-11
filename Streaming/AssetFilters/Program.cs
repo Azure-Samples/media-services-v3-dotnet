@@ -1,19 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure.Storage.Blobs;
+using Common_Utils;
+using Microsoft.Azure.Management.Media;
+using Microsoft.Azure.Management.Media.Models;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Azure.Management.Media;
-using Microsoft.Azure.Management.Media.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System.Text.RegularExpressions;
-using Azure.Storage.Blobs;
+using System.Threading.Tasks;
+
 
 namespace AssetFilters
 {
@@ -22,6 +21,10 @@ namespace AssetFilters
         private const string adaptiveTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name.
+
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
 
         public static async Task Main(string[] args)
         {
@@ -37,7 +40,7 @@ namespace AssetFilters
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -72,7 +75,7 @@ namespace AssetFilters
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -244,34 +247,6 @@ namespace AssetFilters
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
-        }
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         /// <summary>
         /// If the specified transform exists, get that transform.
@@ -362,7 +337,7 @@ namespace AssetFilters
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -462,7 +437,7 @@ namespace AssetFilters
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The name of the job.</param>
         /// <returns></returns>
-        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName, 
+        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
             string transformName, string jobName)
         {
             const int SleepInterval = 10 * 1000;
@@ -473,7 +448,7 @@ namespace AssetFilters
             do
             {
                 job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
-                
+
                 if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
                 {
                     exit = true;
@@ -556,7 +531,7 @@ namespace AssetFilters
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Bitrate, "0-1000000", FilterTrackPropertyCompareOperation.Equal)
             };
 
-            List<FilterTrackSelection> includedTracks = new List<FilterTrackSelection>()
+            List<FilterTrackSelection> includedTracks = new()
             {
                 new FilterTrackSelection(audioConditions),
                 new FilterTrackSelection(videoConditions)
@@ -590,7 +565,7 @@ namespace AssetFilters
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName,

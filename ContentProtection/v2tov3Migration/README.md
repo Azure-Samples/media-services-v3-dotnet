@@ -41,9 +41,14 @@ This sample demonstrates how to find your v2 assets and migrate them to v3. It d
 * Microsoft.IdentityModel.Clients.ActiveDirectory
 * Microsoft.Rest.Azure.Authentication
 
-## Run the sample
+## Build and run
 
-* Configure `appsettings.json` with appropriate access values. The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
+Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+Then build and run the sample in Visual Studio or VS Code.
+
+### appsettings.json
+
+The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
 ```bash
     #!/bin/bash
@@ -61,7 +66,10 @@ This sample demonstrates how to find your v2 assets and migrate them to v3. It d
     --years 2`
 ```
 
-* Build and run the sample in Visual Studio.
+### .env
+
+Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
+Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
 
 ## Next steps
 

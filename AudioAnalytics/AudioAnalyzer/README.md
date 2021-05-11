@@ -22,22 +22,27 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
 
 * Required Assemblies
 
-- Azure.Storage.Blobs
-- Microsoft.Azure.EventGrid
-- Microsoft.Azure.EventHubs
-- Microsoft.Azure.EventHubs.Processor
-- Microsoft.Azure.Management.Media
-- Microsoft.Extensions.Configuration
-- Microsoft.Extensions.Configuration.EnvironmentVariables
-- Microsoft.Extensions.Configuration.Json
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
-
+* Azure.Storage.Blobs
+* Microsoft.Azure.EventGrid
+* Microsoft.Azure.EventHubs
+* Microsoft.Azure.EventHubs.Processor
+* Microsoft.Azure.Management.Media
+* Microsoft.Extensions.Configuration
+* Microsoft.Extensions.Configuration.EnvironmentVariables
+* Microsoft.Extensions.Configuration.Json
+* Microsoft.Identity.Client
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 
 ## Build and run
 
-* Update appsettings.json with your account settings The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
+Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
+Then build and run the sample in Visual Studio or VS Code.
+
+### appsettings.json
+
+The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
 ```bash
     #!/bin/bash
@@ -55,8 +60,11 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
     --years 2`
 ```
 
+### .env
 
-* Build and run the sample in Visual Studio
+Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
+Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
+
 ### Optional - Use Event Grid instead of polling (recommended for production code)
 
 * The following steps should be used if you want to test Event Grid for job monitoring. Please note, there are costs for using Event Hub. For more details, refer to [Event Hubs overview](https://azure.microsoft.com/en-in/pricing/details/event-hubs/) and [Event Hubs pricing](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-faq#pricing).
@@ -65,7 +73,7 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
 
   `az provider register --namespace Microsoft.EventGrid`
 
-#### To check if registered, run the next command. You should see "Registered".
+#### To check if registered, run the next command. You should see "Registered"
 
   `az provider show --namespace Microsoft.EventGrid --query "registrationState"`
 
@@ -88,15 +96,14 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
   az eventgrid event-subscription create --source-resource-id $amsResourceId --name &lt;event-subscription-name&gt; --endpoint-type eventhub --endpoint $hubid
 ```
 
+* Create a storage account and container for Event Processor Host if you don't have one - see [Create a Storage account for event processor host](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host)
 
-- Create a storage account and container for Event Processor Host if you don't have one - see [Create a Storage account for event processor host](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host)
-
-- Update *appsettings.json* or *.env* (at root of solution) with your Event Hub and Storage information
-  - **StorageAccountName**: The name of your storage account.
-  - **StorageAccountKey**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
-  - **StorageContainerName**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
-  - **EventHubConnectionString**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
-  - **EventHubName**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
+* Update *appsettings.json* or *.env* (at root of solution) with your Event Hub and Storage information
+  * **StorageAccountName**: The name of your storage account.
+  * **StorageAccountKey**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
+  * **StorageContainerName**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
+  * **EventHubConnectionString**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
+  * **EventHubName**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
 
 ## Key concepts
 
@@ -106,5 +113,5 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
 
 ## Next steps
 
-- [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-- [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
+* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)

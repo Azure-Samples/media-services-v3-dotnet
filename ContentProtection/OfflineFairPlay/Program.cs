@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Common_Utils;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,20 +14,26 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace OfflineFairPlay
 {
     class Program
     {
+        private const string SourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4";
         private static readonly string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private static readonly string ContentKeyPolicyName = "FairPlayContentKeyPolicy";
         private static readonly string FairPlayStreamingPolicyName = "FairPlayCustomStreamingPolicyName";
         private static readonly string DefaultStreamingEndpointName = "default";  // Change this to your Endpoint name.
 
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
+
         public static async Task Main(string[] args)
         {
             // Please make sure you have set configuration in appsettings.json.For more information, see
             // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -64,7 +68,7 @@ namespace OfflineFairPlay
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -113,7 +117,7 @@ namespace OfflineFairPlay
                         StorageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -216,34 +220,6 @@ namespace OfflineFairPlay
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
-        }
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         /// <summary>
         /// Create the content key policy that configures how the content key is delivered to end clients 
@@ -263,12 +239,12 @@ namespace OfflineFairPlay
 
             if (policy == null)
             {
-                ContentKeyPolicyOpenRestriction restriction = new ContentKeyPolicyOpenRestriction();
+                ContentKeyPolicyOpenRestriction restriction = new();
 
                 ContentKeyPolicyFairPlayConfiguration fairPlay = ConfigureFairPlayLicenseTemplate(config.AskHex, config.FairPlayPfxPath,
                     config.FairPlayPfxPassword);
 
-                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>
+                List<ContentKeyPolicyOption> options = new()
                 {
                     new ContentKeyPolicyOption()
                     {
@@ -280,7 +256,7 @@ namespace OfflineFairPlay
                 Console.WriteLine("Creating a content key policy...");
                 policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, contentKeyPolicyName, options);
             }
-            
+
             return policy;
         }
 
@@ -378,7 +354,7 @@ namespace OfflineFairPlay
             // This example shows how to encode from any HTTPs source URL - a new feature of the v3 API.  
             // Change the URL to any accessible HTTPs URL or SAS URL from Azure.
             JobInputHttp jobInput =
-                new JobInputHttp(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
+                new(files: new[] { SourceUri });
 
             JobOutput[] jobOutputs =
             {
@@ -483,7 +459,7 @@ namespace OfflineFairPlay
 
             byte[] buf = File.ReadAllBytes(fairPlayPfxPath);
             string appCertBase64 = Convert.ToBase64String(buf);
-            ContentKeyPolicyFairPlayConfiguration objContentKeyPolicyPlayReadyConfiguration = new ContentKeyPolicyFairPlayConfiguration
+            ContentKeyPolicyFairPlayConfiguration objContentKeyPolicyPlayReadyConfiguration = new()
             {
                 Ask = askBytes,
                 FairPlayPfx = appCertBase64,
@@ -492,7 +468,7 @@ namespace OfflineFairPlay
                 RentalDuration = 0, // in seconds
                 OfflineRentalConfiguration = new ContentKeyPolicyFairPlayOfflineRentalConfiguration()
                 {
-                   StorageDurationSeconds = 300000,
+                    StorageDurationSeconds = 300000,
                     PlaybackDurationSeconds = 500000
                 }
             };
@@ -529,13 +505,13 @@ namespace OfflineFairPlay
                 // You may want to update this part to throw an Exception instead, and handle name collisions differently.
                 Console.WriteLine("Warning – found an existing Streaming Locator with name = " + locatorName);
 
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
+                string uniqueness = $"-{Guid.NewGuid():N}";
                 locatorName += uniqueness;
 
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
             }
 
-            StreamingPolicy customStreamingPolicy = await GetOrCreateCustomStreamingPloliyForFairPlay(client, resourceGroup, accountName, 
+            StreamingPolicy customStreamingPolicy = await GetOrCreateCustomStreamingPloliyForFairPlay(client, resourceGroup, accountName,
                 FairPlayStreamingPolicyName);
 
             Console.WriteLine("Creating a streaming locator...");
@@ -597,7 +573,7 @@ namespace OfflineFairPlay
 
                 streamingPolicy = await client.StreamingPolicies.CreateAsync(resourceGroupName, accountName, streamingPolicyName, streamingPolicy);
             }
-            
+
             return streamingPolicy;
         }
 
@@ -619,7 +595,7 @@ namespace OfflineFairPlay
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName
