@@ -11,6 +11,7 @@ description: "The samples in this repo show how to encode, package, protect, ana
 # Azure Media Services v3 samples using .NET
 
 The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using .NET SDK. The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.
+
 The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the samples.
 
 To install the latest version of the Microsoft.Azure.Management.Media client SDK go to the Nuget package [Microsoft.Azure.Management.Media](https://www.nuget.org/packages/Microsoft.Azure.Management.Media)
