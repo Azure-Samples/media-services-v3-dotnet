@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Common_Utils;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -19,16 +17,22 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace BasicWidevine
 {
     class Program
     {
         private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
+        private const string SourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4";
         private static readonly string Issuer = "myIssuer";
         private static readonly string Audience = "myAudience";
         private static byte[] TokenSigningKey = new byte[40];
         private static readonly string ContentKeyPolicyName = "WidevineContentKeyPolicy";
         private static readonly string DefaultStreamingEndpointName = "default";     // Change this to your Endpoint name.
+
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
 
         public static async Task Main(string[] args)
         {
@@ -44,7 +48,7 @@ namespace BasicWidevine
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -79,7 +83,7 @@ namespace BasicWidevine
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -127,7 +131,7 @@ namespace BasicWidevine
                         StorageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -212,7 +216,7 @@ namespace BasicWidevine
                     Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
                     Console.WriteLine("You can use Chrome/Firefox for Widevine.");
                     Console.WriteLine();
-                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&widevine=true&token=Bearer%3D{token}");
+                    Console.WriteLine($"https://ampdemo.azureedge.net/?url={dashPath}&widevine=true&token={Authentication.TokenType}%3D{token}");
                     Console.WriteLine();
                 }
 
@@ -246,34 +250,6 @@ namespace BasicWidevine
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
-        }
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         /// <summary>
         /// Create the content key policy that configures how the content key is delivered to end clients 
@@ -295,18 +271,18 @@ namespace BasicWidevine
 
             if (policy == null)
             {
-                ContentKeyPolicySymmetricTokenKey primaryKey = new ContentKeyPolicySymmetricTokenKey(tokenSigningKey);
-                List<ContentKeyPolicyTokenClaim> requiredClaims = new List<ContentKeyPolicyTokenClaim>()
+                ContentKeyPolicySymmetricTokenKey primaryKey = new(tokenSigningKey);
+                List<ContentKeyPolicyTokenClaim> requiredClaims = new()
                 {
                     ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim
                 };
                 List<ContentKeyPolicyRestrictionTokenKey> alternateKeys = null;
                 ContentKeyPolicyTokenRestriction restriction
-                    = new ContentKeyPolicyTokenRestriction(Issuer, Audience, primaryKey, ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims);
+                    = new(Issuer, Audience, primaryKey, ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims);
 
                 ContentKeyPolicyWidevineConfiguration widevineConfig = ConfigureWidevineLicenseTempate();
 
-                List<ContentKeyPolicyOption> options = new List<ContentKeyPolicyOption>
+                List<ContentKeyPolicyOption> options = new()
                 {
                     new ContentKeyPolicyOption()
                     {
@@ -390,7 +366,7 @@ namespace BasicWidevine
         {
             // Check if an Asset already exists
             Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-            Asset asset = new Asset();
+            Asset asset = new();
             string outputAssetName = assetName;
 
             if (outputAsset != null)
@@ -398,7 +374,7 @@ namespace BasicWidevine
                 // Name collision! In order to get the sample to work, let's just go ahead and create a unique asset name
                 // Note that the returned Asset can have a different name than the one specified as an input parameter.
                 // You may want to update this part to throw an Exception instead, and handle name collisions differently.
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
+                string uniqueness = $"-{Guid.NewGuid():N}";
                 outputAssetName += uniqueness;
 
                 Console.WriteLine("Warning – found an existing Asset with name = " + assetName);
@@ -429,7 +405,7 @@ namespace BasicWidevine
             // This example shows how to encode from any HTTPs source URL - a new feature of the v3 API.  
             // Change the URL to any accessible HTTPs URL or SAS URL from Azure.
             JobInputHttp jobInput =
-                new JobInputHttp(files: new[] { "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4" });
+                new(files: new[] { SourceUri });
 
             JobOutput[] jobOutputs =
             {
@@ -509,7 +485,7 @@ namespace BasicWidevine
         /// <returns></returns>
         private static ContentKeyPolicyWidevineConfiguration ConfigureWidevineLicenseTempate()
         {
-            WidevineTemplate template = new WidevineTemplate()
+            WidevineTemplate template = new()
             {
                 AllowedTrackTypes = "SD_HD",
                 ContentKeySpecs = new ContentKeySpec[]
@@ -538,7 +514,7 @@ namespace BasicWidevine
                 }
             };
 
-            ContentKeyPolicyWidevineConfiguration objContentKeyPolicyWidevineConfiguration = new ContentKeyPolicyWidevineConfiguration
+            ContentKeyPolicyWidevineConfiguration objContentKeyPolicyWidevineConfiguration = new()
             {
                 WidevineTemplate = Newtonsoft.Json.JsonConvert.SerializeObject(template)
             };
@@ -579,7 +555,7 @@ namespace BasicWidevine
                 // You may want to update this part to throw an Exception instead, and handle name collisions differently.
                 Console.WriteLine("Warning – found an existing Streaming Locator with name = " + locatorName);
 
-                string uniqueness = $"-{Guid.NewGuid().ToString("N")}";
+                string uniqueness = $"-{Guid.NewGuid():N}";
                 locatorName += uniqueness;
 
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
@@ -613,7 +589,7 @@ namespace BasicWidevine
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
 
-            SigningCredentials cred = new SigningCredentials(
+            SigningCredentials cred = new(
                 tokenSigningKey,
                 // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
                 SecurityAlgorithms.HmacSha256,
@@ -624,7 +600,7 @@ namespace BasicWidevine
                 new Claim(ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim.ClaimType, keyIdentifier)
             };
 
-            JwtSecurityToken token = new JwtSecurityToken(
+            JwtSecurityToken token = new(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
@@ -632,7 +608,7 @@ namespace BasicWidevine
                 expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: cred);
 
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            JwtSecurityTokenHandler handler = new();
 
             return handler.WriteToken(token);
         }
@@ -661,7 +637,7 @@ namespace BasicWidevine
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new UriBuilder
+                UriBuilder uriBuilder = new()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName

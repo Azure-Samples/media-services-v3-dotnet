@@ -1,22 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Common_Utils;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.EventHubs.Processor;
+using Microsoft.Azure.Management.Media;
+using Microsoft.Azure.Management.Media.Models;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Microsoft.Azure.EventHubs;
-using Microsoft.Azure.EventHubs.Processor;
-using Microsoft.Azure.Management.Media;
-using Microsoft.Azure.Management.Media.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure.Authentication;
+
 
 namespace Encoding_MultiChannel_Audio
 {
@@ -25,6 +24,10 @@ namespace Encoding_MultiChannel_Audio
         private const string OutputFolder = @"Output";
         private const string CustomTransform = "Custom_H264_MultiChannel_5";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
+
+        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
+        private const bool UseInteractiveAuth = false;
+
 
         // The multi-channel audio file should contain a stereo pair on tracks 1 and 2, followed by multi channel 5.1 discrete tracks in the following layout
         // 1. Left stereo
@@ -40,7 +43,6 @@ namespace Encoding_MultiChannel_Audio
 
         private const string InputFileName = @"surround-audio.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
 
-
         public static async Task Main(string[] args)
         {
             // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
@@ -55,7 +57,7 @@ namespace Encoding_MultiChannel_Audio
 
             }
 
-            ConfigWrapper config = new ConfigWrapper(new ConfigurationBuilder()
+            ConfigWrapper config = new(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -90,7 +92,7 @@ namespace Encoding_MultiChannel_Audio
             IAzureMediaServicesClient client;
             try
             {
-                client = await CreateMediaServicesClientAsync(config);
+                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
             }
             catch (Exception e)
             {
@@ -210,7 +212,7 @@ namespace Encoding_MultiChannel_Audio
                         storageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new AutoResetEvent(false);
+                    AutoResetEvent jobWaitingEvent = new(false);
 
                     // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
                     await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
@@ -261,7 +263,7 @@ namespace Encoding_MultiChannel_Audio
                         Console.WriteLine("Job final state received, removing the event processor...");
 
                         // Disposes of the Event Processor Host.
-                        eventProcessorHost.UnregisterEventProcessorAsync();
+                        await eventProcessorHost.UnregisterEventProcessorAsync();
                         Console.WriteLine();
                     }
                 }
@@ -327,34 +329,6 @@ namespace Encoding_MultiChannel_Audio
             }
         }
 
-        /// <summary>
-        /// Create the ServiceClientCredentials object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<ServiceClientCredentials> GetCredentialsAsync(ConfigWrapper config)
-        {
-            // Use ApplicationTokenProvider.LoginSilentAsync to get a token using a service principal with symmetric key
-            ClientCredential clientCredential = new ClientCredential(config.AadClientId, config.AadSecret);
-            return await ApplicationTokenProvider.LoginSilentAsync(config.AadTenantId, clientCredential, ActiveDirectoryServiceSettings.Azure);
-        }
-
-        /// <summary>
-        /// Creates the AzureMediaServicesClient object based on the credentials
-        /// supplied in local configuration file.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config)
-        {
-            var credentials = await GetCredentialsAsync(config);
-
-            return new AzureMediaServicesClient(config.ArmEndpoint, credentials)
-            {
-                SubscriptionId = config.SubscriptionId,
-            };
-        }
 
         #region EnsureTransformExists
         /// <summary>
@@ -620,7 +594,7 @@ namespace Encoding_MultiChannel_Audio
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new BlobContainerClient(sasUri);
+            BlobContainerClient container = new(sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -650,8 +624,8 @@ namespace Encoding_MultiChannel_Audio
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new BlobContainerClient(containerSasUrl);
+            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            BlobContainerClient container = new(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -743,14 +717,14 @@ namespace Encoding_MultiChannel_Audio
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new UriBuilder
+                    UriBuilder uriBuilder = new()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,
 
                         Path = streamingFormatPath
                     };
-                    Console.WriteLine($"\t{uriBuilder.ToString()}");
+                    Console.WriteLine($"\t{uriBuilder}");
                     streamingUrls.Add(uriBuilder.ToString());
                 }
                 Console.WriteLine();

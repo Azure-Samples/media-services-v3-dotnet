@@ -12,8 +12,7 @@ description: "The samples in this repo show how to encode, package, protect, ana
 
 The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using .NET SDK. The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.  
 
-To install the latest version of the Microsoft.Azure.Management.Media client SDK go to the Nuget package (Microsoft.Azure.Management.Media)[https://www.nuget.org/packages/Microsoft.Azure.Management.Media]
-
+To install the latest version of the Microsoft.Azure.Management.Media client SDK go to the Nuget package [Microsoft.Azure.Management.Media](https://www.nuget.org/packages/Microsoft.Azure.Management.Media)
 
 ## .NET solution files and how to launch projects
 
@@ -43,6 +42,7 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 | [Streaming/AssetFilters](/Streaming/AssetFilters)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, create an asset-filter and an account-filter, associate the filters to streaming locators and print urls for playback.|
 | [Streaming/StreamHLSAndDASH](/Streaming/StreamHLSAndDASH)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, publish output asset for HLS and DASH streaming.|
 | [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/) | This sample provides guidance and best practices for a production system using on-demand encoding or analytics. Readers should start with the companion article [High Availability with Media Services and VOD](https://docs.microsoft.com/azure/media-services/latest/media-services-high-availability-encoding). There is a separate solution file provided for the [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/Readme.md) sample. |
+| [Common_Utils](/Common_Utils/) | Library used by the samples for the authentication using MSAL and other shared code. |
 
 ## Prerequisites
 
@@ -61,8 +61,6 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 | Issue or Error message | Notes |
 |-------------|-----------|
 |"Encountered error while fetching the list of EventHub PartitionIds" | Make sure that you are using the SAS policy for the EventHub and not the EventHub namespace. Also make sure that your .env or appsettings.json file is pointing to the name of the EventHub (instance) and not the EventHub namespace (which is higher level entity in the portal).|
-
-
 
 ## See also
 
