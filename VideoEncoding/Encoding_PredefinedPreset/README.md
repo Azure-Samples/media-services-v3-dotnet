@@ -15,18 +15,23 @@ This sample demonstrates how to create an encoding Transform that uses a built-i
 
 * Required Assemblies
 
-- Azure.Storage.Blobs
-- Microsoft.Azure.Management.Media
-- Microsoft.Extensions.Configuration
-- Microsoft.Extensions.Configuration.EnvironmentVariables
-- Microsoft.Extensions.Configuration.Json
-- Microsoft.Identity.Client
+* Azure.Storage.Blobs
+* Microsoft.Azure.Management.Media
+* Microsoft.Extensions.Configuration
+* Microsoft.Extensions.Configuration.EnvironmentVariables
+* Microsoft.Extensions.Configuration.Json
+* Microsoft.Identity.Client
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 
 ## Build and run
 
-* Update appsettings.json with your account settings The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
+Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+Then build and run the sample in Visual Studio or VS Code.
+
+### appsettings.json
+
+The settings for your account can be retrieved using the following Azure CLI command in the Media Services module. The following bash shell script creates a service principal for the account and returns the json settings.
 
 ```bash
     #!/bin/bash
@@ -43,3 +48,8 @@ This sample demonstrates how to create an encoding Transform that uses a built-i
     --role Owner` \\
     --years 2`
 ```
+
+### .env
+
+Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
+Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
