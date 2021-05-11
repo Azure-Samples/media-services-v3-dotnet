@@ -28,7 +28,7 @@ This sample demonstrates how to create and use LiveEvents and LiveOutputs in the
 - Microsoft.Extensions.Configuration
 - Microsoft.Extensions.Configuration.Json
 - Microsoft.Extensions.Configuration.EnvironmentVariables
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Microsoft.Identity.Client
 - Azure.Storage.Blobs
 
 * A camera connected to your computer.

@@ -29,7 +29,7 @@ This sample demonstrates how to filter content using asset and account filters. 
 - Microsoft.Extensions.Configuration
 - Microsoft.Extensions.Configuration.EnvironmentVariables
 - Microsoft.Extensions.Configuration.Json
-- Microsoft.Rest.ClientRuntime.Azure.Authentication
+- Microsoft.Identity.Client
 
 ## Build and run
 
