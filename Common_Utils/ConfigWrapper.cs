@@ -4,7 +4,7 @@
 using Microsoft.Extensions.Configuration;
 using System;
 
-namespace Common_Authentication
+namespace Common_Utils
 {
     /// <summary>
     /// This class reads values from local configuration file resources/conf/appsettings.json.
