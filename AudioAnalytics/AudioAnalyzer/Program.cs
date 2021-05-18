@@ -111,7 +111,7 @@ namespace AudioAnalyzer
                 //         Automatic language detection and speaker diarization are not included in this mode.
                 // Standard : Performs all operations included in the Basic mode, additionally performing language detection and speaker diarization.
                 //
-                mode: AudioAnalysisMode.Basic
+                mode: AudioAnalysisMode.Standard
             );
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
@@ -123,8 +123,28 @@ namespace AudioAnalyzer
 
             // Output from the encoding Job must be written to an Asset, so let's create one
             Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
+            
+            // Use a preset override to change the language or mode on the Job level.
+            // Above we created a Transform with a preset that was set to a specific audio language and mode. 
+            // If we want to change that language or mode before submitting the job, we can modify it using the PresetOverride property 
+            // on the JobOutput.
 
-            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AudioAnalyzerTransformName, jobName, inputAssetName, outputAsset.Name);
+            // First we re-define the preset that we want to use for this specific Job...
+            var presetOverride = new AudioAnalyzerPreset
+            {
+                AudioLanguage = "en-US",
+                Mode = AudioAnalysisMode.Basic  /// Switch this job to use Basic mode instead of standard
+            };
+
+            // Then we use the PresetOverride property of the JobOutput to pass in the override values to use on this single Job 
+            // without the need to create a completely separate and new Transform with another langauge code or Mode setting. 
+            // This can save a lot of complexity in your AMS account and reduce the number of Transforms used.
+            JobOutput jobOutput = new JobOutputAsset(){
+                AssetName = outputAsset.Name,
+                // PresetOverride = presetOverride
+            };
+
+            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AudioAnalyzerTransformName, jobName, inputAssetName, jobOutput);
 
             EventProcessorHost eventProcessorHost = null;
             try
@@ -352,13 +372,13 @@ namespace AudioAnalyzer
             string transformName,
             string jobName,
             string inputAssetName,
-            string outputAssetName)
+            JobOutput jobOutput)
         {
             JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
 
             JobOutput[] jobOutputs =
             {
-                new JobOutputAsset(outputAssetName),
+                jobOutput
             };
 
             // In this example, we are assuming that the job name is unique.

@@ -4,5 +4,9 @@
     ],
     "cSpell.words": [
         "hevc"
-    ]
+    ],
+    "azure-iot-edge.defaultPlatform": {
+        "platform": "amd64",
+        "alias": null
+    }
 }
