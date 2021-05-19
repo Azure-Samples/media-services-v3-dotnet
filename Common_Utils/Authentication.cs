@@ -67,6 +67,7 @@ namespace Common_Utils
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
         /// <returns></returns>
+        // <GetCredentialsInteractiveAuthAsync>
         private static async Task<ServiceClientCredentials> GetCredentialsInteractiveAuthAsync(ConfigWrapper config)
         {
             var scopes = new[] { config.ArmAadAudience + "/user_impersonation" };
@@ -105,5 +106,6 @@ namespace Common_Utils
 
             return new TokenCredentials(result.AccessToken, TokenType);
         }
+        // </GetCredentialsInteractiveAuthAsync>
     }
 }
