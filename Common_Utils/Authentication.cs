@@ -20,6 +20,7 @@ namespace Common_Utils
         /// </summary>
         /// <param name="config">The param is of type ConfigWrapper, which reads values from local configuration file.</param>
         /// <returns>A task.</returns>
+        // <CreateMediaServicesClientAsync>
         public static async Task<IAzureMediaServicesClient> CreateMediaServicesClientAsync(ConfigWrapper config, bool interactive = false)
         {
             ServiceClientCredentials credentials;
@@ -33,6 +34,7 @@ namespace Common_Utils
                 SubscriptionId = config.SubscriptionId,
             };
         }
+        // </CreateMediaServicesClientAsync>
 
         /// <summary>
         /// Create the ServiceClientCredentials object based on the credentials
