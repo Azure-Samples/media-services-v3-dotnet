@@ -67,9 +67,8 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 ## See also
 
-Nodejs samples : <https://github.com/Azure-Samples/media-services-v3-node-tutorials>
-
-Java samples: <https://github.com/Azure-Samples/media-services-v3-java>
+- Nodejs samples : <https://github.com/Azure-Samples/media-services-v3-node-tutorials>
+- Java samples: <https://github.com/Azure-Samples/media-services-v3-java>
 
 ## Next steps
 
