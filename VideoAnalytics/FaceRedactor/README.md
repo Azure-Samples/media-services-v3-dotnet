@@ -8,12 +8,16 @@ products:
 
 # Redact and blur videos with the FaceDetectorPreset preset
 
-This sample demonstrates how to redact faces in a video. It shows how to perform the following tasks:
+This sample demonstrates how to redact faces in a video using "combined mode". It shows how to perform the following tasks:
 
 1. Creates a transform that uses a Face Detector preset and the Combined mode for finding faces and blurring them in a single pass.
 1. Uploads a video file to an input asset
-1. Submits a the combine find faces and blur job
+1. Submits a redaction job using the "Combined" mode to find faces and blur in a single pass.  
 1. Downloads the output asset for verification.
+
+> [!NOTE]
+> The Sample is only setup to support a single pass redaction using the combined mode. Setting to just Analyze will result in the output of just the .json file.  If you set the sample to use the "Redact" mode you will get a Job error, because the sample is not uploading the output from the required first-pass using the "analyze" mode.  Feel free to modify the sample to upload the output from the "analyze" mode, modify the .json file and play around withe the blur settings to get a feel for how the 2-pass operation works.
+
 
 > [!TIP]
 > The `Program.cs` file has extensive comments.
