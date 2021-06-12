@@ -29,6 +29,7 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 | Folder | Description |
 |-------------|-------------|
+| [Account/CreateAccount](/Account/CreateAccount)|The sample shows how to create a Media Services account and set the primary storage account, in addition to advanced configuration settings including Key Delivery IP allowlist, Managed Identity, storage auth, and bring your own encryption key.|
 | [VideoEncoding/Encoding_PredefinedPreset](/VideoEncoding/Encoding_PredefinedPreset)|The sample shows how to submit a job using a built-in preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_H264](/VideoEncoding/Encoding_H264)|The sample shows how to submit a job using a custom H.264 encoding preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_HEVC](/VideoEncoding/Encoding_HEVC)|The sample shows how to submit a job using a custom HEVC encoding preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
