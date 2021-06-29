@@ -91,7 +91,7 @@ namespace Account
             // The default value is 30 seconds for the .NET client SDK
             client.LongRunningOperationRetryTimeout = 2;
 
-            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13).Replace('-','x'); // Create a GUID for uniqueness. You can make this something static if you dont want to change RTMP ingest settings in OBS constantly.  
+            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13).Replace('-','x'); // Create a GUID for uniqueness.
             string accountName = "testaccount" + uniqueness;
 
              // Set this to one of the available region names using the format japanwest,japaneast,eastasia,southeastasia,
