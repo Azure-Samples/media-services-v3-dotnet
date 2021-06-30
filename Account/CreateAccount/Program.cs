@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Common_Utils;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
@@ -10,8 +8,6 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Account
@@ -91,32 +87,33 @@ namespace Account
             // The default value is 30 seconds for the .NET client SDK
             client.LongRunningOperationRetryTimeout = 2;
 
-            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13).Replace('-','x'); // Create a GUID for uniqueness.
+            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13).Replace('-', 'x'); // Create a GUID for uniqueness.
             string accountName = "testaccount" + uniqueness;
 
-             // Set this to one of the available region names using the format japanwest,japaneast,eastasia,southeastasia,
-             // westeurope,northeurope,eastus,westus,australiaeast,australiasoutheast,eastus2,centralus,brazilsouth,
-             // centralindia,westindia,southindia,northcentralus,southcentralus,uksouth,ukwest,canadacentral,canadaeast,
-             // westcentralus,westus2,koreacentral,koreasouth,francecentral,francesouth,southafricanorth,southafricawest,
-             // uaecentral,uaenorth,germanywestcentral,germanynorth,switzerlandwest,switzerlandnorth,norwayeast
+            // Set this to one of the available region names using the format japanwest,japaneast,eastasia,southeastasia,
+            // westeurope,northeurope,eastus,westus,australiaeast,australiasoutheast,eastus2,centralus,brazilsouth,
+            // centralindia,westindia,southindia,northcentralus,southcentralus,uksouth,ukwest,canadacentral,canadaeast,
+            // westcentralus,westus2,koreacentral,koreasouth,francecentral,francesouth,southafricanorth,southafricawest,
+            // uaecentral,uaenorth,germanywestcentral,germanynorth,switzerlandwest,switzerlandnorth,norwayeast
 
             string accountLocation = "westus";
 
             // Set up the values for your Media Services account 
-            MediaService parameters = new (
+            MediaService parameters = new(
                 location: accountLocation, // This is the location for the account to be created. 
                 storageAccounts: new List<StorageAccount>(){
                     new StorageAccount(
                         type: StorageAccountType.Primary,
                         // set this to the name of a storage account in your subscription using the full resource path formatting for Microsoft.Storage
-                        id: $"/subscriptions/{config.SubscriptionId}/resourceGroups/{config.ResourceGroup}/providers/Microsoft.Storage/storageAccounts/{config.StorageAccountName}"  
+                        id: $"/subscriptions/{config.SubscriptionId}/resourceGroups/{config.ResourceGroup}/providers/Microsoft.Storage/storageAccounts/{config.StorageAccountName}"
                     )
                 },
 
-                keyDelivery:  new (  // To restrict the client access and delivery of your content keys, set the key delivery accessControl ipAllowList. 
-                    accessControl :  new (
+                keyDelivery: new(  // To restrict the client access and delivery of your content keys, set the key delivery accessControl ipAllowList. 
+                    accessControl: new(
                         defaultAction: DefaultAction.Allow,  // Allow or Deny access from the ipAllowList. If this is set to Allow, the ipAllowList should be empty.
-                        ipAllowList: new List<string>(){  // List the IPv3 addresses to Allow or Deny based on the default action. 
+                        ipAllowList: new List<string>()
+                        {  // List the IPv3 addresses to Allow or Deny based on the default action. 
                             // "10.0.0.1/32", // you can use the CIDR IPv3 format,
                             // "127.0.0.1"  or a single individual Ipv4 address as well.
                         }
@@ -124,21 +121,22 @@ namespace Account
                 )
             );
 
-            var availability =  client.Locations.CheckNameAvailability(
-                type:"Microsoft.Media/mediaservices",
-                locationName:accountLocation, 
-                name:accountName
+            var availability = client.Locations.CheckNameAvailability(
+                type: "Microsoft.Media/mediaservices",
+                locationName: accountLocation,
+                name: accountName
             );
 
-            if (!availability.NameAvailable) {
+            if (!availability.NameAvailable)
+            {
                 Console.WriteLine($"The account with the name {accountName} is not available.");
                 Console.WriteLine(availability.Message);
                 throw new Exception(availability.Reason);
             }
 
             // Create a new Media Services account
-            client.Mediaservices.CreateOrUpdate(config.ResourceGroup,accountName, parameters );
-            
+            client.Mediaservices.CreateOrUpdate(config.ResourceGroup, accountName, parameters);
+
             Console.WriteLine($"Media Services account : {accountName} created!");
             Console.WriteLine("Press enter to clean up resources and delete the account...");
             Console.Out.Flush();
@@ -162,8 +160,8 @@ namespace Account
             Console.WriteLine("Cleaning up...");
             Console.WriteLine();
 
-             Console.WriteLine($"Deleting Media account: {accountName}.");
-            await client.Mediaservices.DeleteAsync(resourceGroupName,accountName);
+            Console.WriteLine($"Deleting Media account: {accountName}.");
+            await client.Mediaservices.DeleteAsync(resourceGroupName, accountName);
 
         }
     }

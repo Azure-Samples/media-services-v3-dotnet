@@ -123,7 +123,7 @@ namespace AudioAnalyzer
 
             // Output from the encoding Job must be written to an Asset, so let's create one
             Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
-            
+
             // Use a preset override to change the language or mode on the Job level.
             // Above we created a Transform with a preset that was set to a specific audio language and mode. 
             // If we want to change that language or mode before submitting the job, we can modify it using the PresetOverride property 
@@ -139,7 +139,8 @@ namespace AudioAnalyzer
             // Then we use the PresetOverride property of the JobOutput to pass in the override values to use on this single Job 
             // without the need to create a completely separate and new Transform with another langauge code or Mode setting. 
             // This can save a lot of complexity in your AMS account and reduce the number of Transforms used.
-            JobOutput jobOutput = new JobOutputAsset(){
+            JobOutput jobOutput = new JobOutputAsset()
+            {
                 AssetName = outputAsset.Name,
                 // PresetOverride = presetOverride
             };
