@@ -406,7 +406,7 @@ namespace OfflinePlayReadyAndWidevine
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
                 }
-                throw exception;
+                throw;
             }
 
             return job;
