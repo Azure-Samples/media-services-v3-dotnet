@@ -141,7 +141,7 @@ namespace AudioAnalyzer
             // This can save a lot of complexity in your AMS account and reduce the number of Transforms used.
             JobOutput jobOutput = new JobOutputAsset()
             {
-                AssetName = outputAsset.Name,
+                AssetName = outputAsset.Name
                 // PresetOverride = presetOverride
             };
 
