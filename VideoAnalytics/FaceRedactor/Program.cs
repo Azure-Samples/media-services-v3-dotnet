@@ -111,7 +111,7 @@ namespace FaceRedactor
                 resolution: AnalysisResolution.SourceResolution,
                 mode: FaceRedactorMode.Combined, // Use the Combined mode here. This is the single pass mode where detection and blurring happens as one pass - if you want to analyze and get JSON results first before blur, use Analyze mode, followed by Redact mode. 
                 blurType: BlurType.Med // Sets the amount of blur. For debugging purposes you can set this to Box to just see the outlines of the faces.
-                //BUG: THere is currently an open bug where the BlurType.Box is not producing the correct results.  See issues list.
+                //BUG: There is currently an open bug where the BlurType.Box is not producing the correct results.  See issues list.
             );
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
