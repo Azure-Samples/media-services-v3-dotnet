@@ -35,7 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamHLSAndDASH", "Streami
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoAnalytics", "VideoAnalytics", "{0455D046-ED7C-40F6-A4F3-D80F658D9594}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnalyzeVideos", "VideoAnalytics\VideoAnalyzer\AnalyzeVideos.csproj", "{51C8945C-DF87-4651-8F05-7924B7C564B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoAnalyzer", "VideoAnalytics\VideoAnalyzer\VideoAnalyzer.csproj", "{51C8945C-DF87-4651-8F05-7924B7C564B3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_HEVC", "VideoEncoding\Encoding_HEVC\Encoding_HEVC.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
 EndProject
@@ -53,7 +53,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common_Utils", "Common_Util
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Account", "Account", "{1A42B0C5-1101-44E1-A9D6-CC94319705AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Account", "Account\CreateAccount\Account.csproj", "{8A47C39E-3326-4536-8FB2-80F894B1F30F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateAccount", "Account\CreateAccount\CreateAccount.csproj", "{8A47C39E-3326-4536-8FB2-80F894B1F30F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -9,7 +9,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net5.0/Account.exe",
+      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net5.0/CreateAccount.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/CreateAccount",
@@ -159,7 +159,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/net5.0/AnalyzeVideos.exe",
+      "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/net5.0/VideoAnalyzer.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer",
@@ -188,7 +188,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net5.0/EncodingWithMESCustomPreset.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net5.0/Encoding_H264.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264",
@@ -203,7 +203,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net5.0/EncodingWithMESCustomPreset.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net5.0/Encoding_HEVC.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC",
@@ -263,7 +263,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net5.0/EncodingWithMES_MultiChannel.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net5.0/Encoding_MultiChannel_Audio.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio",
