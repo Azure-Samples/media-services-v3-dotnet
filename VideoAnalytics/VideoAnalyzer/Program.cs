@@ -518,10 +518,16 @@ namespace VideoAnalyzer
         {
             Console.WriteLine("Cleaning up...");
             Console.WriteLine();
-            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
+            Console.WriteLine($"Deleting Job: {jobName}");
+            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
+            Console.WriteLine($"Deleting input asset: {inputAssetName}");
             await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
+            Console.WriteLine($"Deleting output asset: {outputAssetName}");
             await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
+             Console.WriteLine($"Deleting Transform: {transformName}.");
+            await client.Transforms.DeleteAsync(resourceGroupName,accountName, transformName);
+            
         }
     }
 }
