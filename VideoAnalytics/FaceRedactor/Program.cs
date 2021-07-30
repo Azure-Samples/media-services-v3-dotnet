@@ -21,6 +21,7 @@ namespace FaceRedactor
 {
     class Program
     {
+        // NOTE: Make sure to change the name or delete the transform if you want to modify it after first run creation. If you run sample to completion it should be deleted. 
         private const string FaceRedactorTransformName = "FaceRedactorTransform";
         private const string InputMP4FileName = @"ignite-redact.mp4";
         private const string OutputFolderName = @"Output";
@@ -110,8 +111,8 @@ namespace FaceRedactor
             Preset faceRedactionPreset = new FaceDetectorPreset(
                 resolution: AnalysisResolution.SourceResolution,
                 mode: FaceRedactorMode.Combined, // Use the Combined mode here. This is the single pass mode where detection and blurring happens as one pass - if you want to analyze and get JSON results first before blur, use Analyze mode, followed by Redact mode. 
-                blurType: BlurType.Med // Sets the amount of blur. For debugging purposes you can set this to Box to just see the outlines of the faces.
-                //BUG: There is currently an open bug where the BlurType.Box is not producing the correct results.  See issues list.
+                blurType: BlurType.Box // Sets the amount of blur. For debugging purposes you can set this to Box to just see the outlines of the faces.
+              
             );
 
             // Ensure that you have the desired encoding Transform. This is really a one time setup operation.
@@ -532,10 +533,15 @@ namespace FaceRedactor
         {
             Console.WriteLine("Cleaning up...");
             Console.WriteLine();
+             Console.WriteLine($"Deleting Job: {jobName}");
             await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
 
+            Console.WriteLine($"Deleting input asset: {inputAssetName}");
             await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
+            Console.WriteLine($"Deleting output asset: {outputAssetName}");
             await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
+             Console.WriteLine($"Deleting Transform: {transformName}.");
+            await client.Transforms.DeleteAsync(resourceGroupName,accountName, transformName);
         }
     }
 }
