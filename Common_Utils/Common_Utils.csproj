@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>Common_Authentication</RootNamespace>
+    <RootNamespace>Common_Utils</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,6 +10,14 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.35.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.23" />
+    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="11.2.3" />
+    <PackageReference Include="Microsoft.Azure.Storage.DataMovement" Version="2.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="manifest\manifest.ism">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

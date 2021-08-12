@@ -140,6 +140,21 @@
       "envFile": "${workspaceFolder}/.env"
     },
     {
+      "name": "Launch Stream from existing Mp4",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net5.0/StreamExistingMp4.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
       "name": "Launch Live Event With DVR",
       "type": "coreclr",
       "request": "launch",
