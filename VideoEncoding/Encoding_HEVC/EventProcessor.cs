@@ -1,14 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.Azure.EventGrid.Models;
-using Microsoft.Azure.EventHubs;
-using Microsoft.Azure.EventHubs.Processor;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Azure.Messaging.EventGrid.SystemEvents;
+using Azure.Messaging.EventHubs.Processor;
+using System.Text.Json;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +14,7 @@ namespace EncodingWithMESCustomHEVC
     /// <summary>
     /// Implementation of IEventProcessor to handle events from Event Hub.
     /// </summary>
-    class MediaServicesEventProcessor : IEventProcessor
+    class MediaServicesEventProcessor
     {
         private readonly AutoResetEvent jobWaitingEvent;
         private readonly string jobName;
@@ -31,51 +27,70 @@ namespace EncodingWithMESCustomHEVC
             this.liveEventName = liveEventName;
         }
 
-        public Task CloseAsync(PartitionContext context, CloseReason reason)
+        public Task ProcessErrorAsync(ProcessErrorEventArgs args)
         {
-            Console.WriteLine($"Processor Shutting Down. Partition '{context.PartitionId}', Reason: '{reason}'.");
-            return Task.CompletedTask;
-        }
-
-        public Task OpenAsync(PartitionContext context)
-        {
-            Console.WriteLine($"SimpleEventProcessor initialized. Partition: '{context.PartitionId}'");
-            return Task.CompletedTask;
-        }
-
-        public Task ProcessErrorAsync(PartitionContext context, Exception error)
-        {
-            Console.WriteLine($"Error on Partition: {context.PartitionId}, Error: {error.Message}");
-            return Task.CompletedTask;
-        }
-
-        public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
-        {
-            foreach (var eventData in messages)
+            try
             {
-                PrintJobEvent(eventData);
+                Console.WriteLine("Error in the EventProcessorClient");
+                Console.WriteLine($"\tOperation: { args.Operation }");
+                Console.WriteLine($"\tException: { args.Exception }");
+                Console.WriteLine("");
+            }
+            catch
+            {
+                // It is very important that you always guard against
+                // exceptions in your handler code; the processor does
+                // not have enough understanding of your code to
+                // determine the correct action to take.  Any
+                // exceptions from your handlers go uncaught by
+                // the processor and will NOT be handled in any
+                // way.
+
             }
 
-            return context.CheckpointAsync();
+            return Task.CompletedTask;
+        }
+
+        public Task ProcessEventsAsync(ProcessEventArgs args)
+        {
+            if (args.HasEvent)
+            {
+                PrintJobEvent(args.Data);
+            }
+
+            return args.UpdateCheckpointAsync();
         }
 
         /// <summary>
         /// Parse and print Media Services events.
         /// </summary>
         /// <param name="eventData">Event Hub event data.</param>
-        private void PrintJobEvent(EventData eventData)
+        private void PrintJobEvent(Azure.Messaging.EventHubs.EventData eventData)
         {
-            var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
-            JArray jArr = JsonConvert.DeserializeObject<JArray>(data);
-            foreach (JObject jObj in jArr)
+            // data = Encoding.UTF8.GetString(eventData.EventBody);
+            var options = new JsonSerializerOptions
             {
-                string eventType = (string)jObj.GetValue("eventType");
-                string subject = (string)jObj.GetValue("subject");
-                string eventName = Regex.Replace(subject, @"^.*/", "");
-                if (eventName != jobName && eventName != liveEventName)
+                PropertyNameCaseInsensitive = true
+            };
+
+            var jsonArray = JsonSerializer.Deserialize<Azure.Messaging.EventGrid.EventGridEvent[]>(eventData.EventBody.ToString(), options);
+
+            foreach(Azure.Messaging.EventGrid.EventGridEvent e in jsonArray)
+            {
+                var subject = e.Subject;
+                var topic = e.Topic;
+                var eventType = e.EventType;
+                var eventTime = e.EventTime;
+                string eventSourceName = Regex.Replace(subject, @"^.*/", "");
+
+
+                if (eventSourceName != jobName && eventSourceName != liveEventName)
                 {
                     return;
                 }
+
+                // Log the time and type of event
+                Console.WriteLine($"{eventTime}   EventType: {eventType}");
 
                 switch (eventType)
                 {
@@ -88,9 +103,9 @@ namespace EncodingWithMESCustomHEVC
                     case "Microsoft.Media.JobCanceled":
                     case "Microsoft.Media.JobErrored":
                         {
-                            MediaJobStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobStateChangeEventData>();
+                            MediaJobStateChangeEventData jobEventData = JsonSerializer.Deserialize<MediaJobStateChangeEventData>(e.Data.ToString(), options);
 
-                            Console.WriteLine($"Job state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} State: {jobEventData.State}");
+                            Console.WriteLine($"Job state changed for JobId: {eventSourceName} PreviousState: {jobEventData.PreviousState} State: {jobEventData.State}");
 
                             // For final states, send a message to notify that the job has finished.
                             if (eventType == "Microsoft.Media.JobFinished" || eventType == "Microsoft.Media.JobCanceled" || eventType == "Microsoft.Media.JobErrored")
@@ -113,9 +128,9 @@ namespace EncodingWithMESCustomHEVC
                     case "Microsoft.Media.JobOutputCanceled":
                     case "Microsoft.Media.JobOutputErrored":
                         {
-                            MediaJobOutputStateChangeEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputStateChangeEventData>();
+                            MediaJobOutputStateChangeEventData jobEventData = JsonSerializer.Deserialize<MediaJobOutputStateChangeEventData>(e.Data.ToString(), options);
 
-                            Console.WriteLine($"Job output state changed for JobId: {eventName} PreviousState: {jobEventData.PreviousState} " +
+                            Console.WriteLine($"Job output state changed for JobId: {eventSourceName} PreviousState: {jobEventData.PreviousState} " +
                                 $"State: {jobEventData.Output.State} Progress: {jobEventData.Output.Progress}%");
                         }
                         break;
@@ -123,30 +138,30 @@ namespace EncodingWithMESCustomHEVC
                     // Job output progress event
                     case "Microsoft.Media.JobOutputProgress":
                         {
-                            MediaJobOutputProgressEventData jobEventData = jObj.GetValue("data").ToObject<MediaJobOutputProgressEventData>();
+                            MediaJobOutputProgressEventData jobEventData = JsonSerializer.Deserialize<MediaJobOutputProgressEventData>(e.Data.ToString(), options);
 
-                            Console.WriteLine($"Job output progress changed for JobId: {eventName} Progress: {jobEventData.Progress}%");
+                            Console.WriteLine($"Job output progress changed for JobId: {eventSourceName} Progress: {jobEventData.Progress}%");
                         }
                         break;
 
                     // LiveEvent Stream-level events
                     case "Microsoft.Media.LiveEventConnectionRejected":
                         {
-                            MediaLiveEventConnectionRejectedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventConnectionRejectedEventData>();
+                            MediaLiveEventConnectionRejectedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventConnectionRejectedEventData>(e.Data.ToString(), options);
                             Console.WriteLine($"LiveEvent connection rejected. IngestUrl: {liveEventData.IngestUrl} StreamId: {liveEventData.StreamId} " +
                                 $"EncoderIp: {liveEventData.EncoderIp} EncoderPort: {liveEventData.EncoderPort}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventEncoderConnected":
                         {
-                            MediaLiveEventEncoderConnectedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventEncoderConnectedEventData>();
+                            MediaLiveEventEncoderConnectedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventEncoderConnectedEventData>(e.Data.ToString(), options);
                             Console.WriteLine($"LiveEvent encoder connected. IngestUrl: {liveEventData.IngestUrl} StreamId: {liveEventData.StreamId} " +
                                 $"EncoderIp: {liveEventData.EncoderIp} EncoderPort: {liveEventData.EncoderPort}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventEncoderDisconnected":
                         {
-                            MediaLiveEventEncoderDisconnectedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventEncoderDisconnectedEventData>();
+                            MediaLiveEventEncoderDisconnectedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventEncoderDisconnectedEventData>(e.Data.ToString(), options);
                             Console.WriteLine($"LiveEvent encoder disconnected. IngestUrl: {liveEventData.IngestUrl} StreamId: {liveEventData.StreamId} " +
                                 $"EncoderIp: {liveEventData.EncoderIp} EncoderPort: {liveEventData.EncoderPort}");
                         }
@@ -155,72 +170,45 @@ namespace EncodingWithMESCustomHEVC
                     // LiveEvent Track-level events
                     case "Microsoft.Media.LiveEventIncomingDataChunkDropped":
                         {
-                            MediaLiveEventIncomingDataChunkDroppedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventIncomingDataChunkDroppedEventData>();
-                            Console.WriteLine($"LiveEvent data chunk dropped. LiveEventId: {eventName} ResultCode: {liveEventData.ResultCode}");
+                            MediaLiveEventIncomingDataChunkDroppedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventIncomingDataChunkDroppedEventData>(e.Data.ToString(), options);
+                            Console.WriteLine($"LiveEvent data chunk dropped. LiveEventId: {eventSourceName} ResultCode: {liveEventData.ResultCode}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIncomingStreamReceived":
                         {
-                            MediaLiveEventIncomingStreamReceivedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventIncomingStreamReceivedEventData>();
+                            MediaLiveEventIncomingStreamReceivedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventIncomingStreamReceivedEventData>(e.Data.ToString(), options);
                             Console.WriteLine($"LiveEvent incoming stream received. IngestUrl: {liveEventData.IngestUrl} EncoderIp: {liveEventData.EncoderIp} " +
                                 $"EncoderPort: {liveEventData.EncoderPort}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIncomingStreamsOutOfSync":
                         {
-                            //MediaLiveEventIncomingStreamsOutOfSyncEventData eventData = jObj.GetValue("data").ToObject<MediaLiveEventIncomingStreamsOutOfSyncEventData>();
-                            Console.WriteLine($"LiveEvent incoming audio and video streams are out of sync. LiveEventId: {eventName}");
+                            //MediaLiveEventIncomingStreamsOutOfSyncEventData eventData = JsonSerializer.Deserialize<MediaLiveEventIncomingStreamsOutOfSyncEventData>(e.Data.ToString(), options);;
+                            Console.WriteLine($"LiveEvent incoming audio and video streams are out of sync. LiveEventId: {eventSourceName}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIncomingVideoStreamsOutOfSync":
                         {
-                            //MediaLiveEventIncomingVideoStreamsOutOfSyncEventData eventData =jObj.GetValue("data").ToObject<MediaLiveEventIncomingVideoStreamsOutOfSyncEventData>();
-                            Console.WriteLine($"LeveEvent incoming video streams are out of sync. LiveEventId: {eventName}");
+                            //MediaLiveEventIncomingVideoStreamsOutOfSyncEventData eventData =JsonSerializer.Deserialize<MediaLiveEventIncomingVideoStreamsOutOfSyncEventData>(e.Data.ToString(), options);;
+                            Console.WriteLine($"LeveEvent incoming video streams are out of sync. LiveEventId: {eventSourceName}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventIngestHeartbeat":
                         {
-                            MediaLiveEventIngestHeartbeatEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventIngestHeartbeatEventData>();
+                            MediaLiveEventIngestHeartbeatEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventIngestHeartbeatEventData>(e.Data.ToString(), options);
                             Console.WriteLine($"LiveEvent ingest heart beat. TrackType: {liveEventData.TrackType} State: {liveEventData.State} Healthy: {liveEventData.Healthy}");
                         }
                         break;
                     case "Microsoft.Media.LiveEventTrackDiscontinuityDetected":
                         {
-                            MediaLiveEventTrackDiscontinuityDetectedEventData liveEventData = jObj.GetValue("data").ToObject<MediaLiveEventTrackDiscontinuityDetectedEventData>();
-                            Console.WriteLine($"LiveEvent discontinuity in the incoming track detected. LiveEventId: {eventName} TrackType: {liveEventData.TrackType} " +
+                            MediaLiveEventTrackDiscontinuityDetectedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventTrackDiscontinuityDetectedEventData>(e.Data.ToString(), options);
+                            Console.WriteLine($"LiveEvent discontinuity in the incoming track detected. LiveEventId: {eventSourceName} TrackType: {liveEventData.TrackType} " +
                                 $"Discontinuity gap: {liveEventData.DiscontinuityGap}");
                         }
                         break;
                 }
             }
-        }
-    }
 
-    /// <summary>
-    /// Factory class for creating custom EventProcessor.
-    /// </summary>
-    class MediaServicesEventProcessorFactory : IEventProcessorFactory
-    {
-        private readonly AutoResetEvent jobWaitingEvent;
-        private readonly string jobName;
-        private readonly string liveEventName;
-        public MediaServicesEventProcessorFactory(string jobName, AutoResetEvent jobWaitingEvent)
-        {
-            this.jobName = jobName;
-            this.jobWaitingEvent = jobWaitingEvent;
-            this.liveEventName = null;
-        }
-
-        public MediaServicesEventProcessorFactory(string liveEventName)
-        {
-            this.jobName = null;
-            this.jobWaitingEvent = null;
-            this.liveEventName = liveEventName;
-        }
-
-        IEventProcessor IEventProcessorFactory.CreateEventProcessor(PartitionContext context)
-        {
-            return new MediaServicesEventProcessor(jobName, jobWaitingEvent, liveEventName);
         }
     }
 }

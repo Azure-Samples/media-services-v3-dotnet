@@ -128,6 +128,7 @@ namespace EncodingWithMESCustomH264
 
                 EventProcessorClient processorClient = null;
                 BlobContainerClient storageClient = null;
+                MediaServicesEventProcessor  mediaEventProcessor = null;
 
                 try
                 {
@@ -182,9 +183,9 @@ namespace EncodingWithMESCustomH264
                     var timeout = Task.Delay(30 * 60 * 1000, cancellationSource.Token);
                     tasks.Add(timeout);
 
-                    var mediaEventProcessor = new MediaServicesEventProcessor(jobName,jobWaitingEvent,null);
+                    mediaEventProcessor = new MediaServicesEventProcessor(jobName,jobWaitingEvent,null);
                     processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
-                    processorClient.ProcessErrorAsync += processErrorHandler;
+                    processorClient.ProcessErrorAsync += mediaEventProcessor.ProcessErrorAsync;
 
                     await processorClient.StartProcessingAsync(cancellationSource.Token);
 
@@ -225,19 +226,10 @@ namespace EncodingWithMESCustomH264
                         // finished using the Event Processor to ensure proper cleanup.  This
                         // is especially important when using lambda expressions or handlers
                         // in any form that may contain closure scopes or hold other references.
-
-                        processorClient.ProcessEventAsync -= processEventHandler;
-                        processorClient.ProcessErrorAsync -= processErrorHandler;
+                        processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+                        processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
                     }
 
-                    //if (eventProcessorHost != null)
-                    //{
-                    //    Console.WriteLine("Job final state received, removing the event processor...");
-
-                    //    // Disposes of the Event Processor Host.
-                    //    await eventProcessorHost.UnregisterEventProcessorAsync();
-                    //    Console.WriteLine();
-                    //}
                 }
 
 
@@ -302,59 +294,6 @@ namespace EncodingWithMESCustomH264
 
             }
         }
-
-
-        private static Task processEventHandler(ProcessEventArgs args)
-        {
-            try
-            {
-                if (args.CancellationToken.IsCancellationRequested)
-                {
-                    return Task.CompletedTask;
-                }
-
-                string partition = args.Partition.PartitionId;
-                byte[] eventBody = args.Data.EventBody.ToArray();
-                Debug.WriteLine($"Event from partition { partition } with length { eventBody.Length }.");
-            }
-            catch
-            {
-                // It is very important that you always guard against
-                // exceptions in your handler code; the processor does
-                // not have enough understanding of your code to
-                // determine the correct action to take.  Any
-                // exceptions from your handlers go uncaught by
-                // the processor and will NOT be redirected to
-                // the error handler.
-            }
-
-            return Task.CompletedTask;
-        }
-
-        private static Task processErrorHandler(ProcessErrorEventArgs args)
-        {
-            try
-            {
-                Debug.WriteLine("Error in the EventProcessorClient");
-                Debug.WriteLine($"\tOperation: { args.Operation }");
-                Debug.WriteLine($"\tException: { args.Exception }");
-                Debug.WriteLine("");
-            }
-            catch
-            {
-                // It is very important that you always guard against
-                // exceptions in your handler code; the processor does
-                // not have enough understanding of your code to
-                // determine the correct action to take.  Any
-                // exceptions from your handlers go uncaught by
-                // the processor and will NOT be handled in any
-                // way.
-
-            }
-
-            return Task.CompletedTask;
-        }
-
 
         #region EnsureTransformExists
         /// <summary>
