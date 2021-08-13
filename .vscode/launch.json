@@ -147,7 +147,8 @@
       "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net5.0/StreamExistingMp4.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4",
+      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net5.0/",
+      "externalConsole": true,
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",

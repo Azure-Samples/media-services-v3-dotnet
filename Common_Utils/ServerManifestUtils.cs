@@ -33,7 +33,7 @@ namespace Common_Utils
             {
                 // Prepare the manifest
                 string mp4fileuniqueaudio = null;
-                XDocument doc = XDocument.Load(@"../../Common_Utils/manifest/manifest.ism"); // Check this is working at runtime.
+                XDocument doc = XDocument.Load(Path.Combine(Environment.CurrentDirectory,  @"./manifest/manifest.ism")); 
 
                 XNamespace ns = "http://www.w3.org/2001/SMIL20/Language";
 
