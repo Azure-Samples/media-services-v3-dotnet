@@ -34,6 +34,7 @@ namespace Common_Utils
             AssetContainerSas response;
             try
             {
+                // Create a short lived SAS URL to upload content into the Asset's container.  We use 5 minutes in this sample, but this can be a lot shorter.
                 ListContainerSasInput input = new()
                 {
                     Permissions = AssetContainerPermission.ReadWriteDelete,
@@ -44,7 +45,7 @@ namespace Common_Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error when listing blobs of asset '{0}'.", asset.Name, true);
+                Console.WriteLine("Error when listing blobs of asset '{0}'.", asset.Name);
                 Console.WriteLine(ex.Message);
                 return null;
             }
@@ -53,7 +54,8 @@ namespace Common_Utils
             Uri sasUri = new(uploadSasUrl);
             CloudBlobContainer storageContainer = new(sasUri);
 
-            // Create the .ism file here
+            // Create the Server Manifest .ism file here.  This is a SMIL 2.0 format XML file that points to the uploaded MP4 files in the asset container.
+            // This file is required by the Streaming Endpoint to dynamically generate the HLS and DASH streams from the MP4 source file (when properly encoded.)
             GeneratedServerManifest serverManifest = await ServerManifestUtils.LoadAndUpdateManifestTemplateAsync(storageContainer);
             string tempPath = System.IO.Path.GetTempPath();
             string filePath = Path.Combine(tempPath, serverManifest.FileName);
@@ -63,80 +65,86 @@ namespace Common_Utils
                 File.Delete(filePath);
             }
 
-            // Load the server manifest and save it to a temp file.
+            // Load the server manifest .ism and save it to a temp file.
             XDocument doc = XDocument.Parse(serverManifest.Content);
             doc.Save(filePath);
 
+            // Upload the temp .ism file on disk to the Asset's container
             CloudBlockBlob serverManifestBlob = storageContainer.GetBlockBlobReference(Path.GetFileName(filePath));
 
             // Upload the temp .ism file using the Storage library Data Mover
             await TransferManager.UploadAsync(filePath, serverManifestBlob);
 
+            // Clean up the temp .ism file on disk
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
             }
 
-
             // Get a manifest file list from the Storage container.
-            List<string> fileList = GetFilesListFromStorage(storageContainer);
+            // In this sectino we are going to check for the existence of a client manifest and determine if we need to generate a new one. 
+            // If one exists, we do not generate it again. 
 
-            string ismcFileName = fileList.Where(a => a.ToLower().Contains(".ismc")).FirstOrDefault();
 
-            var serverManifestList = fileList.Where(a => a.ToLower().EndsWith(".ism"));
-            string ismManifestFileName = serverManifestList.FirstOrDefault<string>();
+            string ismcFileName = GetFilesListFromStorage(storageContainer).FirstOrDefault(a => a.ToLower().Contains(".ismc"));
+
+            string ismManifestFileName = GetFilesListFromStorage(storageContainer).FirstOrDefault(a => a.ToLower().EndsWith(".ism"));
             // If there is no .ism then there's no reason to continue.  If there's no .ismc we need to add it.
 
             if (ismManifestFileName != null && ismcFileName == null)
             {
-                Console.WriteLine("Asset {0} : it does not have an ISMC file.", asset.Name, false);
+                Console.WriteLine("Asset {0} : it does not have an ISMC file.", asset.Name);
 
                 // let's try to read client manifest
                 XDocument manifest = null;
                 try
                 {
-                    manifest = await TryToGetClientManifestContentUsingStreamingLocatorAsync(asset, client, resourceGroup, accountName, locator.Name);
+                    manifest = await GetClientManifest(asset,
+                                                       client,
+                                                       resourceGroup,
+                                                       accountName,
+                                                       locator.Name);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine("Error when trying to read client manifest for asset '{0}'.", asset.Name, true); // Warning
+                    Console.WriteLine("Error when trying to read client manifest for asset '{0}'.", asset.Name);
                     return null;
                 }
 
                 string ismcContentXml = manifest.ToString();
                 if (ismcContentXml.Length == 0)
                 {
-                    Console.WriteLine("Asset {0} : client manifest is empty.", asset.Name, true); // Warning
+                    Console.WriteLine("Asset {0} : client manifest is empty.", asset.Name);
                     //error state, skip this asset
                     return null;
                 }
 
                 if (ismcContentXml.IndexOf("<Protection>") > 0)
                 {
-                    Console.WriteLine("Asset {0} : content is encrypted. Removing the protection header from the client manifest.", asset.Name, false);
+                    Console.WriteLine("Asset {0} : content is encrypted. Removing the protection header from the client manifest.", asset.Name);
                     //remove DRM from the ISCM manifest
                     ismcContentXml = XmlManifestUtils.RemoveXmlNode(ismcContentXml);
                 }
 
                 string newIsmcFileName = ismManifestFileName.Substring(0, ismManifestFileName.IndexOf(".")) + ".ismc";
                 CloudBlockBlob ismcBlob = WriteStringToBlob(ismcContentXml, newIsmcFileName, storageContainer);
-                Console.WriteLine("Asset {0} : client manifest created.", asset.Name, false);
+                Console.WriteLine("Asset {0} : client manifest created.", asset.Name);
 
                 // Download the ISM so that we can modify it to include the ISMC file link.
                 string ismXmlContent = GetFileXmlFromStorage(storageContainer, ismManifestFileName);
                 ismXmlContent = XmlManifestUtils.AddIsmcToIsm(ismXmlContent, newIsmcFileName);
                 WriteStringToBlob(ismXmlContent, ismManifestFileName, storageContainer);
-                Console.WriteLine("Asset {0} : server manifest updated.", asset.Name, false);
+                Console.WriteLine("Asset {0} : server manifest updated.", asset.Name);
 
                 // update the ism to point to the ismc (download, modify, delete original, upload new)
             }
 
             // return the .ism manifest
-            return serverManifestList.ToList<string>();
+            return GetFilesListFromStorage(storageContainer).Where(a => a.ToLower().EndsWith(".ism")).ToList();
         }
 
 
-        public static async Task<XDocument> TryToGetClientManifestContentUsingStreamingLocatorAsync(Asset asset, IAzureMediaServicesClient client, string resourceGroup, string accountName, string preferredLocatorName = null)
+        public static async Task<XDocument> GetClientManifest(Asset asset, IAzureMediaServicesClient client, string resourceGroup, string accountName, string preferredLocatorName = null)
         {
             Uri myuri = (await GetValidOnDemandSmoothURIAsync(asset, client, resourceGroup, accountName, preferredLocatorName)).Item1;
 

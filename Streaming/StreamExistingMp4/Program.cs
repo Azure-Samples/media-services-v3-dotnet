@@ -101,12 +101,15 @@ namespace StreamHLSAndDASH
                 //  Constant Bitrate Encoded - CBR mode
                 //  Key Frame distance max 2 seconds
                 //  Min Key frame distance 2 seconds
+                //  Video Codec: H.264 or HEVC
+                //  Audio COdec: AAC
 
                 var inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
 
                 StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, locatorName);
 
-                // Generate the Server manifest for streaming .ism file. 
+                // Generate the Server manifest for streaming .ism file.
+                // This file is a simple SMIL 2.0 file format schema that includes references to the uploaded MP4 files in the XML.
                 var manifestsList = await AssetUtils.CreateServerManifests(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
                 var ismManifestName = manifestsList.FirstOrDefault();
 
