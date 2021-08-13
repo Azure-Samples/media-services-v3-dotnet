@@ -18,19 +18,6 @@ namespace Common_Utils
     public class AssetUtils
     {
 
-        /// <summary>
-        /// Creates the Client .imsc manifest files required to stream an Mp4 file uploaded to an asset with the proper encoding settings. 
-        /// </summary>
-        public static async void GenerateClientManifestAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, Asset inputAsset, StreamingLocator locator)
-        {
-
-            ListContainerSasInput input = new()
-            {
-                Permissions = AssetContainerPermission.ReadWriteDelete,
-                ExpiryTime = DateTime.Now.AddMinutes(5).ToUniversalTime()
-            };
-        }
-
 
         /// <summary>
         /// Creates the Server side .ism manifest files required to stream an Mp4 file uploaded to an asset with the proper encoding settings. 
