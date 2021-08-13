@@ -1,20 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure.Identity;
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Common_Utils;
-using Microsoft.Azure.EventHubs;
-using Microsoft.Azure.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 
 
 namespace EncodingWithMESCustomHEVC
@@ -105,6 +108,10 @@ namespace EncodingWithMESCustomHEVC
             string outputAssetName = $"output-{uniqueness}";
             bool stopEndpoint = false;
 
+            EventProcessorClient processorClient = null;
+            BlobContainerClient storageClient = null;
+            MediaServicesEventProcessor mediaEventProcessor = null;
+
             try
             {
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
@@ -123,30 +130,34 @@ namespace EncodingWithMESCustomHEVC
                 // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
                 // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
                 // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
-                EventProcessorHost eventProcessorHost = null;
+
+                // Create a new host to process events from an Event Hub.
+                Console.WriteLine("Creating a new client to process events from an Event Hub...");
+                var credential = new DefaultAzureCredential();
+                var storageConnectionString = config.StorageConnectionString;
+                var blobContainerName = config.StorageContainerName;
+                var eventHubsConnectionString = config.EventHubConnectionString;
+                var eventHubName = config.EventHubName;
+                var consumerGroup = config.EventHubConsumerGroup;
+
+                storageClient = new BlobContainerClient(
+                    storageConnectionString,
+                    blobContainerName);
+
+                processorClient = new EventProcessorClient(
+                    storageClient,
+                    consumerGroup,
+                    eventHubsConnectionString,
+                    eventHubName);
 
                 try
                 {
                     // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
                     // we will fall-back on polling Job status instead.
 
-                    // Please refer README for Event Hub and storage settings.
-                    // A storage account is required to process the Event Hub events from the Event Grid subscription in this sample.
-                    string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                        config.StorageAccountName, config.StorageAccountKey);
-
-                    // Create a new host to process events from an Event Hub.
-                    Console.WriteLine("Creating a new host to process events from an Event Hub...");
-                    eventProcessorHost = new EventProcessorHost(config.EventHubName,
-                        PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
-                        storageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                     AutoResetEvent jobWaitingEvent = new(false);
-
-                    // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
-                    await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
-                        EventProcessorOptions.DefaultOptions);
 
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
@@ -157,15 +168,20 @@ namespace EncodingWithMESCustomHEVC
                     tasks.Add(jobTask);
 
                     // 30 minutes timeout.
-                    var tokenSource = new CancellationTokenSource();
-                    var timeout = Task.Delay(30 * 60 * 1000, tokenSource.Token);
+                    var cancellationSource = new CancellationTokenSource();
+                    var timeout = Task.Delay(30 * 60 * 1000, cancellationSource.Token);
                     tasks.Add(timeout);
+
+                    mediaEventProcessor = new MediaServicesEventProcessor(jobName, jobWaitingEvent, null);
+                    processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
+                    processorClient.ProcessErrorAsync += mediaEventProcessor.ProcessErrorAsync;
+                    await processorClient.StartProcessingAsync(cancellationSource.Token);
 
                     // Wait for tasks.
                     if (await Task.WhenAny(tasks) == jobTask)
                     {
                         // Job finished. Cancel the timer.
-                        tokenSource.Cancel();
+                        cancellationSource.Cancel();
                         // Get the latest status of the job.
                         job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, CustomTransform, jobName);
                     }
@@ -188,13 +204,19 @@ namespace EncodingWithMESCustomHEVC
                 }
                 finally
                 {
-                    if (eventProcessorHost != null)
+                    if (processorClient != null)
                     {
-                        Console.WriteLine("Job final state received, removing the event processor...");
-
-                        // Disposes of the Event Processor Host.
-                        await eventProcessorHost.UnregisterEventProcessorAsync();
+                        Console.WriteLine("Job final state received, Stopping the event processor...");
+                        await processorClient.StopProcessingAsync();
                         Console.WriteLine();
+
+                        // It is encouraged that you unregister your handlers when you have
+                        // finished using the Event Processor to ensure proper cleanup.  This
+                        // is especially important when using lambda expressions or handlers
+                        // in any form that may contain closure scopes or hold other references.
+
+                        processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+                        processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
                     }
                 }
 
