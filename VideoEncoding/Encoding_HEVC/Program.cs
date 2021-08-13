@@ -124,6 +124,7 @@ namespace EncodingWithMESCustomHEVC
                 // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
                 // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
                 EventProcessorHost eventProcessorHost = null;
+
                 try
                 {
                     // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,

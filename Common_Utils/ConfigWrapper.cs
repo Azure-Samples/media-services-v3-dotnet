@@ -76,6 +76,11 @@ namespace Common_Utils
             get { return _config["EventHubName"]; }
         }
 
+        public string EventHubConsumerGroup
+        {
+            get { return _config["EventConsumerGroup"]; }
+        }
+
         public string StorageContainerName
         {
             get { return _config["StorageContainerName"]; }
@@ -89,6 +94,11 @@ namespace Common_Utils
         public string StorageAccountKey
         {
             get { return _config["StorageAccountKey"]; }
+        }
+
+        public string StorageConnectionString
+        {
+            get { return _config["StorageConnectionString"]; }
         }
 
         public string SymmetricKey
