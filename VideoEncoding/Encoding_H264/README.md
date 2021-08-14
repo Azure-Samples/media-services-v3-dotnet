@@ -16,17 +16,20 @@ This sample shows how to create a custom encoding Transform using custom H.264 e
 * Required Assemblies
 
 * Azure.Storage.Blobs
+* Azure.Messaging.EventGrid
+* Azure.Messaging.EventHubs.Processor
 * Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
 * Microsoft.Extensions.Configuration.EnvironmentVariables
 * Microsoft.Extensions.Configuration.Json
 * Microsoft.Identity.Client
+* Azure.Identity
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
 
 ## Build and run
 
-Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+Update  **.env file** at the root of the solution with your account settings or updated the **appsettings.json** in the project folder. Please choose only one of these two methods.
 For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
 
 (The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
@@ -57,6 +60,19 @@ The settings for your account can be retrieved using the following Azure CLI com
 
 Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
 Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
+
+If using the .env settings file in the root of the solution instead, you need to fill out the information for these environment variables.
+
+  #### Event Hub settings to listen to Event Grid subscription
+  EVENTHUBCONNECTIONSTRING=""
+  EVENTHUBNAME=""
+  EVENTCONSUMERGROUP=""
+
+  #### Azure Storage Account settings
+  STORAGECONTAINERNAME=""
+  STORAGEACCOUNTNAME=""
+  STORAGEACCOUNTKEY=""
+  STORAGECONNECTIONSTRING=""
 
 ### Optional - Use Event Grid instead of polling (recommended for production code)
 
@@ -94,9 +110,12 @@ Connect to the Azure portal with your browser and go to your media services acco
 * Update *appsettings.json* or *.env* (at root of solution) with your Event Hub and Storage information
   * **StorageAccountName**: The name of your storage account.
   * **StorageAccountKey**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
+  * **StorageConnectionString**: This is required for the event hub client to listen to the subscribed media events. 
   * **StorageContainerName**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
   * **EventHubConnectionString**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
   * **EventHubName**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
+  * **EventConsumerGroup**: The Event Hub consumer group name - this is "$Default" typically, unless you changed it in the portal during setup of your Event Hub. 
+
 
 ## Next steps
 
