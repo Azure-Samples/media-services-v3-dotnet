@@ -165,10 +165,6 @@ namespace EncodingWithMESCustomH264
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
                     AutoResetEvent jobWaitingEvent = new(false);
 
-                    // Registers the Event Processor Host and starts receiving messages. Pass in jobWaitingEvent so it can be called back.
-                    //await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(jobName, jobWaitingEvent),
-                    //    EventProcessorOptions.DefaultOptions);
-
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
 
