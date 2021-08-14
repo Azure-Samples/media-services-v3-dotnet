@@ -125,7 +125,7 @@ namespace StreamHLSAndDASH
                         stopEndpoint = true;
                     }
 
-                    IList<string> urls = await GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
+                    IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
                         locator, ismManifestName, streamingEndpoint);
                     Console.WriteLine();
                     foreach (var url in urls)
@@ -262,7 +262,7 @@ namespace StreamHLSAndDASH
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <param name="streamingEndpoint">The streaming endpoint.</param>
         /// <returns></returns>
-        private static async Task<IList<string>> GetHLSAndDASHStreamingUrlsAsync(
+        private static IList<string> GetHLSAndDASHStreamingUrlsAsync(
             IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
