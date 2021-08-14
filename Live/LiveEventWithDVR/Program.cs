@@ -1,6 +1,8 @@
 using Common_Utils;
-using Microsoft.Azure.EventHubs;
-using Microsoft.Azure.EventHubs.Processor;
+using Azure.Identity;
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Processor;
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
@@ -120,8 +122,15 @@ namespace LiveEventWithDVR
             string drvAssetFilterName = "filter-" + uniqueness;
             string streamingLocatorName = "streamingLocator" + uniqueness;
             string streamingEndpointName = "default"; // Change this to your specific streaming endpoint name if not using "default"
-            EventProcessorHost eventProcessorHost = null;
             bool stopEndpoint = false;
+
+            // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
+            // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
+            // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
+
+            EventProcessorClient processorClient = null;
+            BlobContainerClient storageClient = null;
+            MediaServicesEventProcessor mediaEventProcessor = null;
 
             try
             {
@@ -263,19 +272,33 @@ namespace LiveEventWithDVR
                 try
                 {
                     // Please refer README for Event Hub and storage settings.
-                    Console.WriteLine("Starting monitoring LiveEvent events...");
-                    string StorageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                        config.StorageAccountName, config.StorageAccountKey);
+                    // A storage account is required to process the Event Hub events from the Event Grid subscription in this sample.
 
                     // Create a new host to process events from an Event Hub.
-                    Console.WriteLine("Creating a new host to process events from an Event Hub...");
-                    eventProcessorHost = new EventProcessorHost(config.EventHubName,
-                        PartitionReceiver.DefaultConsumerGroupName, config.EventHubConnectionString,
-                        StorageConnectionString, config.StorageContainerName);
+                    Console.WriteLine("Creating a new client to process events from an Event Hub...");
+                    var credential = new DefaultAzureCredential();
+                    var storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                       config.StorageAccountName, config.StorageAccountKey);
+                    var blobContainerName = config.StorageContainerName;
+                    var eventHubsConnectionString = config.EventHubConnectionString;
+                    var eventHubName = config.EventHubName;
+                    var consumerGroup = config.EventHubConsumerGroup;
 
-                    // Registers the Event Processor Host and starts receiving messages.
-                    await eventProcessorHost.RegisterEventProcessorFactoryAsync(new MediaServicesEventProcessorFactory(liveEventName),
-                        EventProcessorOptions.DefaultOptions);
+                    storageClient = new BlobContainerClient(
+                        storageConnectionString,
+                        blobContainerName);
+
+                    processorClient = new EventProcessorClient(
+                        storageClient,
+                        consumerGroup,
+                        eventHubsConnectionString,
+                        eventHubName);
+
+                    mediaEventProcessor = new MediaServicesEventProcessor(null, null, liveEventName);
+                    processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
+                    processorClient.ProcessErrorAsync += mediaEventProcessor.ProcessErrorAsync;
+
+                    await processorClient.StartProcessingAsync();
                 }
                 catch (Exception e)
                 {
@@ -526,9 +549,18 @@ namespace LiveEventWithDVR
                 await CleanupLocatorandAssetAsync(client, config.ResourceGroup, config.AccountName, streamingLocatorName, assetName);
 
                 // Stop event monitoring.
-                if (eventProcessorHost != null)
+                if (processorClient != null)
                 {
-                    await eventProcessorHost.UnregisterEventProcessorAsync();
+                    Console.WriteLine("Job final state received, Stopping the event processor...");
+                    await processorClient.StopProcessingAsync();
+                    Console.WriteLine();
+
+                    // It is encouraged that you unregister your handlers when you have
+                    // finished using the Event Processor to ensure proper cleanup.  This
+                    // is especially important when using lambda expressions or handlers
+                    // in any form that may contain closure scopes or hold other references.
+                    processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+                    processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
                 }
 
                 if (stopEndpoint)
