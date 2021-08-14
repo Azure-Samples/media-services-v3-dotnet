@@ -88,7 +88,7 @@ namespace Common_Utils
             {
                 result = await app.AcquireTokenSilent(scopes, accounts.FirstOrDefault()).ExecuteAsync();
             }
-            catch (MsalUiRequiredException ex)
+            catch (MsalUiRequiredException)
             {
                 try
                 {
