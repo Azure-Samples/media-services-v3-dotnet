@@ -9,12 +9,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EncodingWithMESCustomHEVC
+namespace Common_Utils
 {
     /// <summary>
     /// Implementation of IEventProcessor to handle events from Event Hub.
     /// </summary>
-    class MediaServicesEventProcessor
+    public class MediaServicesEventProcessor
     {
         private readonly AutoResetEvent jobWaitingEvent;
         private readonly string jobName;
