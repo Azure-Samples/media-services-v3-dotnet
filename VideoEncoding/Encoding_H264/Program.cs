@@ -137,13 +137,12 @@ namespace EncodingWithMESCustomH264
 
                     // Please refer README for Event Hub and storage settings.
                     // A storage account is required to process the Event Hub events from the Event Grid subscription in this sample.
-                    // string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                    //    config.StorageAccountName, config.StorageAccountKey);
-
+                   
                     // Create a new host to process events from an Event Hub.
                     Console.WriteLine("Creating a new client to process events from an Event Hub...");
                     var credential = new DefaultAzureCredential();
-                    var storageConnectionString = config.StorageConnectionString;
+                    var storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+                       config.StorageAccountName, config.StorageAccountKey);
                     var blobContainerName = config.StorageContainerName;
                     var eventHubsConnectionString = config.EventHubConnectionString;
                     var eventHubName = config.EventHubName;
@@ -181,8 +180,8 @@ namespace EncodingWithMESCustomH264
                     // 30 minutes timeout.
                     var cancellationSource = new CancellationTokenSource();
                     var timeout = Task.Delay(30 * 60 * 1000, cancellationSource.Token);
-                    tasks.Add(timeout);
 
+                    tasks.Add(timeout);
                     mediaEventProcessor = new MediaServicesEventProcessor(jobName,jobWaitingEvent,null);
                     processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
                     processorClient.ProcessErrorAsync += mediaEventProcessor.ProcessErrorAsync;
