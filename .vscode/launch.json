@@ -183,6 +183,7 @@
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env"
     },
     {
       "name": "Launch Face Redactor",
