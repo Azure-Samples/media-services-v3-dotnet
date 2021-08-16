@@ -205,19 +205,19 @@ namespace VideoAnalyzer
             }
             finally
             {
-                    if (processorClient != null)
-                    {
-                        Console.WriteLine("Job final state received, Stopping the event processor...");
-                        await processorClient.StopProcessingAsync();
-                        Console.WriteLine();
+                if (processorClient != null)
+                {
+                    Console.WriteLine("Job final state received, Stopping the event processor...");
+                    await processorClient.StopProcessingAsync();
+                    Console.WriteLine();
 
-                        // It is encouraged that you unregister your handlers when you have
-                        // finished using the Event Processor to ensure proper cleanup.  This
-                        // is especially important when using lambda expressions or handlers
-                        // in any form that may contain closure scopes or hold other references.
-                        processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
-                        processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
-                    }
+                    // It is encouraged that you unregister your handlers when you have
+                    // finished using the Event Processor to ensure proper cleanup.  This
+                    // is especially important when using lambda expressions or handlers
+                    // in any form that may contain closure scopes or hold other references.
+                    processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+                    processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
+                }
             }
 
             if (job.State == JobState.Finished)
