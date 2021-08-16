@@ -53,6 +53,7 @@ namespace Common_Utils
             string uploadSasUrl = response.AssetContainerSasUrls.First();
             Uri sasUri = new(uploadSasUrl);
             CloudBlobContainer storageContainer = new(sasUri);
+            
 
             // Create the Server Manifest .ism file here.  This is a SMIL 2.0 format XML file that points to the uploaded MP4 files in the asset container.
             // This file is required by the Streaming Endpoint to dynamically generate the HLS and DASH streams from the MP4 source file (when properly encoded.)

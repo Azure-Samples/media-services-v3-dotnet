@@ -103,8 +103,12 @@ namespace Encoding_PredefinedPreset
             try
             {
                 // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform adaptiveEncodeTransform = await EnsureTransformExists(client, config.ResourceGroup, config.AccountName,
-                    TransformName, preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
+                Transform adaptiveEncodeTransform = await EnsureTransformExists(client,
+                                                                                config.ResourceGroup,
+                                                                                config.AccountName,
+                                                                                TransformName,
+                                                                                preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
+                                                                                // This is using th built-in Adaptive Encdoing preset. You can choose from a variety of built-in presets.
 
                 var input = new JobInputHttp(
                                     baseUri: BaseSourceUri,
