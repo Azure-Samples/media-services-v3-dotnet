@@ -12,8 +12,9 @@ namespace Common_Utils
         {
             // Example head tag for the ISM on how to include the ISMC.
             // <head>
-            //   < meta name = "clientManifestRelativePath" content = "GOPR0881.ismc" />
-            //   < meta name = "formats" content = "mp4" />
+            //   <meta name = "clientManifestRelativePath" content = "GOPR0881.ismc" />
+            //   <meta name = "formats" content = "mp4" />
+            //   <meta name = "fragmentsPerHLSSegment" content ="1" />
             // </ head >
 
             string manPath = "clientManifestRelativePath";
