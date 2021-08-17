@@ -2,6 +2,7 @@
 <smil xmlns="http://www.w3.org/2001/SMIL20/Language">
     <head>
         <meta name="formats" content="mp4" />
+        <meta name="fragmentsPerHLSSegment" content="1"/>
     </head>
     <body>
         <switch>
