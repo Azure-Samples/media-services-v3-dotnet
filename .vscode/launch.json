@@ -246,6 +246,21 @@
       "envFile": "${workspaceFolder}/.env"
     },
     {
+      "name": "Launch Encoding Content Aware HEVC",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net5.0/Encoding_HEVC_ContentAware.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
       "name": "Launch Encoding With Sprite",
       "type": "coreclr",
       "request": "launch",
