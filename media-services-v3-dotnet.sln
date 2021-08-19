@@ -53,6 +53,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_PredefinedPreset",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_SpriteThumbnail", "VideoEncoding\Encoding_SpriteThumbnail\Encoding_SpriteThumbnail.csproj", "{1176A34C-1763-4A05-8E98-153C8F1A4EDC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_OverlayImage", "VideoEncoding\Encoding_OverlayImage\Encoding_OverlayImage.csproj", "{D565D6EE-7E7D-4897-835F-2296329C6D4D}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_StitchTwoAssets", "VideoEncoding\Encoding_StitchTwoAssets\Encoding_StitchTwoAssets.csproj", "{2BC5DA5C-08D2-47A3-A2FA-B9F2A57B42A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common_Utils", "Common_Utils\Common_Utils.csproj", "{AEFA0358-318D-4790-8048-5BD7EB9E88DE}"
@@ -71,8 +73,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 		sample.env = sample.env
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_OverlayImage", "VideoEncoding\Encoding_OverlayImage\Encoding_OverlayImage.csproj", "{D565D6EE-7E7D-4897-835F-2296329C6D4D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
