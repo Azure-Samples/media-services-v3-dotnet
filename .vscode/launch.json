@@ -280,10 +280,10 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_ImageOverlay/bin/Debug/net5.0/Encoding_ImageOverlay.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net5.0/Encoding_OverlayImage.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_ImageOverlay",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
