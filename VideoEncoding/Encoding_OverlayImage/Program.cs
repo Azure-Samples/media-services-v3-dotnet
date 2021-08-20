@@ -23,7 +23,7 @@ namespace Encoding_OverlayImage
         private const string OverlayFileName = @"cloud.png";
         private const string OutputFolder = @"Output";
         private const string OverlayLabel = @"logo";
-        private const string CustomTransform = "Custom_OverlayImage";
+        private const string CustomTransform = "Custom_OverlayImage_2";
 
         // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
         private const bool UseInteractiveAuth = false;
@@ -133,6 +133,7 @@ namespace Encoding_OverlayImage
                                                CustomTransform,
                                                jobName,
                                                inputVideoAsset.Name,
+                                               overlayImageAsset.Name,
                                                outputAsset.Name,
                                                correlationData);
 
@@ -216,67 +217,73 @@ namespace Encoding_OverlayImage
         /// <returns></returns>
         private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
-            // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
-
-            if (transform == null)
-            {
-                Console.WriteLine("Creating a custom transform...");
+            // This code does not check if Transform already exists, so it will overwrite existing one. 
+            // That is good for when you are testing things out and getting the layout of the overlay into the right position.
+            // Transform.CreateOrUpdate() will overwrite any existing Transform with the same name.
+    
+            Console.WriteLine("Creating a custom transform...");
              
-                // Create a new Transform Outputs array - this defines the set of outputs for the Transform
-                var outputs = new TransformOutput[]
+            // Create a new Transform Outputs array - this defines the set of outputs for the Transform
+            var outputs = new TransformOutput[]
+            {
+                // Create a new TransformOutput with a custom Standard Encoder Preset and overlay
+                new TransformOutput
                 {
-                    // Create a new TransformOutput with a custom Standard Encoder Preset and overlay
-                    new TransformOutput
+                    Preset = new StandardEncoderPreset
                     {
-                        Preset = new StandardEncoderPreset
+                        Filters = new Filters
                         {
-                            Filters = new Filters
+                            Overlays = new List<Overlay>
                             {
-                                Overlays = new List<Overlay>
+                                new VideoOverlay
                                 {
-                                    new VideoOverlay
+                                    InputLabel = OverlayLabel,   // same as the one used in the JobInput to identify which asset is the overlay image
+                                    Position = new Rectangle( "1200","670") // left, top position of the overlay in absolute pixel position relative to the source videos resolution. 
+                                    // Percentage based settings are coming soon, but not yet supported. In the future you can set this to "90%","90%" for example to be resolution independent on the source video positioning.
+                                }
+                            }
+                        },
+                        Codecs = new List<Codec>
+                        {
+                            new AacAudio
+                            {
+                            },
+                            new H264Video
+                            {
+                                KeyFrameInterval = TimeSpan.FromSeconds(2),
+                                Layers = new List<H264Layer>
+                                {
+                                    new H264Layer
                                     {
-                                        InputLabel = overlayLabel   // same as the one used in the JobInput
+                                        Profile = H264VideoProfile.Baseline,
+                                        Bitrate = 1000000, // 1Mbps
+                                        Width = "1280",
+                                        Height = "720"
+                                    },
+                                    new H264Layer   // Adding a second layer to see that the image also is scaled and positioned the same way on this layer. 
+                                    {
+                                        Profile = H264VideoProfile.Baseline,
+                                        Bitrate = 600000, // 600 kbps
+                                        Width = "480",
+                                        Height = "270"
                                     }
                                 }
-                            },
-                            Codecs = new List<Codec>
+                            }
+                        },
+                        Formats = new List<Format>
+                        {
+                            new Mp4Format
                             {
-                                new AacAudio
-                                {
-                                },
-                                new H264Video
-                                {
-                                    KeyFrameInterval = TimeSpan.FromSeconds(2),
-                                    Layers = new List<H264Layer>
-                                    {
-                                        new H264Layer
-                                        {
-                                            Profile = H264VideoProfile.Baseline,
-                                            Bitrate = 1000000,
-                                            Width = "1140",
-                                            Height = "640"
-                                        }
-                                    }
-                                }
-                            },
-                            Formats = new List<Format>
-                            {
-                                new Mp4Format
-                                {
-                                    FilenamePattern = "{Basename}_{Bitrate}{Extension}",
-                                }
+                                FilenamePattern = "{Basename}_{Bitrate}{Extension}",
                             }
                         }
                     }
-                };
+                }
+            };
 
-                string description = "A simple custom encoding transform with overlay";
-                // Create the custom Transform with the outputs defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
-            }
+            string description = "A simple custom encoding transform with overlay";
+            // Create the custom Transform with the outputs defined above
+            var transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
 
             return transform;
         }
@@ -325,9 +332,15 @@ namespace Encoding_OverlayImage
             string transformName,
             string jobName,
             string inputAssetName,
-            string outputAssetName)
+            string overlayAssetName,
+            string outputAssetName,
+            Dictionary<string,string> correlationData)
         {
-            JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
+            // Add both the Video and the Overlay image assets here as inputs to the job.
+            List<JobInput> jobInputs = new List<JobInput>() {
+                new JobInputAsset(assetName: inputAssetName),
+                new JobInputAsset(assetName: overlayAssetName, label: OverlayLabel)
+            };
 
             JobOutput[] jobOutputs =
             {
@@ -350,8 +363,9 @@ namespace Encoding_OverlayImage
                          jobName,
                          new Job
                          {
-                             Input = jobInput,
+                             Input = new JobInputs(inputs:jobInputs),
                              Outputs = jobOutputs,
+                             CorrelationData = correlationData
                          });
             }
             catch (Exception exception)

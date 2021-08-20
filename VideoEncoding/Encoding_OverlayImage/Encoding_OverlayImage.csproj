@@ -20,10 +20,13 @@
     <None Update="ignite.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="cloud.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>Encoding_SpriteThumbnail</RootNamespace>
+    <RootNamespace>Encoding_OverlayImage</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
