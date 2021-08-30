@@ -110,7 +110,7 @@ namespace StreamHLSAndDASH
 
                 // Generate the Server manifest for streaming .ism file.
                 // This file is a simple SMIL 2.0 file format schema that includes references to the uploaded MP4 files in the XML.
-                var manifestsList = await AssetUtils.CreateServerManifests(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
+                var manifestsList = await AssetUtils.CreateServerManifestsAsync(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
                 var ismManifestName = manifestsList.FirstOrDefault();
 
                 StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);

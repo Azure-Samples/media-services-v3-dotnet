@@ -25,7 +25,7 @@ namespace Common_Utils
         /// <returns>
         /// A list of server side manifest files (.ism) created in the Asset folder. Typically this is only going to be a single .ism file. 
         /// </returns>
-        public static async Task<IList<string>> CreateServerManifests(IAzureMediaServicesClient client, string resourceGroup, string accountName, Asset inputAsset, StreamingLocator locator)
+        public static async Task<IList<string>> CreateServerManifestsAsync(IAzureMediaServicesClient client, string resourceGroup, string accountName, Asset inputAsset, StreamingLocator locator)
         {
 
             // Get the asset associated with the locator.
@@ -89,7 +89,7 @@ namespace Common_Utils
                 XDocument manifest = null;
                 try
                 {
-                    manifest = await GetClientManifest(asset,
+                    manifest = await GetClientManifestAsync(asset,
                                                        client,
                                                        resourceGroup,
                                                        accountName,
@@ -121,7 +121,7 @@ namespace Common_Utils
                 Console.WriteLine("Asset {0} : client manifest created.", asset.Name);
 
                 // Download the ISM so that we can modify it to include the ISMC file link.
-                string ismXmlContent = GetFileXmlFromStorage(storageContainer, ismManifestFileName);
+                string ismXmlContent = await GetStringFromBlobAsync(storageContainer, ismManifestFileName);
                 ismXmlContent = XmlManifestUtils.AddIsmcToIsm(ismXmlContent, newIsmcFileName);
                 await WriteStringToBlobAsync(ismXmlContent, ismManifestFileName, storageContainer);
                 Console.WriteLine("Asset {0} : server manifest updated.", asset.Name);
@@ -134,7 +134,7 @@ namespace Common_Utils
         }
 
 
-        public static async Task<XDocument> GetClientManifest(Asset asset, IAzureMediaServicesClient client, string resourceGroup, string accountName, string preferredLocatorName = null)
+        public static async Task<XDocument> GetClientManifestAsync(Asset asset, IAzureMediaServicesClient client, string resourceGroup, string accountName, string preferredLocatorName = null)
         {
             Uri myuri = (await GetValidOnDemandSmoothURIAsync(asset, client, resourceGroup, accountName, preferredLocatorName)).Item1;
 
@@ -206,14 +206,11 @@ namespace Common_Utils
 
         private static async Task<List<string>> GetManifestFilesListFromStorageAsync(BlobContainerClient storageContainer)
         {
-            //List<CloudBlockBlob> fullBlobList = storageContainer.ListBlobs().OfType<CloudBlockBlob>().ToList();
-
             var fullBlobList = new List<BlobItem>();
-            await foreach (Azure.Page<BlobItem> page in storageContainer.GetBlobsAsync().AsPages()) // BlobTraits.All, BlobStates.All
+            await foreach (Azure.Page<BlobItem> page in storageContainer.GetBlobsAsync().AsPages())
             {
                 fullBlobList.AddRange(page.Values);
             }
-
 
             // Filter the list to only contain .ism and .ismc files
             IEnumerable<string> filteredList = from b in fullBlobList
@@ -222,12 +219,13 @@ namespace Common_Utils
             return filteredList.ToList();
         }
 
-        private static string GetFileXmlFromStorage(BlobContainerClient storageContainer, string ismManifestFileName)
+        private static async Task<string> GetStringFromBlobAsync(BlobContainerClient storageContainer, string ismManifestFileName)
         {
             BlobClient blobClient = storageContainer.GetBlobClient(ismManifestFileName);
-            var response = new BlobClient(blobClient.Uri).DownloadContent();
 
-            return response.Value.Content.ToString();
+            using var ms = new MemoryStream();
+            await blobClient.DownloadToAsync(ms);
+            return System.Text.Encoding.UTF8.GetString(ms.ToArray());
         }
 
         private static async Task WriteStringToBlobAsync(string ContentXml, string fileName, BlobContainerClient storageContainer)
