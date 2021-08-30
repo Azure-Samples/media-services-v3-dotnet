@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
-using Microsoft.Azure.Storage.DataMovement;
-using Microsoft.Azure.Storage.Blob;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.IO;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using System.Text;
 
 namespace Common_Utils
 {
@@ -52,44 +52,33 @@ namespace Common_Utils
 
             string uploadSasUrl = response.AssetContainerSasUrls.First();
             Uri sasUri = new(uploadSasUrl);
-            CloudBlobContainer storageContainer = new(sasUri);
-            
+            var storageContainer = new BlobContainerClient(sasUri);
 
             // Create the Server Manifest .ism file here.  This is a SMIL 2.0 format XML file that points to the uploaded MP4 files in the asset container.
             // This file is required by the Streaming Endpoint to dynamically generate the HLS and DASH streams from the MP4 source file (when properly encoded.)
             GeneratedServerManifest serverManifest = await ServerManifestUtils.LoadAndUpdateManifestTemplateAsync(storageContainer);
-            string tempPath = System.IO.Path.GetTempPath();
-            string filePath = Path.Combine(tempPath, serverManifest.FileName);
 
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-
-            // Load the server manifest .ism and save it to a temp file.
+            // Load the server manifest .ism content
             XDocument doc = XDocument.Parse(serverManifest.Content);
-            doc.Save(filePath);
 
-            // Upload the temp .ism file on disk to the Asset's container
-            CloudBlockBlob serverManifestBlob = storageContainer.GetBlockBlobReference(Path.GetFileName(filePath));
-
-            // Upload the temp .ism file using the Storage library Data Mover
-            await TransferManager.UploadAsync(filePath, serverManifestBlob);
-
-            // Clean up the temp .ism file on disk
-            if (File.Exists(filePath))
+            // Upload the ism file to the Asset's container as blob
+            BlobClient blob = storageContainer.GetBlobClient(serverManifest.FileName);
+            using (var ms = new MemoryStream())
             {
-                File.Delete(filePath);
+                doc.Save(ms);
+                ms.Position = 0;
+                blob.Upload(ms);
             }
+
 
             // Get a manifest file list from the Storage container.
             // In this sectino we are going to check for the existence of a client manifest and determine if we need to generate a new one. 
             // If one exists, we do not generate it again. 
 
+            var manifestFiles = await GetManifestFilesListFromStorageAsync(storageContainer);
+            string ismcFileName = manifestFiles.FirstOrDefault(a => a.ToLower().Contains(".ismc"));
+            string ismManifestFileName = manifestFiles.FirstOrDefault(a => a.ToLower().EndsWith(".ism"));
 
-            string ismcFileName = GetFilesListFromStorage(storageContainer).FirstOrDefault(a => a.ToLower().Contains(".ismc"));
-
-            string ismManifestFileName = GetFilesListFromStorage(storageContainer).FirstOrDefault(a => a.ToLower().EndsWith(".ism"));
             // If there is no .ism then there's no reason to continue.  If there's no .ismc we need to add it.
 
             if (ismManifestFileName != null && ismcFileName == null)
@@ -128,20 +117,20 @@ namespace Common_Utils
                 }
 
                 string newIsmcFileName = ismManifestFileName.Substring(0, ismManifestFileName.IndexOf(".")) + ".ismc";
-                CloudBlockBlob ismcBlob = WriteStringToBlob(ismcContentXml, newIsmcFileName, storageContainer);
+                await WriteStringToBlobAsync(ismcContentXml, newIsmcFileName, storageContainer);
                 Console.WriteLine("Asset {0} : client manifest created.", asset.Name);
 
                 // Download the ISM so that we can modify it to include the ISMC file link.
                 string ismXmlContent = GetFileXmlFromStorage(storageContainer, ismManifestFileName);
                 ismXmlContent = XmlManifestUtils.AddIsmcToIsm(ismXmlContent, newIsmcFileName);
-                WriteStringToBlob(ismXmlContent, ismManifestFileName, storageContainer);
+                await WriteStringToBlobAsync(ismXmlContent, ismManifestFileName, storageContainer);
                 Console.WriteLine("Asset {0} : server manifest updated.", asset.Name);
 
                 // update the ism to point to the ismc (download, modify, delete original, upload new)
             }
 
             // return the .ism manifest
-            return GetFilesListFromStorage(storageContainer).Where(a => a.ToLower().EndsWith(".ism")).ToList();
+            return (await GetManifestFilesListFromStorageAsync(storageContainer)).Where(a => a.ToLower().EndsWith(".ism")).ToList();
         }
 
 
@@ -215,30 +204,39 @@ namespace Common_Utils
         }
 
 
-        private static List<string> GetFilesListFromStorage(CloudBlobContainer storageContainer)
+        private static async Task<List<string>> GetManifestFilesListFromStorageAsync(BlobContainerClient storageContainer)
         {
-            List<CloudBlockBlob> fullBlobList = storageContainer.ListBlobs().OfType<CloudBlockBlob>().ToList();
+            //List<CloudBlockBlob> fullBlobList = storageContainer.ListBlobs().OfType<CloudBlockBlob>().ToList();
+
+            var fullBlobList = new List<BlobItem>();
+            await foreach (Azure.Page<BlobItem> page in storageContainer.GetBlobsAsync().AsPages()) // BlobTraits.All, BlobStates.All
+            {
+                fullBlobList.AddRange(page.Values);
+            }
+
+
             // Filter the list to only contain .ism and .ismc files
             IEnumerable<string> filteredList = from b in fullBlobList
-                                               where b.Name.ToLower().Contains(".ism")
+                                               where b.Properties.BlobType == BlobType.Block && b.Name.ToLower().Contains(".ism")
                                                select b.Name;
             return filteredList.ToList();
         }
 
-        private static string GetFileXmlFromStorage(CloudBlobContainer storageContainer, string ismManifestFileName)
+        private static string GetFileXmlFromStorage(BlobContainerClient storageContainer, string ismManifestFileName)
         {
-            CloudBlockBlob blob = storageContainer.GetBlockBlobReference(ismManifestFileName);
-            return blob.DownloadText();
+            BlobClient blobClient = storageContainer.GetBlobClient(ismManifestFileName);
+            var response = new BlobClient(blobClient.Uri).DownloadContent();
+
+            return response.Value.Content.ToString();
         }
 
-        private static CloudBlockBlob WriteStringToBlob(string ContentXml, string fileName, CloudBlobContainer storageContainer)
+        private static async Task WriteStringToBlobAsync(string ContentXml, string fileName, BlobContainerClient storageContainer)
         {
-            CloudBlockBlob newBlob = storageContainer.GetBlockBlobReference(fileName);
-            newBlob.UploadText(ContentXml);
-            return newBlob;
+            BlobClient blobClient = storageContainer.GetBlobClient(fileName);
+
+            var content = Encoding.UTF8.GetBytes(ContentXml);
+            using var ms = new MemoryStream(content);
+            await blobClient.UploadAsync(ms, true);
         }
-
-
     }
-
 }

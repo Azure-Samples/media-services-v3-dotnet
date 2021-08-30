@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Storage.Blob;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,30 +11,26 @@ namespace Common_Utils
 {
     public static class ServerManifestUtils
     {
-        public static async Task<GeneratedServerManifest> LoadAndUpdateManifestTemplateAsync(CloudBlobContainer container)
+        public static async Task<GeneratedServerManifest> LoadAndUpdateManifestTemplateAsync(BlobContainerClient container)
         {
             // Let's list the blobs
-            BlobContinuationToken continuationToken = null;
-            List<IListBlobItem> allBlobs = new();
-            do
+            var allBlobs = new List<BlobItem>();
+            await foreach (Azure.Page<BlobItem> page in container.GetBlobsAsync().AsPages())
             {
-                BlobResultSegment segment = await container.ListBlobsSegmentedAsync(null, true, BlobListingDetails.Metadata, null, continuationToken, null, null);
-                allBlobs.AddRange(segment.Results);
-                continuationToken = segment.ContinuationToken;
+                allBlobs.AddRange(page.Values);
             }
-            while (continuationToken != null);
+            IEnumerable<BlobItem> blobs = allBlobs.Where(c => c.Properties.BlobType == BlobType.Block).Select(c => c);
 
-            IEnumerable<CloudBlockBlob> blobs = allBlobs.Where(c => c is CloudBlockBlob).Select(c => c as CloudBlockBlob);
 
-            CloudBlockBlob[] mp4AssetFiles = blobs.Where(f => f.Name.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)).ToArray();
-            CloudBlockBlob[] m4aAssetFiles = blobs.Where(f => f.Name.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase)).ToArray();
-            CloudBlockBlob[] mediaAssetFiles = blobs.Where(f => f.Name.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) || f.Name.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase)).ToArray();
+            BlobItem[] mp4AssetFiles = blobs.Where(f => f.Name.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)).ToArray();
+            BlobItem[] m4aAssetFiles = blobs.Where(f => f.Name.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase)).ToArray();
+            BlobItem[] mediaAssetFiles = blobs.Where(f => f.Name.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) || f.Name.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase)).ToArray();
 
             if (mediaAssetFiles.Length != 0)
             {
                 // Prepare the manifest
                 string mp4fileuniqueaudio = null;
-                XDocument doc = XDocument.Load(Path.Combine(Environment.CurrentDirectory,  @"./manifest/manifest.ism")); 
+                XDocument doc = XDocument.Load(Path.Combine(Environment.CurrentDirectory, @"./manifest/manifest.ism"));
 
                 XNamespace ns = "http://www.w3.org/2001/SMIL20/Language";
 
@@ -43,7 +40,7 @@ namespace Common_Utils
                 XElement switchxml = body2.Element(ns + "switch");
 
                 // audio tracks (m4a)
-                foreach (CloudBlockBlob file in m4aAssetFiles)
+                foreach (BlobItem file in m4aAssetFiles)
                 {
                     switchxml.Add(new XElement(ns + "audio", new XAttribute("src", file.Name), new XAttribute("title", Path.GetFileNameWithoutExtension(file.Name))));
                 }
@@ -51,13 +48,13 @@ namespace Common_Utils
                 if (m4aAssetFiles.Length == 0)
                 {
                     // audio track(s)
-                    IEnumerable<CloudBlockBlob> mp4AudioAssetFilesName = mp4AssetFiles.Where(f =>
+                    IEnumerable<BlobItem> mp4AudioAssetFilesName = mp4AssetFiles.Where(f =>
                                                                (f.Name.ToLower().Contains("audio") && !f.Name.ToLower().Contains("video"))
                                                                ||
                                                                (f.Name.ToLower().Contains("aac") && !f.Name.ToLower().Contains("h264"))
                                                                );
 
-                    IOrderedEnumerable<CloudBlockBlob> mp4AudioAssetFilesSize = mp4AssetFiles.OrderBy(f => f.Properties.Length);
+                    IOrderedEnumerable<BlobItem> mp4AudioAssetFilesSize = mp4AssetFiles.OrderBy(f => f.Properties.ContentLength);
 
                     string mp4fileaudio = (mp4AudioAssetFilesName.Count() == 1) ? mp4AudioAssetFilesName.FirstOrDefault().Name : mp4AudioAssetFilesSize.FirstOrDefault().Name; // if there is one file with audio or AAC in the name then let's use it for the audio track
                     switchxml.Add(new XElement(ns + "audio", new XAttribute("src", mp4fileaudio), new XAttribute("title", "audioname")));
@@ -69,7 +66,7 @@ namespace Common_Utils
                 }
 
                 // video tracks
-                foreach (CloudBlockBlob file in mp4AssetFiles)
+                foreach (BlobItem file in mp4AssetFiles)
                 {
                     if (file.Name != mp4fileuniqueaudio) // we don't put the unique audio file as a video track
                     {
