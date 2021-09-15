@@ -56,7 +56,7 @@ namespace EncodingH264ContentAware
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -111,7 +111,7 @@ namespace EncodingH264ContentAware
                                                                 config.AccountName,
                                                                 ContentAwareTransform,
                                                                 preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.ContentAwareEncoding));
-                                                                // This is using th built-in Content Aware Encoding for H264 preset. You can choose from a variety of built-in presets.
+                // This is using th built-in Content Aware Encoding for H264 preset. You can choose from a variety of built-in presets.
 
                 // Create a new input Asset and upload the specified local video file into it.
                 Asset inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
@@ -272,9 +272,9 @@ namespace EncodingH264ContentAware
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("ApiErrorException");
+                Console.WriteLine("ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -292,7 +292,7 @@ namespace EncodingH264ContentAware
         }
 
         #region EnsureTransformExists
-          /// <summary>
+        /// <summary>
         /// If the specified transform exists, get that transform. If the it does not exist, creates a new transform
         /// with the specified output. In this case, the output is set to encode a video using the passed in preset.
         /// </summary>
@@ -333,19 +333,7 @@ namespace EncodingH264ContentAware
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
             // Check if an Asset already exists
-            Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (outputAsset != null)
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
-            }
-            else
-            {
-                Console.WriteLine("Creating an output asset..");
-                outputAsset = new Asset();
-            }
+            Asset outputAsset = new Asset();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -398,7 +386,7 @@ namespace EncodingH264ContentAware
             }
             catch (Exception exception)
             {
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -475,24 +463,8 @@ namespace EncodingH264ContentAware
             // In this example, we are assuming that the asset name is unique.
             //
             // If you already have an asset with the desired name, use the Assets.Get method
-            // to get the existing asset. In Media Services v3, the Get method on entities returns null 
-            // if the entity doesn't exist (a case-insensitive check on the name).
-            Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (asset == null)
-            {
-                // Call Media Services API to create an Asset.
-                // This method creates a container in storage for the Asset.
-                // The files (blobs) associated with the asset will be stored in this container.
-                Console.WriteLine("Creating an input asset...");
-                asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-            }
-            else
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
-            }
+            // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
+            Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
 
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.

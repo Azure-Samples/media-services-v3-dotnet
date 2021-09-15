@@ -62,7 +62,7 @@ namespace BasicPlayReady
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -249,9 +249,9 @@ namespace BasicPlayReady
                 Console.Out.Flush();
                 Console.ReadLine();
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();

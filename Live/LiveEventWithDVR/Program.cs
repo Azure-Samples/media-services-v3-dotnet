@@ -88,7 +88,7 @@ namespace LiveEventWithDVR
 
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -530,9 +530,9 @@ namespace LiveEventWithDVR
                 }
 
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tCode: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -628,9 +628,9 @@ namespace LiveEventWithDVR
                     await client.LiveEvents.DeleteAsync(resourceGroup, accountName, liveEventName);
                 }
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("CleanupLiveEventAndOutputAsync -- Hit ApiErrorException");
+                Console.WriteLine("CleanupLiveEventAndOutputAsync -- Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tCode: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -649,9 +649,9 @@ namespace LiveEventWithDVR
                 // Delete the Archive Asset
                 await client.Assets.DeleteAsync(resourceGroup, accountName, assetName);
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("CleanupLocatorandAssetAsync -- Hit ApiErrorException");
+                Console.WriteLine("CleanupLocatorandAssetAsync -- Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tCode: {e.Body.Error.Message}");
                 Console.WriteLine();

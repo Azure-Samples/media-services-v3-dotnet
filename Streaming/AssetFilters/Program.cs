@@ -54,7 +54,7 @@ namespace AssetFilters
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -228,9 +228,9 @@ namespace AssetFilters
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -303,25 +303,9 @@ namespace AssetFilters
         {
             // In this example, we are assuming that the asset name is unique.
             // If you already have an asset with the desired name, use the Assets.Get method
-            // to get the existing asset. In Media Services v3, the Get method on entities returns null 
-            // if the entity doesn't exist (a case-insensitive check on the name).
-            Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (asset == null)
-            {
-                Console.WriteLine("Creating an input asset...");
-                // Call Media Services API to create an Asset.
-                // This method creates a container in storage for the Asset.
-                // The files (blobs) associated with the asset will be stored in this container.
-                asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-            }
-            else
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
-            }
-
+            // to get the existing asset. In Media Services v3, the Get method on entities throws an ErrorResponseException if the resource is not found.
+            Asset asset =  await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+           
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.
             // That is where you would specify read-write permissions 
@@ -358,19 +342,8 @@ namespace AssetFilters
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName,
             string accountName, string assetName)
         {
-            // Check if an Asset already exists
-            Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (outputAsset != null)
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
-            }
-            else
-            {
-                outputAsset = new Asset();
-            }
+          
+            Asset outputAsset = new Asset();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -417,7 +390,7 @@ namespace AssetFilters
             }
             catch (Exception exception)
             {
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");

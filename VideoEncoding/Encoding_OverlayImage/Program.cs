@@ -57,7 +57,7 @@ namespace Encoding_OverlayImage
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -187,9 +187,9 @@ namespace Encoding_OverlayImage
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("ApiErrorException");
+                Console.WriteLine("ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -220,9 +220,9 @@ namespace Encoding_OverlayImage
             // This code does not check if Transform already exists, so it will overwrite existing one. 
             // That is good for when you are testing things out and getting the layout of the overlay into the right position.
             // Transform.CreateOrUpdate() will overwrite any existing Transform with the same name.
-    
+
             Console.WriteLine("Creating a custom transform...");
-             
+
             // Create a new Transform Outputs array - this defines the set of outputs for the Transform
             var outputs = new TransformOutput[]
             {
@@ -298,21 +298,7 @@ namespace Encoding_OverlayImage
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            // Check if an Asset already exists
-            Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (outputAsset != null)
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
-            }
-            else
-            {
-                Console.WriteLine("Creating an output asset..");
-                outputAsset = new Asset();
-            }
-
+            Asset outputAsset = new Asset();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -334,7 +320,7 @@ namespace Encoding_OverlayImage
             string inputAssetName,
             string overlayAssetName,
             string outputAssetName,
-            Dictionary<string,string> correlationData)
+            Dictionary<string, string> correlationData)
         {
             // Add both the Video and the Overlay image assets here as inputs to the job.
             List<JobInput> jobInputs = new List<JobInput>() {
@@ -363,14 +349,14 @@ namespace Encoding_OverlayImage
                          jobName,
                          new Job
                          {
-                             Input = new JobInputs(inputs:jobInputs),
+                             Input = new JobInputs(inputs: jobInputs),
                              Outputs = jobOutputs,
                              CorrelationData = correlationData
                          });
             }
             catch (Exception exception)
             {
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -450,23 +436,25 @@ namespace Encoding_OverlayImage
             // In this example, we are assuming that the asset name is unique.
             //
             // If you already have an asset with the desired name, use the Assets.Get method
-            // to get the existing asset. In Media Services v3, the Get method on entities returns null 
-            // if the entity doesn't exist (a case-insensitive check on the name).
-            Asset asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
+            // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
+            Asset asset;
 
-            if (asset == null)
+            try
+            {
+                asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
+
+                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+                // an existing asset, use an unique name.
+                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
+
+            }
+            catch (ErrorResponseException)
             {
                 // Call Media Services API to create an Asset.
                 // This method creates a container in storage for the Asset.
                 // The files (blobs) associated with the asset will be stored in this container.
                 Console.WriteLine("Creating an input asset...");
                 asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-            }
-            else
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
             }
 
             // Use Media Services API to get back a response that contains

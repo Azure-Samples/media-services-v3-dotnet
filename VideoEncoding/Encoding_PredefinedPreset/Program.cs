@@ -54,7 +54,7 @@ namespace Encoding_PredefinedPreset
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -108,7 +108,7 @@ namespace Encoding_PredefinedPreset
                                                                                 config.AccountName,
                                                                                 TransformName,
                                                                                 preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.AdaptiveStreaming));
-                                                                                // This is using th built-in Adaptive Encdoing preset. You can choose from a variety of built-in presets.
+                // This is using th built-in Adaptive Encdoing preset. You can choose from a variety of built-in presets.
 
                 var input = new JobInputHttp(
                                     baseUri: BaseSourceUri,
@@ -183,9 +183,9 @@ namespace Encoding_PredefinedPreset
                     Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
                 }
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -241,21 +241,7 @@ namespace Encoding_PredefinedPreset
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            // Check if an Asset already exists
-            Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
-
-            if (outputAsset != null)
-            {
-                // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-                // an existing asset, use an unique name.
-                Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten in this sample.");
-            }
-            else
-            {
-                Console.WriteLine("Creating an output asset..");
-                outputAsset = new Asset();
-            }
-
+            Asset outputAsset = new Asset();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -296,7 +282,7 @@ namespace Encoding_PredefinedPreset
             }
             catch (Exception exception)
             {
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
