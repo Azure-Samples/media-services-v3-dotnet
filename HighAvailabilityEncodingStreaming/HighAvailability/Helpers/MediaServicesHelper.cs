@@ -34,21 +34,14 @@ namespace HighAvailability.Helpers
                 throw new ArgumentNullException(nameof(client));
             }
 
-            // try to get existing transform
-            var transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
-
-            // if transform does not exist
-            if (transform == null)
+            // create output with given preset
+            var outputs = new TransformOutput[]
             {
-                // create output with given preset
-                var outputs = new TransformOutput[]
-                {
-                    new TransformOutput(preset)
-                };
+                new TransformOutput(preset)
+            };
 
-                // create new transform
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs).ConfigureAwait(false);
-            }
+            // create new transform
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs).ConfigureAwait(false);
 
             return transform;
         }

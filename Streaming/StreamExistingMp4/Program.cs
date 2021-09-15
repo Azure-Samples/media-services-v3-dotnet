@@ -113,6 +113,7 @@ namespace StreamHLSAndDASH
                 var manifestsList = await AssetUtils.CreateServerManifestsAsync(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
                 var ismManifestName = manifestsList.FirstOrDefault();
 
+                 // v3 API throws an ErrorResponseException if the resource is not found.
                 StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
                 if (streamingEndpoint != null)
                 {

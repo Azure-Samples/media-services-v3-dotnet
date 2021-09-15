@@ -258,21 +258,17 @@ namespace FaceRedactor
         {
 
             #region FaceDetectorPresetTransform
-            // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            // Start by defining the desired outputs.
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                // Start by defining the desired outputs.
-                TransformOutput[] outputs = new TransformOutput[]
-                {
-                    new TransformOutput(preset),
-                };
+                new TransformOutput(preset),
+            };
 
-                // Create the Transform with the output defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
-            }
+            // Create the Transform with the output defined above
+            // Does a Transform already exist with the desired name? This method will just overwrite (update) the Transform if it exists already. 
+            // In production code, you may want to be cautious and try to avoid updates. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
 
@@ -299,7 +295,7 @@ namespace FaceRedactor
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
             Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-            
+
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.
             // That is where you would specify read-write permissions 
@@ -335,7 +331,7 @@ namespace FaceRedactor
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
             // Check if an Asset already exists
-            Asset outputAsset =new Asset();
+            Asset outputAsset = new Asset();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -369,7 +365,7 @@ namespace FaceRedactor
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try

@@ -215,18 +215,16 @@ namespace Encoding_PredefinedPreset
         private static async Task<Transform> EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName,
             string accountName, string transformName, Preset preset)
         {
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                TransformOutput[] outputs = new TransformOutput[]
-                {
                     new TransformOutput(preset),
-                };
+            };
 
-                Console.WriteLine("Creating a transform...");
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
-            }
+            Console.WriteLine("Creating a transform...");
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
         }

@@ -365,16 +365,11 @@ namespace Encoding_MultiChannel_Audio
         /// <returns></returns>
         private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
-            // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            Console.WriteLine("Creating a custom transform...");
+            // Create a new Transform Outputs array - this defines the set of outputs for the Transform
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                Console.WriteLine("Creating a custom transform...");
-                // Create a new Transform Outputs array - this defines the set of outputs for the Transform
-                TransformOutput[] outputs = new TransformOutput[]
-                {
                     // Create a new TransformOutput with a custom Standard Encoder Preset
                     // This demonstrates how to create custom codec and layer output settings
 
@@ -408,12 +403,14 @@ namespace Encoding_MultiChannel_Audio
                         onError: OnErrorType.StopProcessingJob,
                         relativePriority: Priority.Normal
                     )
-                };
+            };
 
-                string description = "A simple custom encoding transform with 2 MP4 bitrates";
-                // Create the custom Transform with the outputs defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
-            }
+            string description = "A custom multi-channel audio encoding preset";
+
+            // Create the custom Transform with the outputs defined above
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
 
             return transform;
         }
@@ -429,7 +426,7 @@ namespace Encoding_MultiChannel_Audio
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset =  new Asset();
+            Asset outputAsset = new Asset();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -470,7 +467,7 @@ namespace Encoding_MultiChannel_Audio
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
 
             Job job;
@@ -567,10 +564,10 @@ namespace Encoding_MultiChannel_Audio
         {
             // In this example, we are assuming that the asset name is unique.
             //
-             // If you already have an asset with the desired name, use the Assets.Get method
+            // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
             Asset asset;
-            
+
             try
             {
                 asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
@@ -578,7 +575,7 @@ namespace Encoding_MultiChannel_Audio
                 // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
                 // an existing asset, use an unique name.
                 Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
-            
+
             }
             catch (ErrorResponseException)
             {

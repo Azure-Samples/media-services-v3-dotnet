@@ -326,31 +326,27 @@ namespace OfflinePlayReadyAndWidevine
             string accountName,
             string transformName)
         {
-            // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
-
-            if (transform == null)
+            // You need to specify what you want it to produce as an output
+            TransformOutput[] output = new TransformOutput[]
             {
-                // You need to specify what you want it to produce as an output
-                TransformOutput[] output = new TransformOutput[]
+                new TransformOutput
                 {
-                    new TransformOutput
+                    // The preset for the Transform is set to one of Media Services built-in sample presets.
+                    // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
+                    Preset = new BuiltInStandardEncoderPreset()
                     {
-                        // The preset for the Transform is set to one of Media Services built-in sample presets.
-                        // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
-                        Preset = new BuiltInStandardEncoderPreset()
-                        {
-                            // This sample uses the built-in encoding preset for Adaptive Bitrate Streaming.
-                            PresetName = EncoderNamedPreset.AdaptiveStreaming
-                        }
+                        // This sample uses the built-in encoding preset for Adaptive Bitrate Streaming.
+                        PresetName = EncoderNamedPreset.AdaptiveStreaming
                     }
-                };
+                }
+            };
 
-                // Create the Transform with the output defined above
-                Console.WriteLine("Creating a transform...");
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
-            }
+            // Create the Transform with the output defined above
+            Console.WriteLine("Creating a transform...");
+
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
 
             return transform;
         }
@@ -366,8 +362,8 @@ namespace OfflinePlayReadyAndWidevine
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-        
-            Asset outputAsset =new Asset();
+
+            Asset outputAsset = new Asset();
 
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
@@ -402,7 +398,7 @@ namespace OfflinePlayReadyAndWidevine
 
             // In this example, we are assuming that the job name is unique.
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, the Get method on entities returns null 
+            // to get the existing job. In Media Services v3, the Get method on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try

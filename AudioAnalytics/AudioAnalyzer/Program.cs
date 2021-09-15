@@ -131,6 +131,7 @@ namespace AudioAnalyzer
             // If we want to change that language or mode before submitting the job, we can modify it using the PresetOverride property 
             // on the JobOutput.
 
+            #region PresetOverride
             // First we re-define the preset that we want to use for this specific Job...
             var presetOverride = new AudioAnalyzerPreset
             {
@@ -143,12 +144,14 @@ namespace AudioAnalyzer
             // This can save a lot of complexity in your AMS account and reduce the number of Transforms used.
             JobOutput jobOutput = new JobOutputAsset()
             {
-                AssetName = outputAsset.Name
-                // PresetOverride = presetOverride
+                AssetName = outputAsset.Name,
+                PresetOverride = presetOverride
             };
 
             Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AudioAnalyzerTransformName, jobName, inputAssetName, jobOutput);
 
+            #endregion PresetOverride
+            
             // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
             // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
             // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
@@ -276,21 +279,16 @@ namespace AudioAnalyzer
             string transformName,
             Preset preset)
         {
-            // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            // Start by defining the desired outputs.
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                // Start by defining the desired outputs.
-                TransformOutput[] outputs = new TransformOutput[]
-                {
-                    new TransformOutput(preset),
-                };
+                new TransformOutput(preset),
+            };
 
-                // Create the Transform with the output defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
-            }
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform =await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
         }
@@ -403,7 +401,7 @@ namespace AudioAnalyzer
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try

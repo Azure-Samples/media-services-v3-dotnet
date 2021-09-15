@@ -295,101 +295,98 @@ namespace EncodingWithMESCustomHEVC
         /// <returns></returns>
         private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
-            // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            Console.WriteLine("Creating a custom transform...");
+
+            // Create a new Transform Outputs array - this defines the set of outputs for the Transform
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                Console.WriteLine("Creating a custom transform...");
-                // Create a new Transform Outputs array - this defines the set of outputs for the Transform
-                TransformOutput[] outputs = new TransformOutput[]
-                {
-                    // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
-                    // This demonstrates how to create custom codec and layer output settings
+                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
+                // This demonstrates how to create custom codec and layer output settings
 
-                  new TransformOutput(
-                        new StandardEncoderPreset(
-                            codecs: new Codec[]
-                            {
-                                // Add an AAC Audio layer for the audio encoding
-                                new AacAudio(
-                                    channels: 2,
-                                    samplingRate: 48000,
-                                    bitrate: 128000,
-                                    profile: AacAudioProfile.AacLc
-                                ),
-                                // Next, add a HEVC (H.265) for the video encoding
-                               new H265Video (
-                                   // Set the GOP interval to 2 seconds for all H265Layers
-                                    keyFrameInterval: TimeSpan.FromSeconds(2),
-                                    complexity: H265Complexity.Speed, // HEVC encoding is priced at 3 complexity levels. Speed, Balanced, and Quality
-                                     // Add H265Layers. Assign a label that you can use for the output filename
-                                    layers:  new H265Layer[]
-                                    {
-                                        new H265Layer (
-                                            bitrate: 1800000, // Units are in bits per second and not kbps or Mbps - 1.8 Mbps or 1,800 kbps
-                                            maxBitrate: 1800000, // unit is in bits per second and not kbps or Mbps
-                                            width: "1280",
-                                            height: "720",
-                                            bFrames: 4,
-                                            label: "HD-1800kbps" // This label is used to modify the file name in the output formats
-                                        ),
-                                        new H265Layer (
-                                            bitrate: 800000, // Units are in bits per second and not kbps or Mbps - 0.8 Mbps or 800 kbps
-                                            maxBitrate: 800000, // unit is in bits per second and not kbps or Mbps
-                                            width: "960",
-                                            height: "540",
-                                            bFrames: 4,
-                                            label: "SD-800kbps" // This label is used to modify the file name in the output formats
-                                        ),
-                                        new H265Layer (
-                                            bitrate: 300000, // Units are in bits per second and not kbps or Mbps - 0.3 Mbps or 300 kbps
-                                            maxBitrate: 300000, // unit is in bits per second and not kbps or Mbps
-                                            width: "640",
-                                            height: "360",
-                                            bFrames: 4,
-                                            label: "SD-300kbps" // This label is used to modify the file name in the output formats
-                                        )
-                                    }
-                                ),
-                                // Also generate a set of PNG thumbnails
-                                new PngImage(
-                                    start: "25%",
-                                    step: "25%",
-                                    range: "80%",
-                                    layers: new PngLayer[]{
-                                        new PngLayer(
-                                            width: "50%",
-                                            height: "50%"
-                                        )
-                                    }
-                                )
-                            },
-                            // Specify the format for the output files - one for video+audio, and another for the thumbnails
-                            formats: new Format[]
-                            {
-                                // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                                // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
-                                // Either {Label} or {Bitrate} should suffice
-                                 
-                                new Mp4Format(
-                                    filenamePattern:"Video-{Basename}-{Label}-{Bitrate}{Extension}"
-                                ),
-                                new PngFormat(
-                                    filenamePattern:"Thumbnail-{Basename}-{Index}{Extension}"
-                                )
-                            }
-                        ),
-                        onError: OnErrorType.StopProcessingJob,
-                        relativePriority: Priority.Normal
-                    )
-                };
+                new TransformOutput(
+                    new StandardEncoderPreset(
+                        codecs: new Codec[]
+                        {
+                            // Add an AAC Audio layer for the audio encoding
+                            new AacAudio(
+                                channels: 2,
+                                samplingRate: 48000,
+                                bitrate: 128000,
+                                profile: AacAudioProfile.AacLc
+                            ),
+                            // Next, add a HEVC (H.265) for the video encoding
+                            new H265Video (
+                                // Set the GOP interval to 2 seconds for all H265Layers
+                                keyFrameInterval: TimeSpan.FromSeconds(2),
+                                complexity: H265Complexity.Speed, // HEVC encoding is priced at 3 complexity levels. Speed, Balanced, and Quality
+                                    // Add H265Layers. Assign a label that you can use for the output filename
+                                layers:  new H265Layer[]
+                                {
+                                    new H265Layer (
+                                        bitrate: 1800000, // Units are in bits per second and not kbps or Mbps - 1.8 Mbps or 1,800 kbps
+                                        maxBitrate: 1800000, // unit is in bits per second and not kbps or Mbps
+                                        width: "1280",
+                                        height: "720",
+                                        bFrames: 4,
+                                        label: "HD-1800kbps" // This label is used to modify the file name in the output formats
+                                    ),
+                                    new H265Layer (
+                                        bitrate: 800000, // Units are in bits per second and not kbps or Mbps - 0.8 Mbps or 800 kbps
+                                        maxBitrate: 800000, // unit is in bits per second and not kbps or Mbps
+                                        width: "960",
+                                        height: "540",
+                                        bFrames: 4,
+                                        label: "SD-800kbps" // This label is used to modify the file name in the output formats
+                                    ),
+                                    new H265Layer (
+                                        bitrate: 300000, // Units are in bits per second and not kbps or Mbps - 0.3 Mbps or 300 kbps
+                                        maxBitrate: 300000, // unit is in bits per second and not kbps or Mbps
+                                        width: "640",
+                                        height: "360",
+                                        bFrames: 4,
+                                        label: "SD-300kbps" // This label is used to modify the file name in the output formats
+                                    )
+                                }
+                            ),
+                            // Also generate a set of PNG thumbnails
+                            new PngImage(
+                                start: "25%",
+                                step: "25%",
+                                range: "80%",
+                                layers: new PngLayer[]{
+                                    new PngLayer(
+                                        width: "50%",
+                                        height: "50%"
+                                    )
+                                }
+                            )
+                        },
+                        // Specify the format for the output files - one for video+audio, and another for the thumbnails
+                        formats: new Format[]
+                        {
+                            // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
+                            // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
+                            // Either {Label} or {Bitrate} should suffice
+                                
+                            new Mp4Format(
+                                filenamePattern:"Video-{Basename}-{Label}-{Bitrate}{Extension}"
+                            ),
+                            new PngFormat(
+                                filenamePattern:"Thumbnail-{Basename}-{Index}{Extension}"
+                            )
+                        }
+                    ),
+                    onError: OnErrorType.StopProcessingJob,
+                    relativePriority: Priority.Normal
+                )
+            };
 
-                string description = "A simple custom encoding transform with 2 MP4 bitrates";
-                // Create the custom Transform with the outputs defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
-            }
+            string description = "A custom encoding transform for HEVC with 3 MP4 bitrates";
+            // Create the custom Transform with the outputs defined above
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
 
             return transform;
         }
@@ -439,7 +436,7 @@ namespace EncodingWithMESCustomHEVC
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try
@@ -538,7 +535,7 @@ namespace EncodingWithMESCustomHEVC
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
             Asset asset;
-            
+
             try
             {
                 asset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
@@ -546,7 +543,7 @@ namespace EncodingWithMESCustomHEVC
                 // The asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
                 // an existing asset, use an unique name.
                 Console.WriteLine($"Warning: The asset named {assetName} already exists. It will be overwritten.");
-            
+
             }
             catch (ErrorResponseException)
             {
