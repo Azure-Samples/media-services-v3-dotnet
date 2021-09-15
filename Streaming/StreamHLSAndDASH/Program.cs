@@ -121,6 +121,7 @@ namespace StreamHLSAndDASH
 
                     StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, locatorName);
 
+                    // v3 API throws an ErrorResponseException if the resource is not found.
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
                     if (streamingEndpoint != null)
@@ -247,31 +248,27 @@ namespace StreamHLSAndDASH
             string accountName,
             string transformName)
         {
-            // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            // You need to specify what you want it to produce as an output
+            TransformOutput[] output = new TransformOutput[]
             {
-                // You need to specify what you want it to produce as an output
-                TransformOutput[] output = new TransformOutput[]
+                new TransformOutput
                 {
-                    new TransformOutput
+                    // The preset for the Transform is set to one of Media Services built-in sample presets.
+                    // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
+                    Preset = new BuiltInStandardEncoderPreset()
                     {
-                        // The preset for the Transform is set to one of Media Services built-in sample presets.
-                        // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
-                        Preset = new BuiltInStandardEncoderPreset()
-                        {
-                            // This sample uses the built-in encoding preset for Adaptive Bitrate Streaming.
-                            PresetName = EncoderNamedPreset.AdaptiveStreaming
-                        }
+                        // This sample uses the built-in encoding preset for Adaptive Bitrate Streaming.
+                        PresetName = EncoderNamedPreset.AdaptiveStreaming
                     }
-                };
+                }
+            };
 
-                // Create the Transform with the output defined above
-                Console.WriteLine("Creating a transform...");
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
-            }
+            // Create the Transform with the output defined above
+            Console.WriteLine("Creating a transform...");
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
 
             return transform;
         }

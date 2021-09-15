@@ -305,18 +305,16 @@ namespace EncodingH264ContentAware
         private static async Task<Transform> EnsureTransformExists(IAzureMediaServicesClient client, string resourceGroupName,
             string accountName, string transformName, Preset preset)
         {
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                TransformOutput[] outputs = new TransformOutput[]
-                {
                     new TransformOutput(preset),
-                };
+            };
 
-                Console.WriteLine("Creating a transform...");
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
-            }
+            Console.WriteLine("Creating a transform...");
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
         }
@@ -366,7 +364,7 @@ namespace EncodingH264ContentAware
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try

@@ -336,7 +336,7 @@ namespace Encoding_OverlayImage
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try

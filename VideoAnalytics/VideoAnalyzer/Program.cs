@@ -119,7 +119,31 @@ namespace VideoAnalyzer
             // Output from the encoding Job must be written to an Asset, so let's create one
             Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, jobName, inputAssetName, outputAsset.Name);
+            // Use a preset override to change the language or mode on the Job level.
+            // Above we created a Transform with a preset that was set to a specific audio language and mode. 
+            // If we want to change that language or mode before submitting the job, we can modify it using the PresetOverride property 
+            // on the JobOutput.
+
+            #region PresetOverride
+            // First we re-define the preset that we want to use for this specific Job...
+            var presetOverride = new AudioAnalyzerPreset
+            {
+                AudioLanguage = "en-US",
+                Mode = AudioAnalysisMode.Basic  /// Switch this job to use Basic mode instead of standard
+            };
+
+            // Then we use the PresetOverride property of the JobOutput to pass in the override values to use on this single Job 
+            // without the need to create a completely separate and new Transform with another langauge code or Mode setting. 
+            // This can save a lot of complexity in your AMS account and reduce the number of Transforms used.
+            JobOutput jobOutput = new JobOutputAsset()
+            {
+                AssetName = outputAsset.Name,
+                PresetOverride = presetOverride
+            };
+
+            Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, VideoAnalyzerTransformName, jobName, inputAssetName, jobOutput);
+
+            #endregion PresetOverride
 
             // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
             // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
@@ -249,21 +273,17 @@ namespace VideoAnalyzer
             string transformName,
             Preset preset)
         {
-            // Does a Transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = await client.Transforms.GetAsync(resourceGroupName, accountName, transformName);
 
-            if (transform == null)
+            // Start by defining the desired outputs.
+            TransformOutput[] outputs = new TransformOutput[]
             {
-                // Start by defining the desired outputs.
-                TransformOutput[] outputs = new TransformOutput[]
-                {
-                    new TransformOutput(preset),
-                };
+                new TransformOutput(preset),
+            };
 
-                // Create the Transform with the output defined above
-                transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
-            }
+            // Create the Transform with the output defined above
+            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+            // In production code, you may want to be cautious about that. It really depends on your scenario.
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
         }
@@ -339,27 +359,27 @@ namespace VideoAnalyzer
         /// <param name="transformName">The name of the transform.</param>
         /// <param name="jobName">The (unique) name of the job.</param>
         /// <param name="inputAssetName"></param>
-        /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
+        /// <param name="jobOutput">The JobOutput entity with any preset overrides defined. </param>
         // <SubmitJob>
-        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
+         private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
             string transformName,
             string jobName,
             string inputAssetName,
-            string outputAssetName)
+            JobOutput jobOutput)
         {
             JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
 
             JobOutput[] jobOutputs =
             {
-                new JobOutputAsset(outputAssetName),
+                jobOutput
             };
 
             // In this example, we are assuming that the job name is unique.
             //
             // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, Get methods on entities returns null 
+            // to get the existing job. In Media Services v3, Get methods on entities returns ErrorResponseException 
             // if the entity doesn't exist (a case-insensitive check on the name).
             Job job;
             try
