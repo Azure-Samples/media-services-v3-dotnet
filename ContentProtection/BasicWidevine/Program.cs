@@ -66,7 +66,7 @@ namespace BasicWidevine
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -249,9 +249,9 @@ namespace BasicWidevine
                 Console.Out.Flush();
                 Console.ReadLine();
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("Hit ApiErrorException");
+                Console.WriteLine("Hit ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -394,22 +394,10 @@ namespace BasicWidevine
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            // Check if an Asset already exists
-            Asset outputAsset = await client.Assets.GetAsync(resourceGroupName, accountName, assetName);
+           
+            Asset outputAsset = new();
             Asset asset = new();
             string outputAssetName = assetName;
-
-            if (outputAsset != null)
-            {
-                // Name collision! In order to get the sample to work, let's just go ahead and create a unique asset name
-                // Note that the returned Asset can have a different name than the one specified as an input parameter.
-                // You may want to update this part to throw an Exception instead, and handle name collisions differently.
-                string uniqueness = $"-{Guid.NewGuid():N}";
-                outputAssetName += uniqueness;
-
-                Console.WriteLine("Warning – found an existing Asset with name = " + assetName);
-                Console.WriteLine("Creating an Asset with this name instead: " + outputAssetName);
-            }
 
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);

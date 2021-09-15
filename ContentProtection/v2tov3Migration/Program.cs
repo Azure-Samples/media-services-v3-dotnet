@@ -205,6 +205,7 @@ namespace MigrationSample
             //
             // Show how to get the Locators, ContentKeys, and policies associated with the Asset in V3
             //
+            // If the asset is not found it will throw an ErrorResponseException here...
             Asset v3Asset = v3Client.Assets.Get(config.ResourceGroup, config.AccountName, assetNameInv3); // really just to demonstrate we can retrieve the asset via its name
 
             Console.WriteLine("Locators associated with Asset {0} viewed from the V3 API:", v3Asset.Name);

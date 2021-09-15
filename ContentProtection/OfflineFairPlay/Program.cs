@@ -54,7 +54,7 @@ namespace OfflineFairPlay
             {
                 Console.Error.WriteLine($"{exception.Message}");
 
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
@@ -221,9 +221,9 @@ namespace OfflineFairPlay
                 Console.Out.Flush();
                 Console.ReadLine();
             }
-            catch (ApiErrorException e)
+            catch (ErrorResponseException e)
             {
-                Console.WriteLine("ApiErrorException");
+                Console.WriteLine("ErrorResponseException");
                 Console.WriteLine($"\tCode: {e.Body.Error.Code}");
                 Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
                 Console.WriteLine();
@@ -415,7 +415,7 @@ namespace OfflineFairPlay
             }
             catch (Exception exception)
             {
-                if (exception.GetBaseException() is ApiErrorException apiException)
+                if (exception.GetBaseException() is ErrorResponseException apiException)
                 {
                     Console.Error.WriteLine(
                         $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
