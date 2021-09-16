@@ -145,16 +145,13 @@ namespace AssetFilters
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
                         config.AccountName, DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
 
                     IList<string> urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);

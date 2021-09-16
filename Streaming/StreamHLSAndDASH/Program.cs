@@ -124,30 +124,28 @@ namespace StreamHLSAndDASH
                     // v3 API throws an ErrorResponseException if the resource is not found.
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
-
-                        IList<string> urls = await GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
-                            locator.Name, streamingEndpoint);
-                        Console.WriteLine();
-                        foreach (var url in urls)
-                        {
-                            Console.WriteLine(url);
-                        }
-                        Console.WriteLine();
-                        Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                        Console.WriteLine("When finished press enter to cleanup.");
-                        Console.Out.Flush();
-                        Console.ReadLine();
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
+
+                    IList<string> urls = await GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
+                        locator.Name, streamingEndpoint);
+                    Console.WriteLine();
+                    foreach (var url in urls)
+                    {
+                        Console.WriteLine(url);
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+                    Console.WriteLine("When finished press enter to cleanup.");
+                    Console.Out.Flush();
+                    Console.ReadLine();
+
                 }
             }
             catch (ErrorResponseException e)

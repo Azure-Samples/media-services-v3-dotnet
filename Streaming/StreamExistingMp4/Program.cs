@@ -113,32 +113,30 @@ namespace StreamHLSAndDASH
                 var manifestsList = await AssetUtils.CreateServerManifestsAsync(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
                 var ismManifestName = manifestsList.FirstOrDefault();
 
-                 // v3 API throws an ErrorResponseException if the resource is not found.
+                // v3 API throws an ErrorResponseException if the resource is not found.
                 StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
-                if (streamingEndpoint != null)
+                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                 {
-                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                    {
-                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                    Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                    await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                        // Since we started the endpoint, we should stop it in cleanup.
-                        stopEndpoint = true;
-                    }
-
-                    IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
-                        locator, ismManifestName, streamingEndpoint);
-                    Console.WriteLine();
-                    foreach (var url in urls)
-                    {
-                        Console.WriteLine(url);
-                    }
-                    Console.WriteLine();
-                    Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                    Console.WriteLine("When finished press enter to cleanup.");
-                    Console.Out.Flush();
-                    Console.ReadLine();
+                    // Since we started the endpoint, we should stop it in cleanup.
+                    stopEndpoint = true;
                 }
+
+                IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
+                    locator, ismManifestName, streamingEndpoint);
+                Console.WriteLine();
+                foreach (var url in urls)
+                {
+                    Console.WriteLine(url);
+                }
+                Console.WriteLine();
+                Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+                Console.WriteLine("When finished press enter to cleanup.");
+                Console.Out.Flush();
+                Console.ReadLine();
+
             }
             catch (ErrorResponseException e)
             {
@@ -179,7 +177,7 @@ namespace StreamHLSAndDASH
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method throws an ErrorResponseException if the resource is not found on a get. 
             Console.WriteLine("Creating an input asset...");
-            Asset asset =  asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+            Asset asset = asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
 
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.
