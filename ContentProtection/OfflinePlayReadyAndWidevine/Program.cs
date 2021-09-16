@@ -206,15 +206,12 @@ namespace OfflinePlayReadyAndWidevine
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
                         config.AccountName, DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
 
                     string dashPath = await GetDASHStreamingUrlAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
@@ -531,9 +528,28 @@ namespace OfflinePlayReadyAndWidevine
             string locatorName,
             string contentPolicyName)
         {
-            StreamingLocator locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
+            bool locatorExists = true;
+            StreamingLocator locator = null;
 
-            if (locator != null)
+            // Let's check if the locator exists already
+            try
+            {
+                locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
+            }
+            catch (ErrorResponseException ex)
+            {
+                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // locator does not exist, which is expected
+                    locatorExists = false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            if (locatorExists)
             {
                 // Name collision! This should not happen in this sample. If it does happen, in order to get the sample to work,
                 // let's just go ahead and create a unique name.

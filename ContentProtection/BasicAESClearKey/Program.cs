@@ -227,16 +227,13 @@ namespace BasicAESClearKey
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
                         config.AccountName, MyStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, MyStreamingEndpointName);
+                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, MyStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
 
                     string dashPath = await GetDASHStreamingUrlAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
