@@ -123,7 +123,7 @@ namespace EncodingH264ContentAwareConstrained
                     minBitrateBps : 200000,
                     maxHeight: 720,
                     // The minimum height of output video layers. Example: set MinHeight as 360 to avoid output layers of smaller resolutions like 180P.
-                    minHeight: 240,
+                    minHeight: 270,
                     // The maximum number of output video layers. Example: set MaxLayers as 4 to make sure at most 4 output layers are produced to control the overall cost of the encoding job.
                     maxLayers: 3
                 );
@@ -313,11 +313,11 @@ namespace EncodingH264ContentAwareConstrained
             }
             finally
             {
+                Console.WriteLine("Press Enter to clean up all resources");
+                Console.ReadLine();
                 Console.WriteLine("Cleaning up...");
                 await CleanUpAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransformConstrained, jobName, inputAssetName, outputAssetName,
                     locatorName, stopEndpoint, DefaultStreamingEndpointName);
-
-
             }
         }
 
