@@ -145,15 +145,12 @@ namespace Encoding_PredefinedPreset
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName,
                         DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // We started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // We started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
 
                     IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);

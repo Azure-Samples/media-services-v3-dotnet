@@ -225,17 +225,15 @@ namespace BasicWidevine
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName,
                         DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
+
                     string dashPath = await GetDASHStreamingUrlAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
 
                     Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
@@ -297,9 +295,28 @@ namespace BasicWidevine
             string contentKeyPolicyName,
             byte[] tokenSigningKey)
         {
-            ContentKeyPolicy policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
+            bool createPolicy = false;
+            ContentKeyPolicy policy = null;
 
-            if (policy == null)
+            // Let's check if the policy exists already
+            try
+            {
+                policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
+            }
+            catch (ErrorResponseException ex)
+            {
+                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // Content key policy does not exist
+                    createPolicy = true;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            if (createPolicy)
             {
                 ContentKeyPolicySymmetricTokenKey primaryKey = new(tokenSigningKey);
                 List<ContentKeyPolicyTokenClaim> requiredClaims = new()
@@ -558,9 +575,28 @@ namespace BasicWidevine
             string locatorName,
             string contentPolicyName)
         {
-            StreamingLocator locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
+            bool locatorExists = true;
+            StreamingLocator locator = null;
 
-            if (locator != null)
+            // Let's check if the locator exists already
+            try
+            {
+                 locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
+            }
+            catch (ErrorResponseException ex)
+            {
+                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    // locator does not exist, which is expected
+                    locatorExists = false;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            if (locatorExists)
             {
                 // Name collision! This should not happen in this sample. If it does happen, in order to get the sample to work,
                 // let's just go ahead and create a unique name.

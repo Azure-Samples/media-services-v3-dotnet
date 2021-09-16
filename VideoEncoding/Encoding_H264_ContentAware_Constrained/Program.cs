@@ -118,26 +118,26 @@ namespace EncodingH264ContentAwareConstrained
                     // The key frame interval in seconds. Example: set as 2 to reduce the playback buffering for some players.
                     keyFrameIntervalInSeconds: 2,
                     // The maximum bitrate in bits per second (threshold for the top video layer). Example: set MaxBitrateBps as 6000000 to avoid producing very high bitrate outputs for contents with high complexity.
-                    maxBitrateBps : 6000000,
+                    maxBitrateBps: 6000000,
                     // The minimum bitrate in bits per second (threshold for the bottom video layer). Example: set MinBitrateBps as 200000 to have a bottom layer that covers users with low network bandwidth.
-                    minBitrateBps : 200000,
+                    minBitrateBps: 200000,
                     maxHeight: 720,
                     // The minimum height of output video layers. Example: set MinHeight as 360 to avoid output layers of smaller resolutions like 180P.
                     minHeight: 270,
                     // The maximum number of output video layers. Example: set MaxLayers as 4 to make sure at most 4 output layers are produced to control the overall cost of the encoding job.
                     maxLayers: 3
                 );
-                
+
                 var contentAwareEncodingPreset = new BuiltInStandardEncoderPreset(
                     configurations: presetConfigurations,
-                    presetName: EncoderNamedPreset.ContentAwareEncoding           
+                    presetName: EncoderNamedPreset.ContentAwareEncoding
                 );
 
                 Transform transform = await EnsureTransformExists(client,
                                                                 config.ResourceGroup,
                                                                 config.AccountName,
                                                                 ContentAwareTransformConstrained,
-                                                                preset:contentAwareEncodingPreset);
+                                                                preset: contentAwareEncodingPreset);
 
                 #endregion PresetConfigurations
 
@@ -273,16 +273,13 @@ namespace EncodingH264ContentAwareConstrained
                     StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName,
                         DefaultStreamingEndpointName);
 
-                    if (streamingEndpoint != null)
+                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
                     {
-                        if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                        {
-                            Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                            await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
+                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
+                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
 
-                            // Since we started the endpoint, we should stop it in cleanup.
-                            stopEndpoint = true;
-                        }
+                        // Since we started the endpoint, we should stop it in cleanup.
+                        stopEndpoint = true;
                     }
 
                     Console.WriteLine();
