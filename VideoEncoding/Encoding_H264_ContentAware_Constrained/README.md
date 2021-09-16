@@ -24,7 +24,7 @@ Available values are:
 - minBitrateBps
 - minHeight 
 
-Next, pass this new object into the **[BuiltInStandardEncodingPreset.configurations](https://github.com/Azure/azure-rest-api-specs/blob/32d5a0348f38da79fafdf14b945df0f9b8119df4/specification/mediaservices/resource-manager/Microsoft.Media/stable/2021-06-01/Encoding.json#L1354** property.
+Next, pass this new object into the [BuiltInStandardEncodingPreset.configurations](https://github.com/Azure/azure-rest-api-specs/blob/32d5a0348f38da79fafdf14b945df0f9b8119df4/specification/mediaservices/resource-manager/Microsoft.Media/stable/2021-06-01/Encoding.json#L1354) property.
 
 ``` csharp
 
