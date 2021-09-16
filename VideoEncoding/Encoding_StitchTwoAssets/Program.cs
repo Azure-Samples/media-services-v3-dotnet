@@ -311,10 +311,6 @@ namespace Encoding_StitchTwoAssets
         /// <returns></returns>
         private static async Task<Transform> CreateCustomTransform(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string transformName)
         {
-            // Does a transform already exist with the desired name? Assume that an existing Transform with the desired name
-            // also uses the same recipe or Preset for processing content.
-            Transform transform = client.Transforms.Get(resourceGroupName, accountName, transformName);
-
             Console.WriteLine("Creating a custom transform...");
             // Create a new Transform Outputs array - this defines the set of outputs for the Transform
             TransformOutput[] outputs = new TransformOutput[]
@@ -388,8 +384,9 @@ namespace Encoding_StitchTwoAssets
             };
 
             string description = "A simple custom encoding transform with 2 MP4 bitrates";
+
             // Create the custom Transform with the outputs defined above
-            transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs, description);
 
             return transform;
         }
