@@ -112,11 +112,11 @@ namespace EncodingH264ContentAwareConstrained
 
                 PresetConfigurations presetConfigurations = new PresetConfigurations(
                     // Allows you to configure the encoder settings to control the balance between speed and quality. Example: set Complexity as Speed for faster encoding but less compression efficiency.
-                    //complexity: Complexity.Speed,
+                    complexity: Complexity.Speed,
                     // The output includes both audio and video.
-                    //interleaveOutput: InterleaveOutput.InterleavedOutput,
+                    interleaveOutput: InterleaveOutput.InterleavedOutput,
                     // The key frame interval in seconds. Example: set as 2 to reduce the playback buffering for some players.
-                    //keyFrameIntervalInSeconds: 2,
+                    keyFrameIntervalInSeconds: 2,
                     // The maximum bitrate in bits per second (threshold for the top video layer). Example: set MaxBitrateBps as 6000000 to avoid producing very high bitrate outputs for contents with high complexity.
                     maxBitrateBps : 6000000,
                     // The minimum bitrate in bits per second (threshold for the bottom video layer). Example: set MinBitrateBps as 200000 to have a bottom layer that covers users with low network bandwidth.
