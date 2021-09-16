@@ -17,7 +17,6 @@ namespace StreamHLSAndDASH
 {
     public class Program
     {
-        private const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
         private const string InputMP4FileName = @"IgniteHD1800kbps.mp4";
         private const string DefaultStreamingEndpointName = "default";
 
@@ -124,8 +123,7 @@ namespace StreamHLSAndDASH
                     stopEndpoint = true;
                 }
 
-                IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName,
-                    locator, ismManifestName, streamingEndpoint);
+                IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(locator, ismManifestName, streamingEndpoint);
                 Console.WriteLine();
                 foreach (var url in urls)
                 {
@@ -177,7 +175,7 @@ namespace StreamHLSAndDASH
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method throws an ErrorResponseException if the resource is not found on a get. 
             Console.WriteLine("Creating an input asset...");
-            Asset asset = asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
+            Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
 
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.
@@ -236,31 +234,19 @@ namespace StreamHLSAndDASH
         }
 
         /// <summary>
-        /// Checks if the "default" streaming endpoint is in the running state,
-        /// if not, starts it.
-        /// Then, builds the streaming URLs.
+        /// Builds the streaming URLs.
         /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
         /// <param name="streamingEndpoint">The streaming endpoint.</param>
         /// <returns></returns>
         private static IList<string> GetHLSAndDASHStreamingUrlsAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroupName,
-            string accountName,
             StreamingLocator locator,
             string manifestName,
             StreamingEndpoint streamingEndpoint)
         {
-
             var hostname = streamingEndpoint.HostName;
             var scheme = "https";
-            IList<string> manifests = new List<string>();
-
-
-            manifests = BuildManifestPaths(scheme, hostname, locator.StreamingLocatorId.ToString(), manifestName);
+            IList<string> manifests = BuildManifestPaths(scheme, hostname, locator.StreamingLocatorId.ToString(), manifestName);
 
             Console.WriteLine($"The HLS (MP4) manifest for the uploaded asset is : {manifests[0]}");
             Console.WriteLine("Copy the following URL to use in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device. Just send it in email to your phone and you can click and play it.");

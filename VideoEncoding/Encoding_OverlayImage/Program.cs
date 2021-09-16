@@ -123,9 +123,11 @@ namespace Encoding_OverlayImage
 
                 // Note that you can now pass custom correlation data Dictionary into the job to use via EventGrid or other Job polling listeners.
                 // this is handy for passing tenant ID, or custom workflow data as part of your job.
-                var correlationData = new Dictionary<string, string>();
-                correlationData.Add("customData1", "some custom data to pass through the job");
-                correlationData.Add("custom ID", "some GUID here");
+                var correlationData = new Dictionary<string, string>
+                {
+                    { "customData1", "some custom data to pass through the job" },
+                    { "custom ID", "some GUID here" }
+                };
 
                 Job job = await SubmitJobAsync(client,
                                                config.ResourceGroup,
