@@ -20,7 +20,7 @@ namespace EncodingH264ContentAwareConstrained
     public class Program
     {
         private const string OutputFolder = @"Output";
-        private const string ContentAwareTransform = "ContenAwareEncoding";
+        private const string ContentAwareTransformConstrained = "ContenAwareEncoding_Constrained";
         private const string InputMP4FileName = @"ignite.mp4";
         private const string DefaultStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
@@ -105,8 +105,6 @@ namespace EncodingH264ContentAwareConstrained
 
             try
             {
-                // Ensure that you have the Content Aware Encoding Transform ready to submit a job to.
-
                 #region PresetConfigurations
 
                 // This sample uses constraints on the CAE encoding preset to reduce the number of tracks output and resolutions to a specific range. 
@@ -138,8 +136,8 @@ namespace EncodingH264ContentAwareConstrained
                 Transform transform = await EnsureTransformExists(client,
                                                                 config.ResourceGroup,
                                                                 config.AccountName,
-                                                                ContentAwareTransform,
-                                                                preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.ContentAwareEncoding));
+                                                                ContentAwareTransformConstrained,
+                                                                preset:contentAwareEncodingPreset);
 
                 #endregion PresetConfigurations
 
@@ -151,7 +149,7 @@ namespace EncodingH264ContentAwareConstrained
                 // Output from the Job must be written to an Asset, so let's create one
                 Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
 
-                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransform, jobName, inputAsset.Name, outputAsset.Name);
+                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransformConstrained, jobName, inputAsset.Name, outputAsset.Name);
 
                 DateTime startedTime = DateTime.Now;
 
@@ -223,7 +221,7 @@ namespace EncodingH264ContentAwareConstrained
                         // Job finished. Cancel the timer.
                         cancellationSource.Cancel();
                         // Get the latest status of the job.
-                        job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, ContentAwareTransform, jobName);
+                        job = await client.Jobs.GetAsync(config.ResourceGroup, config.AccountName, ContentAwareTransformConstrained, jobName);
                     }
                     else
                     {
@@ -240,7 +238,7 @@ namespace EncodingH264ContentAwareConstrained
                     // Polling is not a recommended best practice for production applications because of the latency it introduces.
                     // Overuse of this API may trigger throttling. Developers should instead use Event Grid and listen for the status events on the jobs
                     Console.WriteLine("Polling job status...");
-                    job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransform, jobName);
+                    job = await WaitForJobToFinishAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransformConstrained, jobName);
                 }
                 finally
                 {
@@ -316,7 +314,7 @@ namespace EncodingH264ContentAwareConstrained
             finally
             {
                 Console.WriteLine("Cleaning up...");
-                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransform, jobName, inputAssetName, outputAssetName,
+                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, ContentAwareTransformConstrained, jobName, inputAssetName, outputAssetName,
                     locatorName, stopEndpoint, DefaultStreamingEndpointName);
 
 
