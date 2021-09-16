@@ -555,28 +555,14 @@ namespace BasicPlayReady
             string locatorName,
             string contentPolicyName)
         {
-            bool locatorExists = true;
-            StreamingLocator locator = null;
+            StreamingLocator locator;
 
             // Let's check if the locator exists already
             try
             {
                 locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
             }
-            catch (ErrorResponseException ex)
-            {
-                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    // locator does not exist, which is expected
-                    locatorExists = false;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            if (locatorExists)
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // Name collision! This should not happen in this sample. If it does happen, in order to get the sample to work,
                 // let's just go ahead and create a unique name.
