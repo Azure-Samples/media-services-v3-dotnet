@@ -303,17 +303,10 @@ namespace BasicWidevine
             {
                 policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
             }
-            catch (ErrorResponseException ex)
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    // Content key policy does not exist
-                    createPolicy = true;
-                }
-                else
-                {
-                    throw;
-                }
+                // Content key policy does not exist
+                createPolicy = true;
             }
 
             if (createPolicy)
@@ -406,13 +399,10 @@ namespace BasicWidevine
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-
-            Asset outputAsset = new();
             Asset asset = new();
-            string outputAssetName = assetName;
 
             Console.WriteLine("Creating an output asset...");
-            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, outputAssetName, asset);
+            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, asset);
         }
 
         /// <summary>
@@ -575,28 +565,14 @@ namespace BasicWidevine
             string locatorName,
             string contentPolicyName)
         {
-            bool locatorExists = true;
-            StreamingLocator locator = null;
+            StreamingLocator locator;
 
             // Let's check if the locator exists already
             try
             {
-                 locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
+                locator = await client.StreamingLocators.GetAsync(resourceGroup, accountName, locatorName);
             }
-            catch (ErrorResponseException ex)
-            {
-                if (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    // locator does not exist, which is expected
-                    locatorExists = false;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            if (locatorExists)
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // Name collision! This should not happen in this sample. If it does happen, in order to get the sample to work,
                 // let's just go ahead and create a unique name.
@@ -609,7 +585,7 @@ namespace BasicWidevine
 
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
             }
-
+           
             locator = await client.StreamingLocators.CreateAsync(
                 resourceGroup,
                 accountName,

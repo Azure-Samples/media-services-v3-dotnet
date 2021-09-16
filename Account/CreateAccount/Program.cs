@@ -140,7 +140,6 @@ namespace Account
             Console.WriteLine($"Media Services account : {accountName} created!");
             Console.WriteLine("Press enter to clean up resources and delete the account...");
             Console.Out.Flush();
-            var ignoredInput = Console.ReadLine();
 
             await CleanUpAsync(client, config.ResourceGroup, accountName);
         }
