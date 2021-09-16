@@ -231,6 +231,21 @@
       "envFile": "${workspaceFolder}/.env"
     },
     {
+      "name": "Launch Encoding Content Aware H264 Constrained",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net5.0/Encoding_H264_ContentAware_Constrained.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
       "name": "Launch Encoding HEVC",
       "type": "coreclr",
       "request": "launch",
