@@ -357,9 +357,8 @@ namespace EncodingH264ContentAwareConstrained
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            // Check if an Asset already exists
             Asset outputAsset = new Asset();
-
+            Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 

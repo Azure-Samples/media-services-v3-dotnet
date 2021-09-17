@@ -344,9 +344,8 @@ namespace VideoAnalyzer
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            // Check if an Asset already exists
             Asset outputAsset = new Asset();
-
+            Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -361,7 +360,7 @@ namespace VideoAnalyzer
         /// <param name="inputAssetName"></param>
         /// <param name="jobOutput">The JobOutput entity with any preset overrides defined. </param>
         // <SubmitJob>
-         private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
+        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
             string transformName,
