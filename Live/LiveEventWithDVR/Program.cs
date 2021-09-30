@@ -235,7 +235,7 @@ namespace LiveEventWithDVR
                         // Set this to Standard or Premium1080P to use the cloud live encoder.
                         // See https://go.microsoft.com/fwlink/?linkid=2095101 for more information
                         // Otherwise, leave as "None" to use pass-through mode
-                        encodingType: LiveEventEncodingType.None // also known as pass-through mode.
+                        encodingType: LiveEventEncodingType.PassthroughBasic // Using "basic" pass-through mode. 
                                                                  // OPTIONAL settings when using live cloud encoding type:
                                                                  // keyFrameInterval: "PT2S", //If this value is not set for an encoding live event, the fragment duration defaults to 2 seconds. The value cannot be set for pass-through live events.
                                                                  // presetName: null, // only used for custom defined presets. 

@@ -10,13 +10,18 @@ products:
 
 This sample demonstrates how to create and use LiveEvents and LiveOutputs in the v3 Media Services API. It performs the following tasks:
 
-1. Creates a pass-through LiveEvent.
+1. Creates a "basic" pass-through LiveEvent.
 1. Starts monitoring the LiveEvent using Event Grid and Event Hub.
 1. Creates an Asset and an AssetFilter with 5 minutes sliding window and 30 seconds seek back time.
 1. Creates a LiveOutput with 25 hours time span.
 1. Creates a StreamingLocator and associate the AssetFilter with it.
 1. Prints urls for the LiveEvent.
 1. Prints playback urls for the event archive after the LiveEvent stops.
+
+## Live events and live outputs in Media Services
+
+This sample shows how to create a "basic" pass-through live event.  There are several types of live events available at different pricing points.  This is the cheapest option, and takes the source video without transcoding it any further and just packages it for HLS and DASH delivery.  You can also choose from "standard" pass-through, or two cloud transcoding live events for 720P and 1080P adaptive bitrate output.  
+For details on the various types of live events see the article [Live events and live outputs in Media Services.](https://docs.microsoft.com/azure/media-services/latest/live-event-outputs-concept)
 
 ## Prerequisites
 
