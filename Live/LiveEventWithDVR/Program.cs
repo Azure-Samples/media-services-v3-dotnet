@@ -254,7 +254,7 @@ namespace LiveEventWithDVR
                         StreamOptionsFlag.LowLatency
                     }
                 //,
-                // 5) Optionally enable live transcriptions if desired. 
+                // 5) Optionally enable live transcriptions if desired. This is only supported on PassthroughStandard, and the transcoding live event types. It is not supported on Basic pass-through type.
                 // WARNING : This is extra cost ($$$), so please check pricing before enabling.
                 /*transcriptions:new List<LiveEventTranscription>(){
                     new LiveEventTranscription(
