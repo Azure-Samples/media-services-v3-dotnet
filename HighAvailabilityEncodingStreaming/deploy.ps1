@@ -73,7 +73,7 @@ foreach ($functionName in $createdFunctionNames)
     Compress-Archive -Path $publishPath -DestinationPath $functionZipFilePath -Force
 
     Write-Host "Publishing Azure Function:" $functionName["fullName"].Value
-    Publish-AzWebApp -ResourceGroupName $ResourceGroupName -Name $functionName["fullName"].Value -ArchivePath $functionZipFilePath -Force
+    Publish-AzWebApp -Timeout 300000 -ResourceGroupName $ResourceGroupName -Name $functionName["fullName"].Value -ArchivePath $functionZipFilePath -Force
 
     Restart-AzWebApp -ResourceGroupName $ResourceGroupName -Name $functionName["fullName"].Value
 }
