@@ -99,7 +99,7 @@ Update the Key Vault configuration to grant access to user submitting test reque
 1. Open the Key Vault instance.
 1. Go to **access policies**.
 1. Click on **Add access policy**.
-1. Select the *Get* and *List* secret permissions.
+1. Select the *Get* and *List* and *Write* secret permissions.
 1. Select **user** in the select principal dialog.
 1. Click **Add** to add access the policy.
 1. Click **Save** to save the change in Access Policies.
