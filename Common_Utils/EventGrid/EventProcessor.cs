@@ -208,7 +208,7 @@ namespace Common_Utils
                                 $"Discontinuity gap: {liveEventData.DiscontinuityGap}");
                         }
                         break;
-                    case "LiveEventChannelArchiveHeartbeatEvent":
+                    case "Microsoft.Media.LiveEventChannelArchiveHeartbeatEvent":
                         {
                            Console.WriteLine($"LiveEvent archive heartbeat event detected. LiveEventId: {eventSourceName}");
                            Console.WriteLine(e.Data.ToString());
