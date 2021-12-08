@@ -237,8 +237,9 @@ namespace Encoding_OverlayImage
                                 new VideoOverlay
                                 {
                                     InputLabel = OverlayLabel,   // same as the one used in the JobInput to identify which asset is the overlay image
-                                    Position = new Rectangle( "1200","670") // left, top position of the overlay in absolute pixel position relative to the source videos resolution. 
+                                    Position = new Rectangle( "1200","670"), // left, top position of the overlay in absolute pixel position relative to the source videos resolution. 
                                     // Percentage based settings are coming soon, but not yet supported. In the future you can set this to "90%","90%" for example to be resolution independent on the source video positioning.
+                                    // Opacity = 0.25  // opacity can be adjusted on the overlay.
                                 }
                             }
                         },
