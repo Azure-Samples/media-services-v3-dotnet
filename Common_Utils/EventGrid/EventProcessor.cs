@@ -145,6 +145,7 @@ namespace Common_Utils
                         break;
 
                     // LiveEvent Stream-level events
+                    // See the following documentation for updated schemas  - https://docs.microsoft.com/azure/media-services/latest/monitoring/media-services-event-schemas#live-event-types
                     case "Microsoft.Media.LiveEventConnectionRejected":
                         {
                             MediaLiveEventConnectionRejectedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventConnectionRejectedEventData>(e.Data.ToString(), options);
@@ -168,6 +169,7 @@ namespace Common_Utils
                         break;
 
                     // LiveEvent Track-level events
+                    // See the following documentation for updated schemas - https://docs.microsoft.com/azure/media-services/latest/monitoring/media-services-event-schemas#live-event-types
                     case "Microsoft.Media.LiveEventIncomingDataChunkDropped":
                         {
                             MediaLiveEventIncomingDataChunkDroppedEventData liveEventData = JsonSerializer.Deserialize<MediaLiveEventIncomingDataChunkDroppedEventData>(e.Data.ToString(), options);
@@ -206,6 +208,15 @@ namespace Common_Utils
                                 $"Discontinuity gap: {liveEventData.DiscontinuityGap}");
                         }
                         break;
+                    case "LiveEventChannelArchiveHeartbeatEvent":
+                        {
+                           Console.WriteLine($"LiveEvent archive heartbeat event detected. LiveEventId: {eventSourceName}");
+                           Console.WriteLine(e.Data.ToString());
+
+                        }
+                        break;
+
+
                 }
             }
 
