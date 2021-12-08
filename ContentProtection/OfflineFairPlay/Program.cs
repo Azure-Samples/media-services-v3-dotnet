@@ -562,14 +562,23 @@ namespace OfflineFairPlay
             string resourceGroupName, string accountName, string streamingPolicyName)
         {
             // In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
-            StreamingPolicy streamingPolicy;
+            bool createPolicy = false;
+            StreamingPolicy streamingPolicy = null;
 
             try
             {
                 streamingPolicy = await client.StreamingPolicies.GetAsync(resourceGroupName, accountName, streamingPolicyName);
                 Console.WriteLine($"Warning: The streaming policy named {streamingPolicyName} already exists.");
             }
-            catch (ErrorResponseException)
+
+
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Content key policy does not exist
+                createPolicy = true;
+            }
+
+            if (createPolicy)
             {
                 streamingPolicy = new StreamingPolicy
                 {

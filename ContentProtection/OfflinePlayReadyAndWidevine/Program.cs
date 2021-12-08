@@ -277,9 +277,21 @@ namespace OfflinePlayReadyAndWidevine
             string accountName,
             string contentKeyPolicyName)
         {
-            ContentKeyPolicy policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
+            bool createPolicy = false;
+            ContentKeyPolicy policy = null;
 
-            if (policy == null)
+            try
+            {
+                policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
+            }
+
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Content key policy does not exist
+                createPolicy = true;
+            }
+
+            if (createPolicy)
             {
                 ContentKeyPolicyOpenRestriction restriction = new();
 
