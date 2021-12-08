@@ -3,21 +3,15 @@
 
 using Azure.Identity;
 using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
 using Common_Utils;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,6 +32,18 @@ namespace OfflineFairPlay
 
         public static async Task Main(string[] args)
         {
+            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
+            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
+            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
+            try
+            {
+                DotEnv.Load(".env");
+            }
+            catch
+            {
+
+            }
+
             // Please make sure you have set configuration in appsettings.json.For more information, see
             // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
             ConfigWrapper config = new(new ConfigurationBuilder()
@@ -264,28 +270,27 @@ namespace OfflineFairPlay
             ConfigWrapper config,
             string contentKeyPolicyName)
         {
-            ContentKeyPolicy policy = await client.ContentKeyPolicies.GetAsync(config.ResourceGroup, config.AccountName, contentKeyPolicyName);
 
-            if (policy == null)
+            // Call Media Services API to create or update the policy.
+
+            Console.WriteLine("Creating or updating the content key policy...");
+
+            ContentKeyPolicyOpenRestriction restriction = new();
+
+            ContentKeyPolicyFairPlayConfiguration fairPlay = ConfigureFairPlayLicenseTemplate(config.AskHex, config.FairPlayPfxPath,
+                config.FairPlayPfxPassword);
+
+            List<ContentKeyPolicyOption> options = new()
             {
-                ContentKeyPolicyOpenRestriction restriction = new();
-
-                ContentKeyPolicyFairPlayConfiguration fairPlay = ConfigureFairPlayLicenseTemplate(config.AskHex, config.FairPlayPfxPath,
-                    config.FairPlayPfxPassword);
-
-                List<ContentKeyPolicyOption> options = new()
+                new ContentKeyPolicyOption()
                 {
-                    new ContentKeyPolicyOption()
-                    {
-                        Configuration = fairPlay,
-                        Restriction = restriction
-                    }
-                };
+                    Configuration = fairPlay,
+                    Restriction = restriction
+                }
+            };
 
-                Console.WriteLine("Creating a content key policy...");
-                policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, contentKeyPolicyName, options);
-            }
-
+            Console.WriteLine("Creating or updating the content key policy...");
+            ContentKeyPolicy policy = await client.ContentKeyPolicies.CreateOrUpdateAsync(config.ResourceGroup, config.AccountName, contentKeyPolicyName, options);
             return policy;
         }
 
@@ -527,7 +532,7 @@ namespace OfflineFairPlay
                 Console.WriteLine("Creating a Streaming Locator with this name instead: " + locatorName);
             }
 
-            StreamingPolicy customStreamingPolicy = await GetOrCreateCustomStreamingPloliyForFairPlay(client, resourceGroup, accountName,
+            StreamingPolicy customStreamingPolicy = await GetOrCreateCustomStreamingPolicyForFairPlay(client, resourceGroup, accountName,
                 FairPlayStreamingPolicyName);
 
             Console.WriteLine("Creating a streaming locator...");
@@ -553,11 +558,18 @@ namespace OfflineFairPlay
         /// <param name="accountName"> The Media Services account name.</param>
         /// <param name="streamingPolicyName">The streaming policy name.</param>
         /// <returns>StreamingPolicy</returns>
-        private static async Task<StreamingPolicy> GetOrCreateCustomStreamingPloliyForFairPlay(IAzureMediaServicesClient client,
+        private static async Task<StreamingPolicy> GetOrCreateCustomStreamingPolicyForFairPlay(IAzureMediaServicesClient client,
             string resourceGroupName, string accountName, string streamingPolicyName)
         {
-            StreamingPolicy streamingPolicy = await client.StreamingPolicies.GetAsync(resourceGroupName, accountName, streamingPolicyName);
-            if (streamingPolicy == null)
+            // In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
+            StreamingPolicy streamingPolicy;
+
+            try
+            {
+                streamingPolicy = await client.StreamingPolicies.GetAsync(resourceGroupName, accountName, streamingPolicyName);
+                Console.WriteLine($"Warning: The streaming policy named {streamingPolicyName} already exists.");
+            }
+            catch (ErrorResponseException)
             {
                 streamingPolicy = new StreamingPolicy
                 {
