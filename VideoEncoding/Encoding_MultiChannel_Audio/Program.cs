@@ -379,13 +379,15 @@ namespace Encoding_MultiChannel_Audio
                                     channels: 2, // stereo track
                                     samplingRate: 48000,
                                     bitrate: 128000,
-                                    profile: AacAudioProfile.AacLc
+                                    profile: AacAudioProfile.AacLc,
+                                    label: "stereo"
                                 ),
                                  new AacAudio(
                                     channels: 6, // 5.1 surround sound track 
                                     samplingRate: 48000,
                                     bitrate: 320000,
-                                    profile: AacAudioProfile.AacLc
+                                    profile: AacAudioProfile.AacLc,
+                                    label: "surround"
                                 )
                             },
                             // Specify the format for the output files
@@ -393,7 +395,15 @@ namespace Encoding_MultiChannel_Audio
                             {
                                 // Mux the AAC audio into MP4 files, using basename, label, bitrate and extension macros       
                                 new Mp4Format(
-                                    filenamePattern:"Video-{Basename}-{Label}-{Bitrate}{Extension}"
+                                    filenamePattern:"{Basename}-{Label}-{Bitrate}{Extension}",
+                                    outputFiles: new OutputFile[]{
+                                        new OutputFile(
+                                            labels: new List<string>{"stereo"} 
+                                        ),
+                                        new OutputFile(
+                                            labels: new List<string>{"surround"}
+                                        )
+                                    }
                                 )
                             }
                         ),
