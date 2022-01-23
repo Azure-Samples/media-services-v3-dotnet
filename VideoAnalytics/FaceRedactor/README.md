@@ -26,10 +26,10 @@ This sample demonstrates how to redact faces in a video using "combined mode". I
 
 * Required Assemblies
 
+* Azure.Identity
+* Azure.Messaging.EventGrid
+* Azure.Messaging.EventHubs.Processor
 * Azure.Storage.Blobs
-* Microsoft.Azure.EventGrid
-* Microsoft.Azure.EventHubs
-* Microsoft.Azure.EventHubs.Processor
 * Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
 * Microsoft.Extensions.Configuration.EnvironmentVariables
