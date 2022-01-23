@@ -23,9 +23,9 @@ This sample demonstrates how to analyze audio in a media file. It shows how to p
 * Required Assemblies
 
 * Azure.Storage.Blobs
-* Microsoft.Azure.EventGrid
-* Microsoft.Azure.EventHubs
-* Microsoft.Azure.EventHubs.Processor
+* Azure.Messaging.EventGrid
+* Azure.Messaging.EventHubs
+* Azure.Messaging.EventHubs.Processor
 * Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
 * Microsoft.Extensions.Configuration.EnvironmentVariables
