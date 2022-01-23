@@ -39,7 +39,7 @@ When a user requests PlayReady or Widevine protected content for the first time,
 * System.Security.Claims
 
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
