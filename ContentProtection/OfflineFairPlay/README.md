@@ -39,7 +39,7 @@ When a user requests FairPlay protected content for the first time, the player a
 * System.IdentityModel.Tokens.Jwt
 * System.Security.Claims
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 * An Apple ASK(Application Secret Key).
 * An Apple certificate(.pfx) and password.
 
