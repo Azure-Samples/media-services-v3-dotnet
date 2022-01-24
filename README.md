@@ -78,5 +78,5 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 ## Next steps
 
-- Azure Media Services documentation: <https://docs.microsoft.com/en-us/azure/media-services/>
-- Azure Media Services pricing: <https://azure.microsoft.com/en-in/pricing/details/media-services/>
+- Azure Media Services documentation: <https://docs.microsoft.com/azure/media-services/>
+- Azure Media Services pricing: <https://azure.microsoft.com/pricing/details/media-services/>
