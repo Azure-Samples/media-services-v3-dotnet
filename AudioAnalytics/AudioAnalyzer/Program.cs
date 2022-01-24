@@ -87,7 +87,7 @@ namespace AudioAnalyzer
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
                 Console.Error.WriteLine($"{e.Message}");
                 return;
             }

@@ -41,7 +41,7 @@ This sample demonstrates how to redact faces in a video using "combined mode". I
 ## Build and run
 
 Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
-For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
+For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
 
 (The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
 
