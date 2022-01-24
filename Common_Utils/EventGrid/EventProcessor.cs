@@ -3,8 +3,8 @@
 
 using Azure.Messaging.EventGrid.SystemEvents;
 using Azure.Messaging.EventHubs.Processor;
-using System.Text.Json;
 using System;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,7 +75,7 @@ namespace Common_Utils
 
             var jsonArray = JsonSerializer.Deserialize<Azure.Messaging.EventGrid.EventGridEvent[]>(eventData.EventBody.ToString(), options);
 
-            foreach(Azure.Messaging.EventGrid.EventGridEvent e in jsonArray)
+            foreach (Azure.Messaging.EventGrid.EventGridEvent e in jsonArray)
             {
                 var subject = e.Subject;
                 var topic = e.Topic;
@@ -210,8 +210,8 @@ namespace Common_Utils
                         break;
                     case "Microsoft.Media.LiveEventChannelArchiveHeartbeatEvent":
                         {
-                           Console.WriteLine($"LiveEvent archive heartbeat event detected. LiveEventId: {eventSourceName}");
-                           Console.WriteLine(e.Data.ToString());
+                            Console.WriteLine($"LiveEvent archive heartbeat event detected. LiveEventId: {eventSourceName}");
+                            Console.WriteLine(e.Data.ToString());
 
                         }
                         break;

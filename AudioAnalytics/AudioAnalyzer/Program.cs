@@ -3,7 +3,6 @@
 
 using Azure.Identity;
 using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Common_Utils;
@@ -12,7 +11,6 @@ using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -151,7 +149,7 @@ namespace AudioAnalyzer
             Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, AudioAnalyzerTransformName, jobName, inputAssetName, jobOutput);
 
             #endregion PresetOverride
-            
+
             // In this sample, we use Event Grid to listen to the notifications through an Azure Event Hub. 
             // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
             // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
@@ -288,7 +286,7 @@ namespace AudioAnalyzer
 
             // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
             // In production code, you may want to be cautious about that. It really depends on your scenario.
-            Transform transform =await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
+            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, outputs);
 
             return transform;
         }
