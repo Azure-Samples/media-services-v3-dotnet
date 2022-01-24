@@ -1,8 +1,7 @@
-using Common_Utils;
 using Azure.Identity;
 using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
+using Common_Utils;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
@@ -236,10 +235,10 @@ namespace LiveEventWithDVR
                         // See https://go.microsoft.com/fwlink/?linkid=2095101 for more information
                         // Otherwise, set to PassthroughBasic or PassthroughStandard to use the two different pass-through modes. 
                         encodingType: LiveEventEncodingType.PassthroughStandard // Choose the type of live event - standard or basic pass-through, or the encoding types for 720P or 1080P
-                                                                 // OPTIONAL settings when using live cloud encoding type:
-                                                                 // keyFrameInterval: "PT2S", //If this value is not set for an encoding live event, the fragment duration defaults to 2 seconds. The value cannot be set for pass-through live events.
-                                                                 // presetName: null, // only used for custom defined presets. 
-                                                                 //stretchMode: "None" // can be used to determine stretch on encoder mode
+                                                                                // OPTIONAL settings when using live cloud encoding type:
+                                                                                // keyFrameInterval: "PT2S", //If this value is not set for an encoding live event, the fragment duration defaults to 2 seconds. The value cannot be set for pass-through live events.
+                                                                                // presetName: null, // only used for custom defined presets. 
+                                                                                //stretchMode: "None" // can be used to determine stretch on encoder mode
                     ),
                     // 3) Set up the Preview endpoint for monitoring based on the settings above we already set.
                     preview: liveEventPreview,
