@@ -26,17 +26,17 @@ This sample demonstrates how to redact faces in a video using "combined mode". I
 
 * Required Assemblies
 
+* Azure.Identity
+* Azure.Messaging.EventGrid
+* Azure.Messaging.EventHubs.Processor
 * Azure.Storage.Blobs
-* Microsoft.Azure.EventGrid
-* Microsoft.Azure.EventHubs
-* Microsoft.Azure.EventHubs.Processor
 * Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
 * Microsoft.Extensions.Configuration.EnvironmentVariables
 * Microsoft.Extensions.Configuration.Json
 * Microsoft.Identity.Client
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
