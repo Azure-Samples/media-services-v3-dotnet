@@ -74,7 +74,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		sample.env = sample.env
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Encoding_H264_ContentAware_Constrained", "VideoEncoding\Encoding_H264_ContentAware_Constrained\Encoding_H264_ContentAware_Constrained.csproj", "{92607C58-5B89-47A1-932A-30CCACA883C4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_H264_ContentAware_Constrained", "VideoEncoding\Encoding_H264_ContentAware_Constrained\Encoding_H264_ContentAware_Constrained.csproj", "{92607C58-5B89-47A1-932A-30CCACA883C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assets", "Assets\Assets.csproj", "{9293E422-E78B-4214-AEF0-842FA243E76D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AssetManagement", "AssetManagement", "{E550442C-98D5-430C-9DE8-22E97C99614C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -374,6 +378,18 @@ Global
 		{92607C58-5B89-47A1-932A-30CCACA883C4}.Release|x64.Build.0 = Release|Any CPU
 		{92607C58-5B89-47A1-932A-30CCACA883C4}.Release|x86.ActiveCfg = Release|Any CPU
 		{92607C58-5B89-47A1-932A-30CCACA883C4}.Release|x86.Build.0 = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|x64.Build.0 = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Debug|x86.Build.0 = Debug|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|x64.ActiveCfg = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|x64.Build.0 = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|x86.ActiveCfg = Release|Any CPU
+		{9293E422-E78B-4214-AEF0-842FA243E76D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -402,6 +418,7 @@ Global
 		{2BC5DA5C-08D2-47A3-A2FA-B9F2A57B42A4} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 		{8A47C39E-3326-4536-8FB2-80F894B1F30F} = {1A42B0C5-1101-44E1-A9D6-CC94319705AE}
 		{92607C58-5B89-47A1-932A-30CCACA883C4} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
+		{9293E422-E78B-4214-AEF0-842FA243E76D} = {E550442C-98D5-430C-9DE8-22E97C99614C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9DAB230D-4F3C-4230-9C72-C8B5198E2064}
