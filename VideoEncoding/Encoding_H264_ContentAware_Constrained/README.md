@@ -91,12 +91,12 @@ To learn more about Content Aware Encoding, see the article on [Content Aware En
 * Microsoft.Identity.Client
 * Azure.Identity
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
 Update  **.env file** at the root of the solution with your account settings or updated the **appsettings.json** in the project folder. Please choose only one of these two methods.
-For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
+For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
 
 (The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
 

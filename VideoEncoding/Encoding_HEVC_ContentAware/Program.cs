@@ -1,6 +1,5 @@
 ﻿using Azure.Identity;
 using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Processor;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Common_Utils;
@@ -9,7 +8,6 @@ using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -83,7 +81,7 @@ namespace EncodingHEVCContentAware
             {
                 if (e.Source.Contains("ActiveDirectory"))
                 {
-                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
                     Console.Error.WriteLine();
                 }
                 Console.Error.WriteLine($"{e.Message}");

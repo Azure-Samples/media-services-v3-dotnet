@@ -55,8 +55,8 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 ## Prerequisites
 
-- A Windows 10 PC, Mac or Linux
-- [Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows 10), or optional [Visual Studio Code](https://code.visualstudio.com/) (Windows, Mac or Linux)
+- A Windows 10/11 PC, Mac or Linux
+- [Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows 10/11), or optional [Visual Studio Code](https://code.visualstudio.com/) (Windows, Mac or Linux)
 - .NET 5.0 SDK : <https://dotnet.microsoft.com/download>
 
 ## Setup
@@ -79,5 +79,5 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 ## Next steps
 
-- Azure Media Services documentation: <https://docs.microsoft.com/en-us/azure/media-services/>
-- Azure Media Services pricing: <https://azure.microsoft.com/en-in/pricing/details/media-services/>
+- Azure Media Services documentation: <https://docs.microsoft.com/azure/media-services/>
+- Azure Media Services pricing: <https://azure.microsoft.com/pricing/details/media-services/>

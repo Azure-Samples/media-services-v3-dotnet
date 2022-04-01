@@ -81,7 +81,7 @@ namespace Encoding_PredefinedPreset
             {
                 if (e.Source.Contains("ActiveDirectory"))
                 {
-                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
                     Console.Error.WriteLine();
                 }
                 Console.Error.WriteLine($"{e.Message}");

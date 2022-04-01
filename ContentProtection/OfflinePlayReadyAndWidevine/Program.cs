@@ -1,20 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.Messaging.EventHubs;
 using Azure.Storage.Blobs;
 using Common_Utils;
-using Azure.Identity;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,7 +80,7 @@ namespace OfflinePlayReadyAndWidevine
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
                 Console.Error.WriteLine($"{e.Message}");
                 return;
             }

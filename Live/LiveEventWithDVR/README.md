@@ -27,24 +27,24 @@ For details on the various types of live events see the article [Live events and
 
 * Required Assemblies
 
-* Microsoft.Azure.EventGrid
-* Microsoft.Azure.EventHubs
-* Microsoft.Azure.EventHubs.Processor
+* Azure.Identity
+* Azure.Messaging.EventGrid
+* Azure.Messaging.EventHubs.Processor
+* Azure.Storage.Blobs
 * Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.Json
 * Microsoft.Extensions.Configuration.EnvironmentVariables
+* Microsoft.Extensions.Configuration.Json
 * Microsoft.Identity.Client
-* Azure.Storage.Blobs
 
 * A camera connected to your computer.
 * A media encoder. For a recommended encoder, please visit [Recommended encoders](https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders).
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/azure/media-services/latest/create-account-cli-quickstart).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
 Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
-For more information, see [Access APIs](https://docs.microsoft.com/en-us/azure/media-services/latest/access-api-howto).
+For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
 
 (The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
 

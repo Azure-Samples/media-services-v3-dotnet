@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Identity;
+using Azure.Messaging.EventHubs;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Common_Utils;
-using Azure.Messaging.EventHubs;
-using Azure.Messaging.EventHubs.Processor;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
@@ -99,7 +98,7 @@ namespace Encoding_MultiChannel_Audio
             {
                 if (e.Source.Contains("ActiveDirectory"))
                 {
-                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json file before running this sample.");
+                    Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
                     Console.Error.WriteLine();
                 }
                 Console.Error.WriteLine($"{e.Message}");
@@ -398,7 +397,7 @@ namespace Encoding_MultiChannel_Audio
                                     filenamePattern:"{Basename}-{Label}-{Bitrate}{Extension}",
                                     outputFiles: new OutputFile[]{
                                         new OutputFile(
-                                            labels: new List<string>{"stereo"} 
+                                            labels: new List<string>{"stereo"}
                                         ),
                                         new OutputFile(
                                             labels: new List<string>{"surround"}
