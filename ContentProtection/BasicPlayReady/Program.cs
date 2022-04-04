@@ -294,9 +294,21 @@ namespace BasicPlayReady
             string contentKeyPolicyName,
             byte[] tokenSigningKey)
         {
-            ContentKeyPolicy policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
 
-            if (policy == null)
+            bool createPolicy = false;
+            ContentKeyPolicy policy = null;
+            try
+            {
+                policy = await client.ContentKeyPolicies.GetAsync(resourceGroupName, accountName, contentKeyPolicyName);
+            }
+
+            catch (ErrorResponseException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Content key policy does not exist
+                createPolicy = true;
+            }
+        
+            if (createPolicy)
             {
                 ContentKeyPolicySymmetricTokenKey primaryKey = new(tokenSigningKey);
                 List<ContentKeyPolicyTokenClaim> requiredClaims = new()
