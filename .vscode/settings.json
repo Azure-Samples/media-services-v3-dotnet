@@ -3,7 +3,10 @@
         "amsaccount"
     ],
     "cSpell.words": [
-        "hevc"
+        "hevc",
+        "masl",
+        "Msal",
+        "MSAL"
     ],
     "azure-iot-edge.defaultPlatform": {
         "platform": "amd64",
