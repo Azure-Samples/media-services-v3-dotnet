@@ -25,8 +25,6 @@ public static async Task<AzureMediaServicesClient> CreateMediaServicesClient()
     SUBSCRIPTIONID = envVars["SUBSCRIPTIONID"];
     var ARMAADAUDIENCE = envVars["ARMAADAUDIENCE"];
     var ARMENDPOINT = envVars["ARMENDPOINT"];
-    var AADENDPOINT = envVars["AADENDPOINT"];
-    var STORAGECONNECTIONSTRING = envVars["STORAGECONNECTIONSTRING"];
 
     string TokenType = "Bearer";
     var scopes = new[] { ARMAADAUDIENCE + ".default" };
