@@ -10,6 +10,8 @@ using dotenv.net;
 static string RESOURCEGROUP;
 static string ACCOUNTNAME;
 
+static string SUBSCRIPTIONID;
+
 public static async Task<AzureMediaServicesClient> CreateMediaServicesClient()
 {
     dotenv.net.DotEnv.Load();
@@ -20,7 +22,7 @@ public static async Task<AzureMediaServicesClient> CreateMediaServicesClient()
     var AADTENANTID = envVars["AADTENANTID"];
     ACCOUNTNAME = envVars["ACCOUNTNAME"];
     RESOURCEGROUP = envVars["RESOURCEGROUP"];
-    var SUBSCRIPTIONID = envVars["SUBSCRIPTIONID"];
+    SUBSCRIPTIONID = envVars["SUBSCRIPTIONID"];
     var ARMAADAUDIENCE = envVars["ARMAADAUDIENCE"];
     var ARMENDPOINT = envVars["ARMENDPOINT"];
     var AADENDPOINT = envVars["AADENDPOINT"];
