@@ -1,3 +1,5 @@
+// In VS Code, this file will show as RED since it will be imported into an interactive notebook later to get the nuget packages.
+
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
