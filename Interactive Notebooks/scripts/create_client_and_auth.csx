@@ -5,10 +5,12 @@ using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
 using Microsoft.Rest;
-using Common_Utils;
 using dotenv.net;
 
-public static async Task<IAzureMediaServicesClient> CreateMediaServicesClient()
+static string RESOURCEGROUP;
+static string ACCOUNTNAME;
+
+public static async Task<AzureMediaServicesClient> CreateMediaServicesClient()
 {
     dotenv.net.DotEnv.Load();
     var envVars = dotenv.net.DotEnv.Read();
@@ -16,8 +18,8 @@ public static async Task<IAzureMediaServicesClient> CreateMediaServicesClient()
     var AADSECRET = envVars["AADSECRET"];
     var AADTENANTDOMAIN = envVars["AADTENANTDOMAIN"];
     var AADTENANTID = envVars["AADTENANTID"];
-    var ACCOUNTNAME = envVars["ACCOUNTNAME"];
-    var RESOURCEGROUP = envVars["RESOURCEGROUP"];
+    ACCOUNTNAME = envVars["ACCOUNTNAME"];
+    RESOURCEGROUP = envVars["RESOURCEGROUP"];
     var SUBSCRIPTIONID = envVars["SUBSCRIPTIONID"];
     var ARMAADAUDIENCE = envVars["ARMAADAUDIENCE"];
     var ARMENDPOINT = envVars["ARMENDPOINT"];
@@ -38,7 +40,7 @@ public static async Task<IAzureMediaServicesClient> CreateMediaServicesClient()
 
     var credentials = new TokenCredentials(authResult.AccessToken, TokenType);
 
-    IAzureMediaServicesClient client = null;
+    AzureMediaServicesClient client = null;
 
     try
     {
