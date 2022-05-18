@@ -8,7 +8,7 @@ products:
 
 # Streaming an existing single bitrate MP4 file with HLS or Dash
 
-This sample demonstrates how to dynamically package VOD content from an existing. pre-encoded MP4 file and stream with HLS/DASH. 
+This sample demonstrates how to dynamically package VOD content from an existing pre-encoded MP4 file (or set of ABR encoded Mp4s) and stream with HLS/DASH. 
 It shows how you can create the required server manifest (.ism) and client manifest (.ismc) files needed for the Azure Media Services origin server to stream a pre-encoded file to HLS or DASH formats. 
 Once the server and client manifest are available, the streaming server understands how to dynamically generate HLS and DASH format.  
 Keep in mind that this can be slightly less performant and heavier on the CPU of the Streaming Endpoint than generating the content directly through the Standard encoder presets for adaptive streaming (AdaptiveStreaming or Content Aware Encoding presets)
