@@ -178,7 +178,8 @@ namespace Common_Utils
                     UriBuilder uribuilder = new()
                     {
                         Host = runningSes.HostName,
-                        Path = smoothPath.FirstOrDefault().Paths.FirstOrDefault()
+                        Path = smoothPath.FirstOrDefault().Paths.FirstOrDefault(),
+                        Scheme = "https"
                     };
                     return (uribuilder.Uri, emptyLiveOutput);
                 }
@@ -187,7 +188,8 @@ namespace Common_Utils
                     UriBuilder uribuilder = new()
                     {
                         Host = runningSes.HostName,
-                        Path = locatorToUse.StreamingLocatorId.ToString() + "/" + liveOutput.ManifestName + ".ism/manifest"
+                        Path = locatorToUse.StreamingLocatorId.ToString() + "/" + liveOutput.ManifestName + ".ism/manifest",
+                        Scheme = "https"
                     };
                     emptyLiveOutput = true;
                     return (uribuilder.Uri, emptyLiveOutput);

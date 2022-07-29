@@ -222,9 +222,7 @@ namespace EncodingWithMESCustomH264
                         processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
                         processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
                     }
-
                 }
-
 
                 TimeSpan elapsed = DateTime.Now - startedTime;
 
@@ -252,7 +250,6 @@ namespace EncodingWithMESCustomH264
                     Console.WriteLine();
                     Console.WriteLine("Getting the Streaming manifest URLs for HLS and DASH:");
                     IList<string> urls = await GetStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
-
 
                     Console.WriteLine("To try streaming, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
                     Console.WriteLine("When finished, press ENTER to cleanup.");
