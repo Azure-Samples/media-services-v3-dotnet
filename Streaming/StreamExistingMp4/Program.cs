@@ -13,7 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 
-namespace StreamHLSAndDASH
+namespace StreamExistingMp4
 {
     public class Program
     {
