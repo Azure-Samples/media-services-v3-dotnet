@@ -492,7 +492,7 @@ namespace OfflinePlayReadyAndWidevine
             objContentKeyPolicyPlayReadyLicense = new ContentKeyPolicyPlayReadyLicense
             {
                 AllowTestDevices = true,
-                BeginDate = new DateTime(2019, 8, 15),
+                BeginDate = new DateTime(2021, 8, 15),
                 ContentKeyLocation = new ContentKeyPolicyPlayReadyContentEncryptionKeyFromHeader(),
                 ContentType = ContentKeyPolicyPlayReadyContentType.UltraVioletStreaming,
                 LicenseType = ContentKeyPolicyPlayReadyLicenseType.Persistent,

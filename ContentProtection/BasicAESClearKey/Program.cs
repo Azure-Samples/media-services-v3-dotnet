@@ -34,7 +34,7 @@ namespace BasicAESClearKey
         private static readonly string MyStreamingEndpointName = "default";   // Change this to your Endpoint name.
 
         // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
-        private const bool UseInteractiveAuth = false;
+        private const bool UseInteractiveAuth = true;
 
 
         public static async Task Main(string[] args)
@@ -205,7 +205,7 @@ namespace BasicAESClearKey
                         Directory.CreateDirectory(OutputFolderName);
 
                     // Generate a new random token signing key to use
-                    RNGCryptoServiceProvider rng = new();
+                    var rng = RandomNumberGenerator.Create();
                     rng.GetBytes(TokenSigningKey);
 
                     //Create the content key policy that configures how the content key is delivered to end clients

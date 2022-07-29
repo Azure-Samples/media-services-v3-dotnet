@@ -9,7 +9,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net5.0/CreateAccount.exe",
+      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net6.0/CreateAccount.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/CreateAccount",
@@ -24,7 +24,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Assets/bin/Debug/net5.0/assets.exe",
+      "program": "${workspaceFolder}/Assets/bin/Debug/net6.0/assets.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Assets/",
@@ -39,7 +39,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net5.0/AudioAnalyzer.exe",
+      "program": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net6.0/AudioAnalyzer.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer",
@@ -54,7 +54,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net5.0/BasicAESClearKey.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net6.0/BasicAESClearKey.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicAESClearKey",
@@ -69,7 +69,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net5.0/BasicPlayReady.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net6.0/BasicPlayReady.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReady",
@@ -84,7 +84,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net5.0/BasicWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net6.0/BasicWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicWidevine",
@@ -99,7 +99,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net5.0/OfflineFairPlay.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net6.0/OfflineFairPlay.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflineFairPlay",
@@ -114,7 +114,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net5.0/OfflinePlayreadyAndWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net6.0/OfflinePlayreadyAndWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine",
@@ -129,7 +129,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net5.0/AssetFilters.exe",
+      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net6.0/AssetFilters.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/AssetFilters",
@@ -144,7 +144,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net5.0/StreamHLSAndDASH.exe",
+      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net6.0/StreamHLSAndDASH.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/StreamHLSAndDASH",
@@ -159,10 +159,10 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net5.0/StreamExistingMp4.exe",
+      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net6.0/StreamExistingMp4.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net5.0/",
+      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net6.0/",
       "externalConsole": true,
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
@@ -175,7 +175,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net5.0/LiveEventWithDVR.exe",
+      "program": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net6.0/LiveEventWithDVR.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Live/LiveEventWithDVR",
@@ -190,7 +190,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/net5.0/VideoAnalyzer.exe",
+      "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/net6.0/VideoAnalyzer.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer",
@@ -205,7 +205,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoAnalytics/FaceRedactor/bin/Debug/net5.0/FaceRedactor.exe",
+      "program": "${workspaceFolder}/VideoAnalytics/FaceRedactor/bin/Debug/net6.0/FaceRedactor.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoAnalytics/FaceRedactor",
@@ -220,7 +220,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net5.0/Encoding_H264.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net6.0/Encoding_H264.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264",
@@ -235,7 +235,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net5.0/Encoding_H264_ContentAware.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net6.0/Encoding_H264_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware",
@@ -250,7 +250,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net5.0/Encoding_H264_ContentAware_Constrained.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net6.0/Encoding_H264_ContentAware_Constrained.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained",
@@ -265,7 +265,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net5.0/Encoding_HEVC.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net6.0/Encoding_HEVC.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC",
@@ -280,7 +280,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net5.0/Encoding_HEVC_ContentAware.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net6.0/Encoding_HEVC_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware",
@@ -295,7 +295,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net5.0/Encoding_SpriteThumbnail.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net6.0/Encoding_SpriteThumbnail.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail",
@@ -310,7 +310,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net5.0/Encoding_OverlayImage.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net6.0/Encoding_OverlayImage.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage",
@@ -325,7 +325,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net5.0/Encoding_StitchTwoAssets.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net6.0/Encoding_StitchTwoAssets.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets",
@@ -340,7 +340,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net5.0/Encoding_PredefinedPreset.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net6.0/Encoding_PredefinedPreset.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset",
@@ -355,7 +355,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net5.0/Encoding_MultiChannel_Audio.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net6.0/Encoding_MultiChannel_Audio.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio",

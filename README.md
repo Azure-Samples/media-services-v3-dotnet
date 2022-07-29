@@ -5,12 +5,12 @@ languages:
 products:
   - azure
   - azure-media-services
-description: "The samples in this repo show how to encode, package, protect, analyze your videos with Azure Media Services v3 using .NET 5.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
+description: "The samples in this repo show how to encode, package, protect, analyze your videos with Azure Media Services v3 using .NET 6.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
 ---
  
-# Azure Media Services v3 samples using .NET 5.0
+# Azure Media Services v3 samples using .NET 6.0
 
-The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using [.NET 5.0 SDK](https://dotnet.microsoft.com/download). The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.
+The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using [.NET 6.0 SDK](https://dotnet.microsoft.com/download). The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.
 
 The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the samples.
 
@@ -56,13 +56,13 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 ## Prerequisites
 
 - A Windows 10/11 PC, Mac or Linux
-- [Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows 10/11), or optional [Visual Studio Code](https://code.visualstudio.com/) (Windows, Mac or Linux)
-- .NET 5.0 SDK : <https://dotnet.microsoft.com/download>
+- [Visual Studio 2022](https://visualstudio.microsoft.com/) (Windows 10/11), or optional [Visual Studio Code](https://code.visualstudio.com/) (Windows, Mac or Linux)
+- .NET 6.0 SDK : <https://dotnet.microsoft.com/download>
 
 ## Setup
 
 - Clone or download this sample repository.
-- Open the solution file media-services-v3-dotnet.sln in Visual Studio 2019, or open the folder in Visual Studio Code.
+- Open the solution file media-services-v3-dotnet.sln in Visual Studio 2022, or open the folder in Visual Studio Code.
 - Read sample's README.md to see what key concepts to review and how to set up and run the sample.
 - Select the project to Run in the Debugger (ctrl-shift-D in VS Code on Window) and press F5 to launch
 
