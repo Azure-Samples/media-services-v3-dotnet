@@ -23,87 +23,87 @@ namespace Common_Utils
 
         public string SubscriptionId
         {
-            get { return _config["SubscriptionId"]; }
+            get { return _config["AZURE_SUBSCRIPTION_ID"]; }
         }
 
         public string ResourceGroup
         {
-            get { return _config["ResourceGroup"]; }
+            get { return _config["AZURE_RESOURCE_GROUP"]; }
         }
 
         public string AccountName
         {
-            get { return _config["AccountName"]; }
+            get { return _config["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]; }
         }
 
         public string AadTenantId
         {
-            get { return _config["AadTenantId"]; }
+            get { return _config["AZURE_TENANT_ID"]; }
         }
 
         public string AadClientId
         {
-            get { return _config["AadClientId"]; }
+            get { return _config["AZURE_CLIENT_ID"]; }
         }
 
         public string AadSecret
         {
-            get { return _config["AadSecret"]; }
+            get { return _config["AZURE_CLIENT_SECRET"]; }
         }
 
         public Uri ArmAadAudience
         {
-            get { return new Uri(_config["ArmAadAudience"]); }
+            get { return new Uri(_config["AZURE_ARM_TOKEN_AUDIENCE"]); }
         }
 
         public Uri AadEndpoint
         {
-            get { return new Uri(_config["AadEndpoint"]); }
+            get { return new Uri(_config["AZURE_AAD_ENDPOINT"]); }
         }
 
         public Uri ArmEndpoint
         {
-            get { return new Uri(_config["ArmEndpoint"]); }
+            get { return new Uri(_config["AZURE_ARM_ENDPOINT"]); }
         }
 
         public string EventHubConnectionString
         {
-            get { return _config["EventHubConnectionString"]; }
+            get { return _config["EVENTHUBCONNECTIONSTRING"]; }
         }
 
         public string EventHubName
         {
-            get { return _config["EventHubName"]; }
+            get { return _config["EVENTHUBNAME"]; }
         }
 
         public string EventHubConsumerGroup
         {
-            get { return _config["EventConsumerGroup"]; }
+            get { return _config["EVENTCONSUMERGROUP"]; }
         }
 
         public string StorageContainerName
         {
-            get { return _config["StorageContainerName"]; }
+            get { return _config["STORAGECONTAINERNAME"]; }
         }
 
         public string StorageAccountName
         {
-            get { return _config["StorageAccountName"]; }
+            get { return _config["STORAGEACCOUNTNAME"]; }
         }
 
         public string StorageAccountKey
         {
-            get { return _config["StorageAccountKey"]; }
+            get { return _config["STORAGEACCOUNTKEY"]; }
         }
 
         public string StorageConnectionString
         {
-            get { return _config["StorageConnectionString"]; }
+            get { return _config["STORAGECONNECTIONSTRING"]; }
         }
 
         public string SymmetricKey
         {
-            get { return _config["SymmetricKey"]; }
+            get { return _config["SYMMETRICKEY"]; }
         }
 
         public string AskHex

@@ -8,9 +8,6 @@
         "Msal",
         "MSAL"
     ],
-    "azure-iot-edge.defaultPlatform": {
-        "platform": "amd64",
-        "alias": null
-    },
+    "omnisharp.useGlobalMono": "never",
     "nuxt.isNuxtApp": false
 }

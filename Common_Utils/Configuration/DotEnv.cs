@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 
 namespace Common_Utils
 {
@@ -11,6 +12,27 @@ namespace Common_Utils
     /// </summary>
     public static class DotEnv
     {
+        public static ConfigWrapper LoadEnvOrAppSettings(){
+             // Load the .env file in the root if it exists.
+            try
+            {
+                DotEnv.Load(".env");
+            }
+            catch
+            {
+
+            }
+
+            // Load the appsettings.json file if it exists, then finally load environment variables in deployment to override settings
+            ConfigWrapper config = new(new ConfigurationBuilder()
+             .SetBasePath(Directory.GetCurrentDirectory())
+             .AddJsonFile("appsettings.json")
+             .AddEnvironmentVariables()
+             .Build());
+
+             return config;
+        }
+
         /// <summary>
         /// Loads the .env file and stores the values as variables
         /// </summary>

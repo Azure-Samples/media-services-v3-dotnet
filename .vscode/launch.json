@@ -20,6 +20,21 @@
       "envFile": "${workspaceFolder}/.env"
     },
     {
+      "name": "Launch Get Accounts",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net6.0/GetAccounts.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/Account/GetAccounts",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
       "name": "Launch Asset Management",
       "type": "coreclr",
       "request": "launch",
