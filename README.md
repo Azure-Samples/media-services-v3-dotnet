@@ -5,14 +5,14 @@ languages:
 products:
   - azure
   - azure-media-services
-description: "The samples in this repo show how to encode, package, protect, analyze your videos with Azure Media Services v3 using .NET 6.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
+description: "The samples in this repo show how to encode, package, and protect with Azure Media Services v3 using .NET 6.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
 ---
  
 # Azure Media Services v3 samples using .NET 6.0
 
 This project is part of the Azure Media Services API samples. For more information and links to more samples, see [Azure Media Services](https://media.microsoft.com).
 
-The samples in this repo show how to encode, package, protect your videos with Azure Media Services v3 using [.NET 6.0 SDK](https://dotnet.microsoft.com/download). The repo also contains samples that demonstrate how to analyze videos and perform live ingest in order to broadcast your events.
+The samples in this repo show how to encode, package, live stream, and protect your videos with Azure Media Services v3 using [.NET 6.0 SDK](https://dotnet.microsoft.com/download).
 
 The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the samples.
 
@@ -43,7 +43,6 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 | [VideoEncoding/Encoding_SpriteThumbnail](/VideoEncoding/Encoding_SpriteThumbnail)|The sample shows how to submit a job using a custom preset with a thumbnail sprite and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_OverlayImage](/VideoEncoding/Encoding_OverlayImage)|The sample shows how to overlay an image logo or watermark on a video, publish output asset for streaming, and download results for verification.|
 | [Live/LiveEventWithDVR](/Live/LiveEventWithDVR)|This sample first shows how to create a LiveEvent with a full archive up to 25 hours and an filter on the asset with 5 minutes DVR window, then it shows how to use the filter to create a locator for streaming.|
-| [VideoAnalytics/VideoAnalyzer](/VideoAnalytics/VideoAnalyzer)|This sample illustrates how to create a video analyzer transform, upload a video file to an input asset, submit a job with the transform and download the results for verification.|
 | [AudioAnalytics/AudioAnalyzer](/AudioAnalytics/AudioAnalyzer)|This sample illustrates how to create a audio analyzer transform, upload a media file to an input asset, submit a job with the transform and download the results for verification.|
 | [ContentProtection/BasicAESClearKey](/ContentProtection/BasicAESClearKey)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, create a ContentKeyPolicy using a secret key, associate the ContentKeyPolicy with StreamingLocator, get a token and print a url for playback in Azure Media Player. When a stream is requested by a player, Media Services uses the specified key to dynamically encrypt your content with AES-128 and Azure Media Player uses the token to decrypt.|
 | [ContentProtection/BasicWidevine](/ContentProtection/BasicWidevine)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, create a ContentKeyPolicy with Widevine configuration using a secret key, associate the ContentKeyPolicy with StreamingLocator, get a token and print a url for playback in a Widevine Player. When a user requests Widevine-protected content, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player. A Widevine license contains the decryption key that can be used by the client player to decrypt and stream the content.|

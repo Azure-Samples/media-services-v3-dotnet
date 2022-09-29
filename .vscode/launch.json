@@ -201,36 +201,6 @@
       "envFile": "${workspaceFolder}/.env"
     },
     {
-      "name": "Launch Video Analyzer",
-      "type": "coreclr",
-      "request": "launch",
-      // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer/bin/Debug/net6.0/VideoAnalyzer.exe",
-      "preLaunchTask": "build",
-      "args": [],
-      "cwd": "${workspaceFolder}/VideoAnalytics/VideoAnalyzer",
-      "stopAtEntry": false,
-      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
-      "name": "Launch Face Redactor",
-      "type": "coreclr",
-      "request": "launch",
-      // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoAnalytics/FaceRedactor/bin/Debug/net6.0/FaceRedactor.exe",
-      "preLaunchTask": "build",
-      "args": [],
-      "cwd": "${workspaceFolder}/VideoAnalytics/FaceRedactor",
-      "stopAtEntry": false,
-      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
-    },
-    {
       "name": "Launch Encoding H264",
       "type": "coreclr",
       "request": "launch",

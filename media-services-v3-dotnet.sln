@@ -35,13 +35,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamHLSAndDASH", "Streami
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamExistingMp4", "Streaming\StreamExistingMp4\StreamExistingMp4.csproj", "{60785C6A-7BF6-471D-9D89-A2B8790BBA75}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VideoAnalytics", "VideoAnalytics", "{0455D046-ED7C-40F6-A4F3-D80F658D9594}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoAnalyzer", "VideoAnalytics\VideoAnalyzer\VideoAnalyzer.csproj", "{51C8945C-DF87-4651-8F05-7924B7C564B3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_HEVC", "VideoEncoding\Encoding_HEVC\Encoding_HEVC.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceRedactor", "VideoAnalytics\FaceRedactor\FaceRedactor.csproj", "{815185F5-CC4B-4748-A089-C6E808EEE0FC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_MultiChannel_Audio", "VideoEncoding\Encoding_MultiChannel_Audio\Encoding_MultiChannel_Audio.csproj", "{8673C10B-0E8E-4061-BC51-453DB6B80E0D}"
 EndProject
