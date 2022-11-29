@@ -26,7 +26,7 @@ namespace Common_Utils
             // Load the appsettings.json file if it exists, then finally load environment variables in deployment to override settings
             ConfigWrapper config = new(new ConfigurationBuilder()
              .SetBasePath(Directory.GetCurrentDirectory())
-             .AddJsonFile("appsettings.json")
+             .AddJsonFile("appsettings.json", true)
              .AddEnvironmentVariables()
              .Build());
 
