@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-using Common_Utils;
-using System.Threading.Tasks;
-using Azure.Identity;
 using Azure;
 using Azure.Core;
+using Azure.Identity;
 using Azure.ResourceManager;
-using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
+using Azure.ResourceManager.Resources;
+using Common_Utils;
 
 // Based on the guidelines in https://github.com/Azure/azure-sdk-for-net/blob/main/doc/dev/mgmt_quickstart.md
 namespace Account

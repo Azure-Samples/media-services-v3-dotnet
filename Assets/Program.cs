@@ -1,12 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System;
-using System.Globalization;
 using Azure;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
+using System;
+using System.Globalization;
 
 var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
     subscriptionId: "---set-your-subscription-id-here---",

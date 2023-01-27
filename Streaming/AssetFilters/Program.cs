@@ -337,7 +337,7 @@ namespace AssetFilters
             string accountName, string assetName)
         {
 
-            Asset outputAsset = new Asset();
+            Asset outputAsset = new();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }

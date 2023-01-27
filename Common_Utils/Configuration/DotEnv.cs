@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
-using Microsoft.Extensions.Configuration;
 
 namespace Common_Utils
 {
@@ -12,8 +12,9 @@ namespace Common_Utils
     /// </summary>
     public static class DotEnv
     {
-        public static ConfigWrapper LoadEnvOrAppSettings(){
-             // Load the .env file in the root if it exists.
+        public static ConfigWrapper LoadEnvOrAppSettings()
+        {
+            // Load the .env file in the root if it exists.
             try
             {
                 DotEnv.Load(".env");
@@ -30,7 +31,7 @@ namespace Common_Utils
              .AddEnvironmentVariables()
              .Build());
 
-             return config;
+            return config;
         }
 
         /// <summary>

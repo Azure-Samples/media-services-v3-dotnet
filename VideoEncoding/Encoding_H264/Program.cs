@@ -527,7 +527,7 @@ namespace EncodingWithMESCustomH264
             // If you already have an asset with the desired name, use the Assets.Get method
             // to get the existing asset. In Media Services v3, the Get method on entities will return an ErrorResponseException if the resource is not found. 
             Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-           
+
 
             // Use Media Services API to get back a response that contains
             // SAS URL for the Asset container into which to upload blobs.

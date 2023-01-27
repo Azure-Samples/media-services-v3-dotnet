@@ -1,21 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure;
+using Azure.Identity;
+using Azure.Messaging.EventHubs;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Media;
+using Azure.ResourceManager.Media.Models;
+using Azure.Storage.Blobs;
+using Common_Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
-using Azure;
-using Azure.Identity;
-using Azure.Messaging.EventHubs;
-using Azure.Storage.Blobs;
-using Azure.ResourceManager;
-using Azure.ResourceManager.Media;
-using Azure.ResourceManager.Media.Models;
 using System.Net;
-
-using Common_Utils;
+using System.Threading.Tasks;
 
 //////////////////////////////////////////////////////////////////////////////////////
 ////  Azure Media Services Live streaming sample 
@@ -356,7 +355,7 @@ try
     var streamingLocatorData = new StreamingLocatorData
     {
         AssetName = asset.Data.Name,
-        StreamingPolicyName = "Predefined_ClearStreamingOnly", 
+        StreamingPolicyName = "Predefined_ClearStreamingOnly",
     };
     streamingLocatorData.Filters.Add(drvAssetFilterName);  // Associate the dvr filter with StreamingLocator.
 
@@ -368,7 +367,7 @@ try
             new StreamingLocatorData
             {
                 AssetName = assetName,
-                StreamingPolicyName = "Predefined_ClearStreamingOnly", 
+                StreamingPolicyName = "Predefined_ClearStreamingOnly",
             })).Value;
 
     // Get the default Streaming Endpoint on the account
@@ -417,7 +416,7 @@ try
         StreamingLocatorResource archiveLocator = (await mediaServicesAccount
             .GetStreamingLocators()
             .CreateOrUpdateAsync(
-                WaitUntil.Completed, 
+                WaitUntil.Completed,
                 archiveStreamingLocatorName,
                 new StreamingLocatorData
                 {
@@ -549,11 +548,11 @@ async Task CleanupLiveEventAndOutputAsync(MediaServicesAccountResource mediaServ
     }
     catch (RequestFailedException e)
     {
-        
+
         Console.WriteLine("CleanupLiveEventAndOutputAsync -- Hit ErrorResponseException");
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
-        
+
     }
 
 }
@@ -577,5 +576,5 @@ static async Task CleanupLocatorandAssetAsync(MediaServicesAccountResource media
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
     }
-    
+
 }

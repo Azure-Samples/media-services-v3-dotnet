@@ -32,8 +32,8 @@ namespace Common_Utils
             try
             {
                 Console.WriteLine("Error in the EventProcessorClient");
-                Console.WriteLine($"\tOperation: { args.Operation }");
-                Console.WriteLine($"\tException: { args.Exception }");
+                Console.WriteLine($"\tOperation: {args.Operation}");
+                Console.WriteLine($"\tException: {args.Exception}");
                 Console.WriteLine("");
             }
             catch

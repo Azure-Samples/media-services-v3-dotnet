@@ -307,7 +307,7 @@ namespace BasicPlayReady
                 // Content key policy does not exist
                 createPolicy = true;
             }
-        
+
             if (createPolicy)
             {
                 ContentKeyPolicySymmetricTokenKey primaryKey = new(tokenSigningKey);
