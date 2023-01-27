@@ -37,7 +37,7 @@ string outputAssetName = $"output-{uniqueness}";
 bool stopStreamingEndpoint = false;
 
 // Ensure that you have customized encoding Transform. This is a one-time setup operation.
-var transform = await CreateTransform(mediaServicesAccount, CustomTransform);
+var transform = await CreateTransformAsync(mediaServicesAccount, CustomTransform);
 
 // Create a new input Asset and upload the specified local video file into it.
 var inputAsset = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
@@ -80,7 +80,7 @@ Console.WriteLine();
 Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
 await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
 
-Console.WriteLine("To try streaming, copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+Console.WriteLine("To try streaming, copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
 Console.WriteLine("When finished, press ENTER to cleanup.");
 Console.WriteLine();
 Console.ReadLine();
@@ -96,7 +96,7 @@ await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, st
 /// <param name="mediaServicesAccount">The Media Services account.</param>
 /// <param name="transformName">The transform name.</param>
 /// <returns>The transform.</returns>
-static async Task<MediaTransformResource> CreateTransform(MediaServicesAccountResource mediaServicesAccount, string transformName)
+static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAccountResource mediaServicesAccount, string transformName)
 {
     Console.WriteLine("Creating a Transform...");
 
