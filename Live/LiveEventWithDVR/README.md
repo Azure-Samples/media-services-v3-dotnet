@@ -30,12 +30,11 @@ For details on the various types of live events see the article [Live events and
 * Azure.Identity
 * Azure.Messaging.EventGrid
 * Azure.Messaging.EventHubs.Processor
+* Azure.ResourceManager.Media
 * Azure.Storage.Blobs
-* Microsoft.Azure.Management.Media
 * Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.EnvironmentVariables
 * Microsoft.Extensions.Configuration.Json
-* Microsoft.Identity.Client
+* System.Linq.Async
 
 * A camera connected to your computer.
 * A media encoder. For a recommended encoder, please visit [Recommended encoders](https://docs.microsoft.com/en-us/azure/media-services/latest/recommended-on-premises-live-encoders).
@@ -43,10 +42,8 @@ For details on the various types of live events see the article [Live events and
 
 ## Build and run
 
-Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
+Update **appsettings.json** in the project folder.
 For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
-
-(The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
 
 Then build and run the sample in Visual Studio or VS Code.
 
@@ -69,11 +66,6 @@ The settings for your account can be retrieved using the following Azure CLI com
     --role Owner` \\
     --years 2`
 ```
-
-### .env
-
-Use [sample.env](../../sample.env) as a template for the .env file to be created. The .env file must be placed at the root of the sample (same location than sample.env).
-Connect to the Azure portal with your browser and go to your media services account / API access to get the .ENV data to store to the .env file.
 
 ### Optional - Use Event Grid instead of polling (recommended for production code)
 
@@ -108,12 +100,12 @@ Connect to the Azure portal with your browser and go to your media services acco
 
 * Create a storage account and container for Event Processor Host if you don't have one - see [Create a Storage account for event processor host](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-dotnet-standard-getstarted-send#create-a-storage-account-for-event-processor-host)
 
-* Update *appsettings.json* or *.env* (at root of solution) with your Event Hub and Storage information
-  * **StorageAccountName**: The name of your storage account.
-  * **StorageAccountKey**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
-  * **StorageContainerName**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
-  * **EventHubConnectionString**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
-  * **EventHubName**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
+* Update *appsettings.json* with your Event Hub and Storage information
+  * **AZURE_STORAGE_ACCOUNT_NAME**: The name of your storage account.
+  * **AZURE_STORAGE_ACCOUNT_KEY**: The access key for your storage account. In Azure portal "All resources", search your storage account, then click "Access keys", copy key1.
+  * **AZURE_BLOB_CONTAINER_NAME**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
+  * **AZURE_EVENT_HUBS_CONNECTION_STRING**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
+  * **AZURE_EVENT_HUB_NAME**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
 
 ## Key concepts
 

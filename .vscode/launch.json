@@ -9,346 +9,337 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net6.0/CreateAccount.exe",
+      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0/CreateAccount.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/CreateAccount",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Get Accounts",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net6.0/GetAccounts.exe",
+      "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0/GetAccounts.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/GetAccounts",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Launch Quotas",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0/Quotas.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/Account/Quotas",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Asset Management",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Assets/bin/Debug/net6.0/assets.exe",
+      "program": "${workspaceFolder}/Assets/bin/Debug/net7.0/Assets.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Assets/",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Audio Analyzer",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net6.0/AudioAnalyzer.exe",
+      "program": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net7.0/AudioAnalyzer.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Basic AES Clear Key",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net6.0/BasicAESClearKey.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0/BasicAESClearKey.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicAESClearKey",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Basic PlayReady",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net6.0/BasicPlayReady.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0/BasicPlayReady.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReady",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Basic Widevine",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net6.0/BasicWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0/BasicWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicWidevine",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Offline FairPlay",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net6.0/OfflineFairPlay.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0/OfflineFairPlay.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflineFairPlay",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Offline Playready And Widevine",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net6.0/OfflinePlayreadyAndWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0/OfflinePlayreadyAndWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Asset Filters",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net6.0/AssetFilters.exe",
+      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0/AssetFilters.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/AssetFilters",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Stream HLS And DASH",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net6.0/StreamHLSAndDASH.exe",
+      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0/StreamHLSAndDASH.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/StreamHLSAndDASH",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Stream from existing Mp4",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net6.0/StreamExistingMp4.exe",
+      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/StreamExistingMp4.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net6.0/",
+      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/",
       "externalConsole": true,
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Live Event With DVR",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net6.0/LiveEventWithDVR.exe",
+      "program": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net7.0/LiveEventWithDVR.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Live/LiveEventWithDVR",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding H264",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net6.0/Encoding_H264.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net7.0/Encoding_H264.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Content Aware H264",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net6.0/Encoding_H264_ContentAware.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net7.0/Encoding_H264_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Content Aware H264 Constrained",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net6.0/Encoding_H264_ContentAware_Constrained.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net7.0/Encoding_H264_ContentAware_Constrained.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding HEVC",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net6.0/Encoding_HEVC.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net7.0/Encoding_HEVC.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Content Aware HEVC",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net6.0/Encoding_HEVC_ContentAware.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net7.0/Encoding_HEVC_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding With Sprite",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net6.0/Encoding_SpriteThumbnail.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net7.0/Encoding_SpriteThumbnail.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding With Image Overlay",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net6.0/Encoding_OverlayImage.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net7.0/Encoding_OverlayImage.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Stitch Two Assets",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net6.0/Encoding_StitchTwoAssets.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net7.0/Encoding_StitchTwoAssets.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Predefined Preset",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net6.0/Encoding_PredefinedPreset.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net7.0/Encoding_PredefinedPreset.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": "Launch Encoding Multi-channel Audio",
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net6.0/Encoding_MultiChannel_Audio.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net7.0/Encoding_MultiChannel_Audio.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env"
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

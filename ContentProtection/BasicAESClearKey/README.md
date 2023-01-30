@@ -28,15 +28,14 @@ When a stream is requested by a player, Media Services uses the specified key to
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Azure.Storage.Blobs
-* Microsoft.Identity.Client
-* Microsoft.IdentityModel.Tokens
-* System.IdentityModel.Tokens.Jwt
 * Microsoft.Extensions.Configuration
 * Microsoft.Extensions.Configuration.EnvironmentVariables
 * Microsoft.Extensions.Configuration.Json
+* Microsoft.Identity.Client
+* Microsoft.IdentityModel.Tokens
+* System.IdentityModel.Tokens.Jwt
 * System.Linq.Async
 * System.Security.Claims
-* System.IdentityModel.Tokens.Jwt
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 

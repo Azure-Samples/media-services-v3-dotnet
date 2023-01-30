@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
    	<PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
   </ItemGroup>
