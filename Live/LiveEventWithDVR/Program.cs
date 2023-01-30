@@ -9,6 +9,7 @@ using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using Common_Utils;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,23 +51,18 @@ using System.Threading.Tasks;
 ////     or CMS system. This can also be created earlier after step 5 if desired.
 //////////////////////////////////////////////////////////////////////////////////////
 
+// Please make sure you have set your settings in the appsettings.json file
+IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+IConfigurationRoot configuration = builder.Build();
 
-// Event Hub config
-string storageAccountName = "---set-your-storage-account-name-here---";
-string storageAccountKey = "---set-your-storage-account-key-here---";
-string blobContainerName = "---set-your-blob-container-name-here---";
-string eventHubsConnectionString = "---set-your-event-hubs-connection-string-here---";
-string eventHubName = "---set-your-event-hub-name-here---";
-string consumerGroup = "---set-your-consumer-group-here---";
-
-var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
+    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
+    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
-var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServiceAccount);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServicesResource);
 
 string uniqueness = Guid.NewGuid().ToString().Substring(0, 13); // Create a GUID for uniqueness. You can make this something static if you dont want to change RTMP ingest settings in OBS constantly.  
 string liveEventName = "liveevent-" + uniqueness; // WARNING: Be careful not to leak live events using this sample!
@@ -183,12 +179,11 @@ try
         Console.WriteLine("Creating a new client to process events from an Event Hub...");
 
         var storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                           storageAccountName, storageAccountKey);
+                           configuration["AZURE_STORAGE_ACCOUNT_NAME"], configuration["AZURE_STORAGE_ACCOUNT_KEY"]);
 
 
-
-        storageClient = new BlobContainerClient(storageConnectionString, blobContainerName);
-        processorClient = new EventProcessorClient(storageClient, consumerGroup, eventHubsConnectionString, eventHubName);
+        storageClient = new BlobContainerClient(storageConnectionString, configuration["AZURE_BLOB_CONTAINER_NAME"]);
+        processorClient = new EventProcessorClient(storageClient, configuration["AZURE_CONSUMER_GROUP"], configuration["AZURE_EVENT_HUBS_CONNECTION_STRING"], configuration["AZURE_EVENT_HUB_NAME"]);
         mediaEventProcessor = new MediaServicesEventProcessor(null, null, liveEventName);
 
         processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;

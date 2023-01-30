@@ -4,6 +4,7 @@
 using Azure.Identity;
 using Azure.Monitor.Query;
 using Azure.ResourceManager.Media;
+using Microsoft.Extensions.Configuration;
 
 var quotas = new QuotaMetrics[]
 {
@@ -25,15 +26,19 @@ var allQuotaNames = quotas
 var credential = new DefaultAzureCredential(
     new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true });
 
-var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+// Please make sure you have set your settings in the appsettings.json file
+IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+IConfigurationRoot configuration = builder.Build();
+
+var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
+    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
+    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
 
 var metricsClient = new MetricsQueryClient(credential);
 
 var results = await metricsClient.QueryResourceAsync(
-    mediaServicesResourceId.ToString(),
+    MediaServicesResource.ToString(),
     allQuotaNames);
 
 var values = results.Value.Metrics.ToDictionary(

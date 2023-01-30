@@ -7,6 +7,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Linq;
@@ -17,10 +18,13 @@ const string CustomTransform = "Custom_HEVC_3_layers";
 const string InputMP4FileName = "ignite.mp4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
+IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+IConfigurationRoot configuration = builder.Build();
+
 var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
+    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
+    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);

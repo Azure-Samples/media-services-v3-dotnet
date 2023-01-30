@@ -24,7 +24,7 @@ This sample shows how to create a custom encoding Transform using HEVC encoding 
 
 ## Build and run
 
-Update account settings in Program.cs. Then build and run the sample in Visual Studio or VS Code.
+Update the settings in **appsetting.json**. Then build and run the sample in Visual Studio or VS Code.
 
 ## Next steps
 

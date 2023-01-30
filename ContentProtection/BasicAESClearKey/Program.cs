@@ -7,6 +7,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -24,10 +25,14 @@ const string Audience = "myAudience";
 byte[] TokenSigningKey = new byte[40];
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
+// Please make sure you have set your settings in the appsettings.json file
+IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
+IConfigurationRoot configuration = builder.Build();
+
 var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
+    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
+    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
