@@ -31,7 +31,7 @@ namespace Account
             // First we construct the ArmClient using DefaultAzureCredential
             // This will use the Environment variables set for the current logged in user. 
             // Use the VS Code Azure login command, or the CLI 'az login' to set the environment variables
-            ArmClient client = new ArmClient(new DefaultAzureCredential(), configuration["AZURE_SUBSCRIPTION_ID"]);
+            ArmClient client = new(new DefaultAzureCredential(), configuration["AZURE_SUBSCRIPTION_ID"]);
 
             SubscriptionResource subscription = await client.GetDefaultSubscriptionAsync();
             Console.WriteLine($"Got subscription: {subscription.Data.DisplayName}");
@@ -44,7 +44,7 @@ namespace Account
             // Create a new resource group
             string resourceGroupName = "newresourcegroup_" + uniqueness;
             AzureLocation location = AzureLocation.WestUS2;
-            ResourceGroupData resourceGroupData = new ResourceGroupData(location);
+            ResourceGroupData resourceGroupData = new(location);
             ArmOperation<ResourceGroupResource> operation = await resourceGroups.CreateOrUpdateAsync(WaitUntil.Completed, resourceGroupName, resourceGroupData);
             ResourceGroupResource resourceGroupNew = operation.Value;
 

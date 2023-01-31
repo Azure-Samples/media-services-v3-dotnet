@@ -11,8 +11,7 @@
     <PackageReference Include="Azure.Identity" Version="1.8.1" />
     <PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />
     <PackageReference Include="Azure.Monitor.Query" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

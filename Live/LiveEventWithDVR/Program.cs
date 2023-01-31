@@ -113,7 +113,7 @@ try
     //      IpV4 address with 4 numbers
     //      CIDR address range  
 
-    IPRange allAllowIpRange = new IPRange
+    IPRange allAllowIpRange = new()
     {
         Name = "AllowAll",
         Address = IPAddress.Parse("0.0.0.0"),
@@ -122,11 +122,11 @@ try
 
     // Create the LiveEvent Preview IP access control object. 
     // This will restrict which clients can view the preview endpoint
-    LiveEventPreview liveEventPreview = new LiveEventPreview();
+    LiveEventPreview liveEventPreview = new();
     liveEventPreview.IPAllowedIPs.Add(allAllowIpRange);
 
     #region NewLiveEvent
-    MediaLiveEventData liveEventData = new MediaLiveEventData(mediaServicesAccount.Get().Value.Data.Location)
+    MediaLiveEventData liveEventData = new(mediaServicesAccount.Get().Value.Data.Location)
     {
         Description = "Sample LiveEvent from .NET SDK sample",
         UseStaticHostname = true,
@@ -324,7 +324,7 @@ try
     var ignoredInput = Console.ReadLine();
 
 
-    MediaAssetFilterData drvAssetFilter = new MediaAssetFilterData
+    MediaAssetFilterData drvAssetFilter = new()
     {
         PresentationTimeRange = new PresentationTimeRange
         {

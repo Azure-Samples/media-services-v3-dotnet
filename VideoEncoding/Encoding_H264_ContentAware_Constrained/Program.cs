@@ -108,7 +108,7 @@ namespace EncodingH264ContentAwareConstrained
                 // This sample uses constraints on the CAE encoding preset to reduce the number of tracks output and resolutions to a specific range. 
                 // First we will create a PresetConfigurations object to define the constraints that we want to use
 
-                PresetConfigurations presetConfigurations = new PresetConfigurations(
+                PresetConfigurations presetConfigurations = new(
                     // Allows you to configure the encoder settings to control the balance between speed and quality. Example: set Complexity as Speed for faster encoding but less compression efficiency.
                     complexity: Complexity.Speed,
                     // The output includes both audio and video.
@@ -355,7 +355,7 @@ namespace EncodingH264ContentAwareConstrained
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            Asset outputAsset = new();
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }

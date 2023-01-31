@@ -161,10 +161,7 @@ namespace Common_Utils
             Microsoft.Rest.Azure.IPage<StreamingEndpoint> ses = await client.StreamingEndpoints.ListAsync(resourceGroup, accountName);
 
             StreamingEndpoint runningSes = ses.Where(s => s.ResourceState == StreamingEndpointResourceState.Running).FirstOrDefault();
-            if (runningSes == null)
-            {
-                runningSes = ses.FirstOrDefault();
-            }
+            runningSes ??= ses.FirstOrDefault();
 
             if (locators.Count > 0 && runningSes != null)
             {

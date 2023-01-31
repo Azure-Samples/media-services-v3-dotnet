@@ -298,7 +298,7 @@ namespace Encoding_OverlayImage
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            Asset outputAsset = new();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -323,7 +323,7 @@ namespace Encoding_OverlayImage
             Dictionary<string, string> correlationData)
         {
             // Add both the Video and the Overlay image assets here as inputs to the job.
-            List<JobInput> jobInputs = new List<JobInput>() {
+            List<JobInput> jobInputs = new() {
                 new JobInputAsset(assetName: inputAssetName),
                 new JobInputAsset(assetName: overlayAssetName, label: OverlayLabel)
             };
