@@ -19,9 +19,7 @@ This sample shows how to create a custom encoding Transform using custom H.264 e
 * Azure.Messaging.EventGrid
 * Azure.Messaging.EventHubs.Processor
 * Microsoft.Azure.Management.Media
-* Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.EnvironmentVariables
-* Microsoft.Extensions.Configuration.Json
+* Microsoft.Extensions.Hosting
 * Microsoft.Identity.Client
 * Azure.Identity
 

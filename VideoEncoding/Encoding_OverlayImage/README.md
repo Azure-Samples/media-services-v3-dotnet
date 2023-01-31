@@ -19,9 +19,7 @@ See the article [Create an overlay Transform](https://docs.microsoft.com/azure/m
 
   * Azure.Storage.Blobs
   * Microsoft.Azure.Management.Media"
-  * Microsoft.Extensions.Configuration
-  * Microsoft.Extensions.Configuration.EnvironmentVariables
-  * *Microsoft.Extensions.Configuration.Json
+  * Microsoft.Extensions.Hosting
   * Microsoft.Identity.Client
 
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).

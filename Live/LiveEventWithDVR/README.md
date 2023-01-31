@@ -32,8 +32,7 @@ For details on the various types of live events see the article [Live events and
 * Azure.Messaging.EventHubs.Processor
 * Azure.ResourceManager.Media
 * Azure.Storage.Blobs
-* Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.Json
+* Microsoft.Extensions.Hosting
 * System.Linq.Async
 
 * A camera connected to your computer.
