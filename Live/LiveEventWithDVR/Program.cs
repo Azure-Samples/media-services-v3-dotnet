@@ -511,7 +511,6 @@ finally
 
 
 
-
 List<string> BuildManifestPaths(string scheme, string hostname, Guid? streamingLocatorId, string manifestName)
 {
     const string hlsFormat = "format=m3u8-cmaf";
@@ -567,9 +566,7 @@ async Task CleanupLiveEventAndOutputAsync(MediaServicesAccountResource mediaServ
         Console.WriteLine("CleanupLiveEventAndOutputAsync -- Hit ErrorResponseException");
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
-
     }
-
 }
 // </CleanupLiveEventAndOutput>
 

@@ -10,73 +10,61 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
-internal class Program
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
 {
-    /// <summary>
-    /// The main method of the sample. Please make sure you have set your settings in the appsettings.json file or use command line parameters.
-    /// </summary>
-    /// <param name="args"></param>
-    /// <returns></returns>
-    static async Task Main(string[] args)
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServiceAccountId = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+
+var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var armClient = new ArmClient(credential);
+
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServiceAccountId);
+
+// List all assets in the account
+Console.WriteLine("Listing all the assets in this account");
+await foreach (var asset in mediaServicesAccount.GetMediaAssets().GetAllAsync())
+{
+    Console.WriteLine($" - {asset.Data.Name,-45}  ID: {asset.Data.AssetId}  Container: {asset.Data.Container}");
+}
+
+// Create a new asset
+Console.WriteLine("Creating a new asset");
+
+// Create a new asset setting the description, alternate ID, a custom container name in storage to override the default
+// naming which uses "asset-" + Guid.NewGuid()
+var newAsset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
+    WaitUntil.Completed,
+    assetName: "myAsset" + Guid.NewGuid(),
+    new MediaAssetData
     {
+        Description = "My Video description",
+        AlternateId = "12345",
+        Container = "my-custom-name-" + Guid.NewGuid()
+    });
 
-        // Loading the settings from the appsettings.json file or from the command line parameters
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddCommandLine(args)
-            .Build();
+Console.WriteLine($"Created a new asset: '{newAsset.Value.Data.Name}' in with storage container '{newAsset.Value.Data.Container}'");
 
-        if (!Options.TryGetOptions(configuration, out var options))
-        {
-            return;
-        }
-
-        Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
-        Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
-        Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
-        Console.WriteLine();
-
-        var mediaServiceAccountId = MediaServicesAccountResource.CreateResourceIdentifier(
-            subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
-            resourceGroupName: options.AZURE_RESOURCE_GROUP,
-            accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
-
-        var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
-        var armClient = new ArmClient(credential);
-
-        var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServiceAccountId);
-
-        // List all assets in the account
-        Console.WriteLine("Listing all the assets in this account");
-        await foreach (var asset in mediaServicesAccount.GetMediaAssets().GetAllAsync())
-        {
-            Console.WriteLine($" - {asset.Data.Name,-45}  ID: {asset.Data.AssetId}  Container: {asset.Data.Container}");
-        }
-
-        // Create a new asset
-        Console.WriteLine("Creating a new asset");
-
-        // Create a new asset setting the description, alternate ID, a custom container name in storage to override the default
-        // naming which uses "asset-" + Guid.NewGuid()
-        var newAsset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
-            WaitUntil.Completed,
-            assetName: "myAsset" + Guid.NewGuid(),
-            new MediaAssetData
-            {
-                Description = "My Video description",
-                AlternateId = "12345",
-                Container = "my-custom-name-" + Guid.NewGuid()
-            });
-
-        Console.WriteLine($"Created a new asset: '{newAsset.Value.Data.Name}' in with storage container '{newAsset.Value.Data.Container}'");
-
-        // List assets filtering by date
-        var dateFilter = DateTime.UtcNow.AddDays(-1).ToString("O", DateTimeFormatInfo.InvariantInfo);
-        await foreach (var asset in mediaServicesAccount.GetMediaAssets().GetAllAsync(filter: $"properties/created gt {dateFilter}"))
-        {
-            Console.WriteLine($" - {asset.Data.Name,-45}  Created: {asset.Data.CreatedOn}");
-        }
-    }
+// List assets filtering by date
+var dateFilter = DateTime.UtcNow.AddDays(-1).ToString("O", DateTimeFormatInfo.InvariantInfo);
+await foreach (var asset in mediaServicesAccount.GetMediaAssets().GetAllAsync(filter: $"properties/created gt {dateFilter}"))
+{
+    Console.WriteLine($" - {asset.Data.Name,-45}  Created: {asset.Data.CreatedOn}");
 }
 
 /// <summary>

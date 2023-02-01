@@ -8,35 +8,24 @@ using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-internal class Program
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
 {
-    record QuotaMetrics(string Name, string? CountMetric, string? QuotaMetric);
+    return;
+}
 
-    /// <summary>
-    /// The main method of the sample. Please make sure you have set your settings in the appsettings.json file or use command line parameters.
-    /// </summary>
-    /// <param name="args"></param>
-    /// <returns></returns>
-    static async Task Main(string[] args)
-    {
-        // Loading the settings from the appsettings.json file or from the command line parameters
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddCommandLine(args)
-            .Build();
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
 
-        if (!Options.TryGetOptions(configuration, out var options))
-        {
-            return;
-        }
-
-        Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
-        Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
-        Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
-        Console.WriteLine();
-
-        var quotas = new QuotaMetrics[]
-        {
+var quotas = new QuotaMetrics[]
+{
                 new QuotaMetrics("Assets", "AssetCount", "AssetQuota"),
                 new QuotaMetrics("Content Key Polices", "ContentKeyPolicyCount", "ContentKeyPolicyQuota"),
                 new QuotaMetrics("Streaming Policies", "StreamingPolicyCount", "StreamingPolicyQuota"),
@@ -45,44 +34,43 @@ internal class Program
                 new QuotaMetrics("Transforms", null, "TransformQuota"),
                 new QuotaMetrics("Jobs", null, "JobQuota"),
                 new QuotaMetrics("Jobs Scheduled", "JobsScheduled", null)
-        };
+};
 
-        var allQuotaNames = quotas
-            .Select(q => q.CountMetric)
-            .Concat(quotas.Select(q => q.QuotaMetric))
-            .Where(v => v != null);
+var allQuotaNames = quotas
+    .Select(q => q.CountMetric)
+    .Concat(quotas.Select(q => q.QuotaMetric))
+    .Where(v => v != null);
 
-        var credential = new DefaultAzureCredential(
-            new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true });
+var credential = new DefaultAzureCredential(
+    new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true });
 
-        var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
-            subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
-            resourceGroupName: options.AZURE_RESOURCE_GROUP,
-            accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
-        var metricsClient = new MetricsQueryClient(credential);
+var metricsClient = new MetricsQueryClient(credential);
 
-        var results = await metricsClient.QueryResourceAsync(
-            MediaServicesResource.ToString(),
-            allQuotaNames);
+var results = await metricsClient.QueryResourceAsync(
+    MediaServicesResource.ToString(),
+    allQuotaNames);
 
-        var values = results.Value.Metrics.ToDictionary(
-            m => m.Name,
-            m => m.TimeSeries.Last().Values.Last().Average);
+var values = results.Value.Metrics.ToDictionary(
+    m => m.Name,
+    m => m.TimeSeries.Last().Values.Last().Average);
 
-        var formatString = "{0,-20}{1,10}{2,10}";
-        Console.WriteLine(formatString, "Resource", "Current", "Quota");
-        Console.WriteLine(formatString, "--------", "----------", "--------");
+var formatString = "{0,-20}{1,10}{2,10}";
+Console.WriteLine(formatString, "Resource", "Current", "Quota");
+Console.WriteLine(formatString, "--------", "----------", "--------");
 
-        foreach (var quota in quotas)
-        {
-            var countValue = quota.CountMetric != null ? values[quota.CountMetric] : null;
-            var quotaValue = quota.QuotaMetric != null ? values[quota.QuotaMetric] : null;
+foreach (var quota in quotas)
+{
+    var countValue = quota.CountMetric != null ? values[quota.CountMetric] : null;
+    var quotaValue = quota.QuotaMetric != null ? values[quota.QuotaMetric] : null;
 
-            Console.WriteLine(formatString, quota.Name, countValue, quotaValue);
-        }
-    }
+    Console.WriteLine(formatString, quota.Name, countValue, quotaValue);
 }
+record QuotaMetrics(string Name, string? CountMetric, string? QuotaMetric);
 
 /// <summary>
 /// Class to manage the settings which come from appsettings.json or command line parameters.

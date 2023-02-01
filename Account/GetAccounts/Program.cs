@@ -10,58 +10,47 @@ using System.Diagnostics.CodeAnalysis;
 
 // Based on the guidelines in https://github.com/Azure/azure-sdk-for-net/blob/main/doc/dev/mgmt_quickstart.md
 
-internal class Program
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
 {
-    /// <summary>
-    /// The main method of the sample. Please make sure you have set your settings in the appsettings.json file or use command line parameters.
-    /// </summary>
-    /// <param name="args"></param>
-    /// <returns></returns>
-    static async Task Main(string[] args)
-    {
-        // Loading the settings from the appsettings.json file or from the command line parameters
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddCommandLine(args)
-            .Build();
-
-        if (!Options.TryGetOptions(configuration, out var options))
-        {
-            return;
-        }
-
-        Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
-        Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
-        Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
-        Console.WriteLine();
-
-        // First we construct the ArmClient using DefaultAzureCredential
-        // This will use the Environment variables set for the current logged in user. 
-        // Use the VS Code Azure login command, or the CLI 'az login' to set the environment variables
-        ArmClient client = new(new DefaultAzureCredential());
-
-        SubscriptionCollection subscriptions = client.GetSubscriptions();
-        SubscriptionResource subscription = subscriptions.Get(options.AZURE_SUBSCRIPTION_ID.ToString());
-        Console.WriteLine($"Got subscription: {subscription.Data.DisplayName}");
-
-        ResourceGroupCollection resourceGroups = subscription.GetResourceGroups();
-        ResourceGroupResource resourceGroup = await resourceGroups.GetAsync(options.AZURE_RESOURCE_GROUP);
-
-        // Get all the media accounts in as resource group
-        MediaServicesAccountCollection mediaServices = resourceGroup.GetMediaServicesAccounts();
-
-        await foreach (var amsAccount in mediaServices)
-        {
-            Console.WriteLine($"name= {amsAccount.Data.Name}");
-            Console.WriteLine($"location= {amsAccount.Data.Location}");
-        }
-
-        // Get a specific media account 
-        MediaServicesAccountResource mediaService = await resourceGroup.GetMediaServicesAccountAsync(options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
-
-        Console.WriteLine($"Got media service : {mediaService.Data.Name}");
-    }
+    return;
 }
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+// First we construct the ArmClient using DefaultAzureCredential
+// This will use the Environment variables set for the current logged in user. 
+// Use the VS Code Azure login command, or the CLI 'az login' to set the environment variables
+ArmClient client = new(new DefaultAzureCredential());
+
+SubscriptionCollection subscriptions = client.GetSubscriptions();
+SubscriptionResource subscription = subscriptions.Get(options.AZURE_SUBSCRIPTION_ID.ToString());
+Console.WriteLine($"Got subscription: {subscription.Data.DisplayName}");
+
+ResourceGroupCollection resourceGroups = subscription.GetResourceGroups();
+ResourceGroupResource resourceGroup = await resourceGroups.GetAsync(options.AZURE_RESOURCE_GROUP);
+
+// Get all the media accounts in as resource group
+MediaServicesAccountCollection mediaServices = resourceGroup.GetMediaServicesAccounts();
+
+await foreach (var amsAccount in mediaServices)
+{
+    Console.WriteLine($"name= {amsAccount.Data.Name}");
+    Console.WriteLine($"location= {amsAccount.Data.Location}");
+}
+
+// Get a specific media account 
+MediaServicesAccountResource mediaService = await resourceGroup.GetMediaServicesAccountAsync(options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+
+Console.WriteLine($"Got media service : {mediaService.Data.Name}");
 
 /// <summary>
 /// Class to manage the settings which come from appsettings.json or command line parameters.
