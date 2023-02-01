@@ -8,28 +8,38 @@ using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 const string OutputFolder = "Output";
 const string CustomTransform = "Custom_HEVC_3_layers";
 const string InputMP4FileName = "ignite.mp4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
-IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-IConfigurationRoot configuration = builder.Build();
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
 
-var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
-    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
-    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
+if (!Options.TryGetOptions(configuration, out var options))
+{
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
-
-var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServiceAccount);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
 
 // Creating a unique suffix so that we don't have name collisions if you run the sample
 // multiple times without cleaning up.
@@ -261,12 +271,12 @@ static async Task<MediaJobResource> SubmitJobAsync(
 static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job)
 {
     var sleepInterval = TimeSpan.FromSeconds(30);
-    MediaJobState state;
+    MediaJobState? state;
 
     do
     {
         job = await job.GetAsync();
-        state = job.Data.State.Value;
+        state = job.Data.State.GetValueOrDefault();
 
         Console.WriteLine($"Job is '{state}'.");
         for (int i = 0; i < job.Data.Outputs.Count; i++)
@@ -452,9 +462,9 @@ static async Task CleanUpAsync(
     MediaJobResource job,
     MediaAssetResource inputAsset,
     MediaAssetResource outputAsset,
-    StreamingLocatorResource streamingLocator,
+    StreamingLocatorResource? streamingLocator,
     bool stopEndpoint,
-    StreamingEndpointResource streamingEndpoint)
+    StreamingEndpointResource? streamingEndpoint)
 {
     await job.DeleteAsync(WaitUntil.Completed);
     await transform.DeleteAsync(WaitUntil.Completed);
@@ -466,15 +476,49 @@ static async Task CleanUpAsync(
         await streamingLocator.DeleteAsync(WaitUntil.Completed);
     }
 
-    if (stopEndpoint)
+    if (streamingEndpoint != null)
     {
-        // Because we started the endpoint, we'll stop it.
-        await streamingEndpoint.StopAsync(WaitUntil.Completed);
+        if (stopEndpoint)
+        {
+            // Because we started the endpoint, we'll stop it.
+            await streamingEndpoint.StopAsync(WaitUntil.Completed);
+        }
+        else
+        {
+            // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+            // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+            Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        }
     }
-    else
+}
+
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {
-        // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
-        // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
-        Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
     }
 }

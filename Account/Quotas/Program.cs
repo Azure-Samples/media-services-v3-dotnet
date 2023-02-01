@@ -5,56 +5,112 @@ using Azure.Identity;
 using Azure.Monitor.Query;
 using Azure.ResourceManager.Media;
 using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
-var quotas = new QuotaMetrics[]
+internal class Program
 {
-    new QuotaMetrics("Assets", "AssetCount", "AssetQuota"),
-    new QuotaMetrics("Content Key Polices", "ContentKeyPolicyCount", "ContentKeyPolicyQuota"),
-    new QuotaMetrics("Streaming Policies", "StreamingPolicyCount", "StreamingPolicyQuota"),
-    new QuotaMetrics("Live Events", "ChannelsAndLiveEventsCount", "MaxChannelsAndLiveEventsCount"),
-    new QuotaMetrics("Running Live Events", "RunningChannelsAndLiveEventsCount", "MaxRunningChannelsAndLiveEventsCount"),
-    new QuotaMetrics("Transforms", null, "TransformQuota"),
-    new QuotaMetrics("Jobs", null, "JobQuota"),
-    new QuotaMetrics("Jobs Scheduled", "JobsScheduled", null),
-};
+    record QuotaMetrics(string Name, string? CountMetric, string? QuotaMetric);
 
-var allQuotaNames = quotas
-    .Select(q => q.CountMetric)
-    .Concat(quotas.Select(q => q.QuotaMetric))
-    .Where(v => v != null);
+    /// <summary>
+    /// The main method of the sample. Please make sure you have set your settings in the appsettings.json file or use command line parameters.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    static async Task Main(string[] args)
+    {
+        // Loading the settings from the appsettings.json file or from the command line parameters
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddCommandLine(args)
+            .Build();
 
-var credential = new DefaultAzureCredential(
-    new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true });
+        if (!Options.TryGetOptions(configuration, out var options))
+        {
+            return;
+        }
 
-// Please make sure you have set your settings in the appsettings.json file
-IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-IConfigurationRoot configuration = builder.Build();
+        Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+        Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+        Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+        Console.WriteLine();
 
-var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
-    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
-    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
+        var quotas = new QuotaMetrics[]
+        {
+                new QuotaMetrics("Assets", "AssetCount", "AssetQuota"),
+                new QuotaMetrics("Content Key Polices", "ContentKeyPolicyCount", "ContentKeyPolicyQuota"),
+                new QuotaMetrics("Streaming Policies", "StreamingPolicyCount", "StreamingPolicyQuota"),
+                new QuotaMetrics("Live Events", "ChannelsAndLiveEventsCount", "MaxChannelsAndLiveEventsCount"),
+                new QuotaMetrics("Running Live Events", "RunningChannelsAndLiveEventsCount", "MaxRunningChannelsAndLiveEventsCount"),
+                new QuotaMetrics("Transforms", null, "TransformQuota"),
+                new QuotaMetrics("Jobs", null, "JobQuota"),
+                new QuotaMetrics("Jobs Scheduled", "JobsScheduled", null)
+        };
 
-var metricsClient = new MetricsQueryClient(credential);
+        var allQuotaNames = quotas
+            .Select(q => q.CountMetric)
+            .Concat(quotas.Select(q => q.QuotaMetric))
+            .Where(v => v != null);
 
-var results = await metricsClient.QueryResourceAsync(
-    MediaServicesResource.ToString(),
-    allQuotaNames);
+        var credential = new DefaultAzureCredential(
+            new DefaultAzureCredentialOptions { ExcludeManagedIdentityCredential = true });
 
-var values = results.Value.Metrics.ToDictionary(
-    m => m.Name,
-    m => m.TimeSeries.Last().Values.Last().Average);
+        var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
+            subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+            resourceGroupName: options.AZURE_RESOURCE_GROUP,
+            accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
-var formatString = "{0,-20}{1,10}{2,10}";
-Console.WriteLine(formatString, "Resource", "Current", "Quota");
-Console.WriteLine(formatString, "--------", "----------", "--------");
+        var metricsClient = new MetricsQueryClient(credential);
 
-foreach (var quota in quotas)
-{
-    var countValue = quota.CountMetric != null ? values[quota.CountMetric] : null;
-    var quotaValue = quota.QuotaMetric != null ? values[quota.QuotaMetric] : null;
+        var results = await metricsClient.QueryResourceAsync(
+            MediaServicesResource.ToString(),
+            allQuotaNames);
 
-    Console.WriteLine(formatString, quota.Name, countValue, quotaValue);
+        var values = results.Value.Metrics.ToDictionary(
+            m => m.Name,
+            m => m.TimeSeries.Last().Values.Last().Average);
+
+        var formatString = "{0,-20}{1,10}{2,10}";
+        Console.WriteLine(formatString, "Resource", "Current", "Quota");
+        Console.WriteLine(formatString, "--------", "----------", "--------");
+
+        foreach (var quota in quotas)
+        {
+            var countValue = quota.CountMetric != null ? values[quota.CountMetric] : null;
+            var quotaValue = quota.QuotaMetric != null ? values[quota.QuotaMetric] : null;
+
+            Console.WriteLine(formatString, quota.Name, countValue, quotaValue);
+        }
+    }
 }
 
-record QuotaMetrics(string Name, string? CountMetric, string? QuotaMetric);
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
+}

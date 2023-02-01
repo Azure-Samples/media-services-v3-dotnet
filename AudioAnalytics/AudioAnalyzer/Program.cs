@@ -154,9 +154,9 @@ namespace AudioAnalyzer
             // If you do not provide an Event Hub config in the settings, the sample will fall back to polling the job for status. 
             // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
 
-            EventProcessorClient processorClient = null;
-            BlobContainerClient storageClient = null;
-            MediaServicesEventProcessor mediaEventProcessor = null;
+            EventProcessorClient? processorClient = null;
+            BlobContainerClient? storageClient = null;
+            MediaServicesEventProcessor? mediaEventProcessor = null;
             try
             {
                 // First we will try to process Job events through Event Hub in real-time. If this fails for any reason,
@@ -501,7 +501,7 @@ namespace AudioAnalyzer
                 permissions: AssetContainerPermission.Read,
                 expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.First());
             BlobContainerClient container = new(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);

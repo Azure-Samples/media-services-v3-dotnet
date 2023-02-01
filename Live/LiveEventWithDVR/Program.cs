@@ -10,12 +10,10 @@ using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using Common_Utils;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Threading.Tasks;
 
 //////////////////////////////////////////////////////////////////////////////////////
 ////  Azure Media Services Live streaming sample 
@@ -51,18 +49,30 @@ using System.Threading.Tasks;
 ////     or CMS system. This can also be created earlier after step 5 if desired.
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Please make sure you have set your settings in the appsettings.json file
-IConfigurationBuilder builder = new ConfigurationBuilder().AddJsonFile("appsettings.json");
-IConfigurationRoot configuration = builder.Build();
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
 
-var MediaServicesResource = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: configuration["AZURE_SUBSCRIPTION_ID"],
-    resourceGroupName: configuration["AZURE_RESOURCE_GROUP"],
-    accountName: configuration["AZURE_MEDIA_SERVICES_ACCOUNT_NAME"]);
+if (!Options.TryGetOptions(configuration, out var options))
+{
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
-var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServicesResource);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
 
 string uniqueness = Guid.NewGuid().ToString().Substring(0, 13); // Create a GUID for uniqueness. You can make this something static if you dont want to change RTMP ingest settings in OBS constantly.  
 string liveEventName = "liveevent-" + uniqueness; // WARNING: Be careful not to leak live events using this sample!
@@ -79,9 +89,9 @@ bool stopEndpoint = false;
 // If you do not provide an Event Hub config, the sample will fall back to polling the job for status. 
 // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
 
-EventProcessorClient processorClient = null;
-BlobContainerClient storageClient = null;
-MediaServicesEventProcessor mediaEventProcessor = null;
+EventProcessorClient? processorClient = null;
+BlobContainerClient? storageClient = null;
+MediaServicesEventProcessor? mediaEventProcessor = null;
 
 try
 {
@@ -389,7 +399,7 @@ try
 
     var hostname = streamingEndpoint.Data.HostName;
     var scheme = "https";
-    List<string> manifests = BuildManifestPaths(scheme, hostname, locator.Data.StreamingLocatorId.ToString(), manifestName);
+    List<string> manifests = BuildManifestPaths(scheme, hostname, locator.Data.StreamingLocatorId, manifestName);
 
     Console.WriteLine($"The HLS (MP4) manifest for the Live stream  : {manifests[0]}");
     Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
@@ -419,7 +429,7 @@ try
                     StreamingPolicyName = "Predefined_ClearStreamingOnly"
                 })).Value;
         Console.WriteLine("To playback the archived on-demand asset, Use the following urls:");
-        manifests = BuildManifestPaths(scheme, hostname, archiveLocator.Data.StreamingLocatorId.ToString(), manifestName);
+        manifests = BuildManifestPaths(scheme, hostname, archiveLocator.Data.StreamingLocatorId, manifestName);
         Console.WriteLine($"The HLS (MP4) manifest for the archived asset without a DVR filter is : {manifests[0]}");
         Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
         Console.WriteLine($"{manifests[0]}");
@@ -462,12 +472,15 @@ finally
         await processorClient.StopProcessingAsync();
         Console.WriteLine();
 
-        // It is encouraged that you unregister your handlers when you have
-        // finished using the Event Processor to ensure proper cleanup.  This
-        // is especially important when using lambda expressions or handlers
-        // in any form that may contain closure scopes or hold other references.
-        processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
-        processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
+        if (mediaEventProcessor != null)
+        {
+            // It is encouraged that you unregister your handlers when you have
+            // finished using the Event Processor to ensure proper cleanup.  This
+            // is especially important when using lambda expressions or handlers
+            // in any form that may contain closure scopes or hold other references.
+            processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+            processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
+        }
     }
 
     if (stopEndpoint)
@@ -492,7 +505,7 @@ finally
 
 
 
-List<string> BuildManifestPaths(string scheme, string hostname, string streamingLocatorId, string manifestName)
+List<string> BuildManifestPaths(string scheme, string hostname, Guid? streamingLocatorId, string manifestName)
 {
     const string hlsFormat = "format=m3u8-cmaf";
     const string dashFormat = "format=mpd-time-cmaf";
@@ -571,5 +584,36 @@ static async Task CleanupLocatorandAssetAsync(MediaServicesAccountResource media
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
     }
+}
 
+
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
 }
