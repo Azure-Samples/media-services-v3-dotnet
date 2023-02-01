@@ -25,9 +25,4 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodeHttp</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
 </Project>

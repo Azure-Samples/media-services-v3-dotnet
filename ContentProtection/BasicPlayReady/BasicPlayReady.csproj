@@ -6,10 +6,6 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<LangVersion>latest</LangVersion>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.8.1" />
 		<PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />

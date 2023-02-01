@@ -32,9 +32,4 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>Encoding_OverlayImage</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
 </Project>

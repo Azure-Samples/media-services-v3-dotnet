@@ -26,11 +26,6 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodeHttp</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <Content Include="ignite.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -31,9 +31,4 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodingWithMESCustomH264</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
 </Project>

@@ -31,9 +31,4 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>EncodingH264ContentAwareConstrained</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
 </Project>

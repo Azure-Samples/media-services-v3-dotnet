@@ -29,9 +29,4 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>Encoding_SpriteThumbnail</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
 </Project>
