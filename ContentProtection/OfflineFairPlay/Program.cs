@@ -46,11 +46,11 @@ namespace OfflineFairPlay
 
             // Please make sure you have set configuration in appsettings.json.For more information, see
             // https://docs.microsoft.com/azure/media-services/latest/access-api-cli-how-to.
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                 .Build());
 
             try
             {
@@ -150,7 +150,7 @@ namespace OfflineFairPlay
                         eventHubName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new(false);
+                    var jobWaitingEvent = new AutoResetEvent(false);
 
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
@@ -275,12 +275,12 @@ namespace OfflineFairPlay
 
             Console.WriteLine("Creating or updating the content key policy...");
 
-            ContentKeyPolicyOpenRestriction restriction = new();
+            var restriction = new ContentKeyPolicyOpenRestriction();
 
             ContentKeyPolicyFairPlayConfiguration fairPlay = ConfigureFairPlayLicenseTemplate(config.AskHex, config.FairPlayPfxPath,
                 config.FairPlayPfxPassword);
 
-            List<ContentKeyPolicyOption> options = new()
+            var options = new List<ContentKeyPolicyOption>()
             {
                 new ContentKeyPolicyOption()
                 {
@@ -345,7 +345,7 @@ namespace OfflineFairPlay
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new();
+            var outputAsset = new Asset();
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -475,7 +475,7 @@ namespace OfflineFairPlay
 
             byte[] buf = File.ReadAllBytes(fairPlayPfxPath);
             string appCertBase64 = Convert.ToBase64String(buf);
-            ContentKeyPolicyFairPlayConfiguration objContentKeyPolicyPlayReadyConfiguration = new()
+            var objContentKeyPolicyPlayReadyConfiguration = new ContentKeyPolicyFairPlayConfiguration()
             {
                 Ask = askBytes,
                 FairPlayPfx = appCertBase64,
@@ -632,7 +632,7 @@ namespace OfflineFairPlay
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new()
+                var uriBuilder = new UriBuilder()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName

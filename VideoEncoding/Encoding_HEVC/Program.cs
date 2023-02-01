@@ -347,7 +347,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 
     // Use Storage API to get a reference to the Asset container
     // that was created by calling Asset's CreateOrUpdate method.  
-    BlobContainerClient container = new(sasUri);
+    var container = new BlobContainerClient (sasUri);
     BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
     // Use Storage API to upload the file into the container in storage.
@@ -434,7 +434,7 @@ static async Task PrintStreamingUrlsAsync(
         Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
         foreach (string streamingFormatPath in path.Paths)
         {
-            UriBuilder uriBuilder = new()
+            var uriBuilder = new UriBuilder()
             {
                 Scheme = "https",
                 Host = streamingEndpoint.Data.HostName,

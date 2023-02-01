@@ -250,7 +250,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 
     // Use Storage API to get a reference to the Asset container
     // that was created by calling Asset's CreateOrUpdate method.  
-    BlobContainerClient container = new(sasUri);
+    var container = new BlobContainerClient (sasUri);
     BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
     // Use Storage API to upload the file into the container in storage.
@@ -392,21 +392,21 @@ static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
 // <GetToken>
 static string GetToken(string issuer, string audience, string keyIdentifier, ContentKeyPolicySymmetricTokenKey ckTokenKey)
 {
-    SymmetricSecurityKey tokenSigningKey = new(ckTokenKey.KeyValue);
+    var tokenSigningKey = new SymmetricSecurityKey(ckTokenKey.KeyValue);
 
-    SigningCredentials cred = new(
+    var cred = new SigningCredentials(
         tokenSigningKey,
         // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
         SecurityAlgorithms.HmacSha256,
         SecurityAlgorithms.Sha256Digest);
 
-    List<Claim> claims = new()
+    var claims = new List<Claim>()
     {
         new Claim("urn:microsoft:azure:mediaservices:contentkeyidentifier", keyIdentifier),
         new Claim("urn:microsoft:azure:mediaservices:maxuses", "5")
     };
 
-    JwtSecurityToken token = new(
+    var token = new JwtSecurityToken(
         issuer: issuer,
         audience: audience,
         claims: claims,
@@ -414,7 +414,7 @@ static string GetToken(string issuer, string audience, string keyIdentifier, Con
         expires: DateTime.Now.AddMinutes(60),
         signingCredentials: cred);
 
-    JwtSecurityTokenHandler handler = new();
+    var handler = new JwtSecurityTokenHandler();
 
     return handler.WriteToken(token);
 }
@@ -435,7 +435,7 @@ static async Task PrintStreamingUrlsAsync(
         Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
         foreach (string streamingFormatPath in path.Paths)
         {
-            UriBuilder uriBuilder = new()
+            var uriBuilder = new UriBuilder()
             {
                 Scheme = "https",
                 Host = streamingEndpoint.Data.HostName,

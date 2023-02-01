@@ -46,7 +46,7 @@ namespace AudioAnalyzer
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
+            var config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -186,7 +186,7 @@ namespace AudioAnalyzer
                     eventHubName);
 
                 // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                AutoResetEvent jobWaitingEvent = new(false);
+                var jobWaitingEvent = new AutoResetEvent(false);
 
                 // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                 IList<Task> tasks = new List<Task>();
@@ -346,7 +346,7 @@ namespace AudioAnalyzer
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -365,7 +365,7 @@ namespace AudioAnalyzer
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new();
+            var outputAsset = new Asset();
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -501,15 +501,15 @@ namespace AudioAnalyzer
                 permissions: AssetContainerPermission.Read,
                 expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime());
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.First());
-            BlobContainerClient container = new(containerSasUrl);
+            var containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.First());
+            var container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
 
             Console.WriteLine($"Downloading output results to '{directory}'...");
 
-            string continuationToken = null;
+            string? continuationToken = null;
             IList<Task> downloadTasks = new List<Task>();
 
             do

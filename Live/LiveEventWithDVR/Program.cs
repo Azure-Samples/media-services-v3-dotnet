@@ -128,7 +128,7 @@ try
     //      IpV4 address with 4 numbers
     //      CIDR address range  
 
-    IPRange allAllowIpRange = new()
+    var allAllowIpRange = new IPRange()
     {
         Name = "AllowAll",
         Address = IPAddress.Parse("0.0.0.0"),
@@ -137,11 +137,11 @@ try
 
     // Create the LiveEvent Preview IP access control object. 
     // This will restrict which clients can view the preview endpoint
-    LiveEventPreview liveEventPreview = new();
+    var liveEventPreview = new LiveEventPreview();
     liveEventPreview.IPAllowedIPs.Add(allAllowIpRange);
 
     #region NewLiveEvent
-    MediaLiveEventData liveEventData = new(mediaServicesAccount.Get().Value.Data.Location)
+    var liveEventData = new MediaLiveEventData(mediaServicesAccount.Get().Value.Data.Location)
     {
         Description = "Sample LiveEvent from .NET SDK sample",
         UseStaticHostname = true,
@@ -341,7 +341,7 @@ try
     var ignoredInput = Console.ReadLine();
 
 
-    MediaAssetFilterData drvAssetFilter = new()
+    var drvAssetFilter = new MediaAssetFilterData()
     {
         PresentationTimeRange = new PresentationTimeRange
         {
@@ -516,7 +516,7 @@ List<string> BuildManifestPaths(string scheme, string hostname, Guid? streamingL
     const string hlsFormat = "format=m3u8-cmaf";
     const string dashFormat = "format=mpd-time-cmaf";
 
-    List<string> manifests = new();
+    var manifests = new List<string>();
 
     var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}.ism/manifest";
     var hlsManifest = $"{manifestBase}({hlsFormat})";

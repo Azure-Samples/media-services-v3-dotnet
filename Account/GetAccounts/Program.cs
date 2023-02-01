@@ -29,7 +29,7 @@ Console.WriteLine();
 // First we construct the ArmClient using DefaultAzureCredential
 // This will use the Environment variables set for the current logged in user. 
 // Use the VS Code Azure login command, or the CLI 'az login' to set the environment variables
-ArmClient client = new(new DefaultAzureCredential());
+var client = new ArmClient(new DefaultAzureCredential());
 
 SubscriptionCollection subscriptions = client.GetSubscriptions();
 SubscriptionResource subscription = subscriptions.Get(options.AZURE_SUBSCRIPTION_ID.ToString());

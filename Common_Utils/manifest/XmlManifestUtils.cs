@@ -35,7 +35,7 @@ namespace Common_Utils
             if (doc != null)// && ismXmlContent.IndexOf("clientManifestRelativePath") < 0)
             {
                 XElement bodyhead = doc.Element(ns + "smil").Element(ns + "head");
-                XElement element = new(ns + "meta", new XAttribute("name", manPath), new XAttribute("content", newIsmcFileName));
+                var element = new XElement(ns + "meta", new XAttribute("name", manPath), new XAttribute("content", newIsmcFileName));
 
                 XElement manifestRelPath = bodyhead.Elements(ns + "meta").Where(e => e.Attribute("name").Value == manPath).FirstOrDefault();
                 if (manifestRelPath != null)
@@ -56,7 +56,7 @@ namespace Common_Utils
 
         public static string RemoveXmlNode(string ismcContentXml)
         {
-            XmlDocument doc = new();
+            var doc = new XmlDocument();
             doc.LoadXml(ismcContentXml);
             XmlNode node = doc.SelectSingleNode("//SmoothStreamingMedia");
             XmlNode child = doc.SelectSingleNode("//Protection");

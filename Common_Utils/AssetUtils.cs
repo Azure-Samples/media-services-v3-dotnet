@@ -35,7 +35,7 @@ namespace Common_Utils
             try
             {
                 // Create a short lived SAS URL to upload content into the Asset's container.  We use 5 minutes in this sample, but this can be a lot shorter.
-                ListContainerSasInput input = new()
+                var input = new ListContainerSasInput()
                 {
                     Permissions = AssetContainerPermission.ReadWriteDelete,
                     ExpiryTime = DateTime.Now.AddMinutes(5).ToUniversalTime()
@@ -51,7 +51,7 @@ namespace Common_Utils
             }
 
             string uploadSasUrl = response.AssetContainerSasUrls.First();
-            Uri sasUri = new(uploadSasUrl);
+            var sasUri = new Uri(uploadSasUrl);
             var storageContainer = new BlobContainerClient(sasUri);
 
             // Create the Server Manifest .ism file here.  This is a SMIL 2.0 format XML file that points to the uploaded MP4 files in the asset container.
@@ -172,7 +172,7 @@ namespace Common_Utils
                 IEnumerable<StreamingPath> smoothPath = streamingPaths.Where(p => p.StreamingProtocol == StreamingPolicyStreamingProtocol.SmoothStreaming);
                 if (smoothPath.Any(s => s.Paths.Count != 0))
                 {
-                    UriBuilder uribuilder = new()
+                    var uribuilder = new UriBuilder()
                     {
                         Host = runningSes.HostName,
                         Path = smoothPath.FirstOrDefault().Paths.FirstOrDefault(),
@@ -182,7 +182,7 @@ namespace Common_Utils
                 }
                 else if (smoothPath.Any() && liveOutput != null) // A live output with no data in it as live event not started. But we can determine the output URLs
                 {
-                    UriBuilder uribuilder = new()
+                    var uribuilder = new UriBuilder()
                     {
                         Host = runningSes.HostName,
                         Path = locatorToUse.StreamingLocatorId.ToString() + "/" + liveOutput.ManifestName + ".ism/manifest",
