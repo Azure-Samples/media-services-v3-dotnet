@@ -105,6 +105,7 @@ The settings for your account can be retrieved using the following Azure CLI com
   * **AZURE_BLOB_CONTAINER_NAME**: The name of your container. Click Blobs in your storage account, find you container and copy the name.
   * **AZURE_EVENT_HUBS_CONNECTION_STRING**: The Event Hub connection string. Search for your Event Hub namespace you just created. &lt;your namespace&gt; -&gt; Shared access policies -&gt; RootManageSharedAccessKey -&gt; Connection string-primary key. You can optionally create a SAS policy for the Event Hub instance with Manage and Listen policies and use the connection string for the Event Hub instance.
   * **AZURE_EVENT_HUB_NAME**: The Event Hub instance name.  &lt;your namespace&gt; -&gt; Event Hubs.
+  * **AZURE_CONSUMER_GROUP**: The name of the consumer group for the event hub processor.
 
 ## Key concepts
 
