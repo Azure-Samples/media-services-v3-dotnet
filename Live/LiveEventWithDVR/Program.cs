@@ -63,6 +63,11 @@ if (!Options.TryGetOptions(configuration, out var options))
 Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
 Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
 Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine($"Blob container name:         {options.AZURE_BLOB_CONTAINER_NAME}");
+Console.WriteLine($"Consumer group:              {options.AZURE_CONSUMER_GROUP}");
+Console.WriteLine($"Event hub name:              {options.AZURE_EVENT_HUB_NAME}");
+Console.WriteLine($"Storage account name:        {options.AZURE_STORAGE_ACCOUNT_NAME}");
+
 Console.WriteLine();
 
 var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
@@ -188,12 +193,14 @@ try
         // Create a new host to process events from an Event Hub.
         Console.WriteLine("Creating a new client to process events from an Event Hub...");
 
-        var storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                           configuration["AZURE_STORAGE_ACCOUNT_NAME"], configuration["AZURE_STORAGE_ACCOUNT_KEY"]);
+        var storageConnectionString = string.Format(
+            "DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+            options.AZURE_STORAGE_ACCOUNT_NAME,
+            options.AZURE_STORAGE_ACCOUNT_KEY
+            );
 
-
-        storageClient = new BlobContainerClient(storageConnectionString, configuration["AZURE_BLOB_CONTAINER_NAME"]);
-        processorClient = new EventProcessorClient(storageClient, configuration["AZURE_CONSUMER_GROUP"], configuration["AZURE_EVENT_HUBS_CONNECTION_STRING"], configuration["AZURE_EVENT_HUB_NAME"]);
+        storageClient = new BlobContainerClient(storageConnectionString, options.AZURE_BLOB_CONTAINER_NAME);
+        processorClient = new EventProcessorClient(storageClient, options.AZURE_CONSUMER_GROUP, options.AZURE_EVENT_HUBS_CONNECTION_STRING, options.AZURE_EVENT_HUB_NAME);
         mediaEventProcessor = new MediaServicesEventProcessor(null, null, liveEventName);
 
         processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
@@ -600,6 +607,24 @@ internal class Options
 
     [Required]
     public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    [Required]
+    public string? AZURE_STORAGE_ACCOUNT_NAME { get; set; }
+
+    [Required]
+    public string? AZURE_STORAGE_ACCOUNT_KEY { get; set; }
+
+    [Required]
+    public string? AZURE_BLOB_CONTAINER_NAME { get; set; }
+
+    [Required]
+    public string? AZURE_CONSUMER_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_EVENT_HUBS_CONNECTION_STRING { get; set; }
+
+    [Required]
+    public string? AZURE_EVENT_HUB_NAME { get; set; }
 
     static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {
