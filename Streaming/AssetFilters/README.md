@@ -26,9 +26,7 @@ This sample demonstrates how to filter content using asset and account filters. 
 
 - Azure.Storage.Blobs
 - Microsoft.Azure.Management.Media
-- Microsoft.Extensions.Configuration
-- Microsoft.Extensions.Configuration.EnvironmentVariables
-- Microsoft.Extensions.Configuration.Json
+- Microsoft.Extensions.Hosting
 - Microsoft.Identity.Client
 
 ## Build and run

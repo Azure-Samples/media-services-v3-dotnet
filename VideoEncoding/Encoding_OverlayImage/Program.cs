@@ -43,11 +43,11 @@ namespace Encoding_OverlayImage
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                 .Build());
 
             try
             {
@@ -298,7 +298,7 @@ namespace Encoding_OverlayImage
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            var outputAsset = new Asset();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -323,7 +323,7 @@ namespace Encoding_OverlayImage
             Dictionary<string, string> correlationData)
         {
             // Add both the Video and the Overlay image assets here as inputs to the job.
-            List<JobInput> jobInputs = new List<JobInput>() {
+            var jobInputs = new List<JobInput>() {
                 new JobInputAsset(assetName: inputAssetName),
                 new JobInputAsset(assetName: overlayAssetName, label: OverlayLabel)
             };
@@ -472,7 +472,7 @@ namespace Encoding_OverlayImage
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -502,8 +502,8 @@ namespace Encoding_OverlayImage
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new(containerSasUrl);
+            var containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            var container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -595,7 +595,7 @@ namespace Encoding_OverlayImage
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new()
+                    var uriBuilder = new UriBuilder()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,

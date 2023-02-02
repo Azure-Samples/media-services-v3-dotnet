@@ -40,7 +40,7 @@ namespace Encoding_PredefinedPreset
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
+            var config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -236,7 +236,7 @@ namespace Encoding_PredefinedPreset
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            var outputAsset = new Asset();
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
 
@@ -359,8 +359,8 @@ namespace Encoding_PredefinedPreset
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new(containerSasUrl);
+            var containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            var container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -452,7 +452,7 @@ namespace Encoding_PredefinedPreset
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new()
+                    var uriBuilder = new UriBuilder()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,

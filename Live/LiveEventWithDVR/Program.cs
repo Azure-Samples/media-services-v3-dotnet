@@ -9,12 +9,11 @@ using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
 using Common_Utils;
-using System;
-using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Threading.Tasks;
 
 //////////////////////////////////////////////////////////////////////////////////////
 ////  Azure Media Services Live streaming sample 
@@ -50,23 +49,35 @@ using System.Threading.Tasks;
 ////     or CMS system. This can also be created earlier after step 5 if desired.
 //////////////////////////////////////////////////////////////////////////////////////
 
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
 
-// Event Hub config
-string storageAccountName = "---set-your-storage-account-name-here---";
-string storageAccountKey = "---set-your-storage-account-key-here---";
-string blobContainerName = "---set-your-blob-container-name-here---";
-string eventHubsConnectionString = "---set-your-event-hubs-connection-string-here---";
-string eventHubName = "---set-your-event-hub-name-here---";
-string consumerGroup = "---set-your-consumer-group-here---";
+if (!Options.TryGetOptions(configuration, out var options))
+{
+    return;
+}
 
-var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine($"Blob container name:         {options.AZURE_BLOB_CONTAINER_NAME}");
+Console.WriteLine($"Consumer group:              {options.CONSUMER_GROUP_NAME}");
+Console.WriteLine($"Event hub name:              {options.EVENTHUB_NAME}");
+Console.WriteLine($"Storage account name:        {options.AZURE_STORAGE_ACCOUNT_NAME}");
+
+Console.WriteLine();
+
+var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
-var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServiceAccount);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
 
 string uniqueness = Guid.NewGuid().ToString().Substring(0, 13); // Create a GUID for uniqueness. You can make this something static if you dont want to change RTMP ingest settings in OBS constantly.  
 string liveEventName = "liveevent-" + uniqueness; // WARNING: Be careful not to leak live events using this sample!
@@ -83,9 +94,9 @@ bool stopEndpoint = false;
 // If you do not provide an Event Hub config, the sample will fall back to polling the job for status. 
 // For production ready code, it is always recommended to use Event Grid instead of polling on the Job status. 
 
-EventProcessorClient processorClient = null;
-BlobContainerClient storageClient = null;
-MediaServicesEventProcessor mediaEventProcessor = null;
+EventProcessorClient? processorClient = null;
+BlobContainerClient? storageClient = null;
+MediaServicesEventProcessor? mediaEventProcessor = null;
 
 try
 {
@@ -117,7 +128,7 @@ try
     //      IpV4 address with 4 numbers
     //      CIDR address range  
 
-    IPRange allAllowIpRange = new IPRange
+    var allAllowIpRange = new IPRange()
     {
         Name = "AllowAll",
         Address = IPAddress.Parse("0.0.0.0"),
@@ -126,11 +137,11 @@ try
 
     // Create the LiveEvent Preview IP access control object. 
     // This will restrict which clients can view the preview endpoint
-    LiveEventPreview liveEventPreview = new LiveEventPreview();
+    var liveEventPreview = new LiveEventPreview();
     liveEventPreview.IPAllowedIPs.Add(allAllowIpRange);
 
     #region NewLiveEvent
-    MediaLiveEventData liveEventData = new MediaLiveEventData(mediaServicesAccount.Get().Value.Data.Location)
+    var liveEventData = new MediaLiveEventData(mediaServicesAccount.Get().Value.Data.Location)
     {
         Description = "Sample LiveEvent from .NET SDK sample",
         UseStaticHostname = true,
@@ -182,13 +193,14 @@ try
         // Create a new host to process events from an Event Hub.
         Console.WriteLine("Creating a new client to process events from an Event Hub...");
 
-        var storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                           storageAccountName, storageAccountKey);
+        var storageConnectionString = string.Format(
+            "DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
+            options.AZURE_STORAGE_ACCOUNT_NAME,
+            options.AZURE_STORAGE_ACCOUNT_KEY
+            );
 
-
-
-        storageClient = new BlobContainerClient(storageConnectionString, blobContainerName);
-        processorClient = new EventProcessorClient(storageClient, consumerGroup, eventHubsConnectionString, eventHubName);
+        storageClient = new BlobContainerClient(storageConnectionString, options.AZURE_BLOB_CONTAINER_NAME);
+        processorClient = new EventProcessorClient(storageClient, options.CONSUMER_GROUP_NAME, options.EVENTHUB_CONNECTION_STRING, options.EVENTHUB_NAME);
         mediaEventProcessor = new MediaServicesEventProcessor(null, null, liveEventName);
 
         processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
@@ -329,7 +341,7 @@ try
     var ignoredInput = Console.ReadLine();
 
 
-    MediaAssetFilterData drvAssetFilter = new MediaAssetFilterData
+    var drvAssetFilter = new MediaAssetFilterData()
     {
         PresentationTimeRange = new PresentationTimeRange
         {
@@ -394,7 +406,7 @@ try
 
     var hostname = streamingEndpoint.Data.HostName;
     var scheme = "https";
-    List<string> manifests = BuildManifestPaths(scheme, hostname, locator.Data.StreamingLocatorId.ToString(), manifestName);
+    List<string> manifests = BuildManifestPaths(scheme, hostname, locator.Data.StreamingLocatorId, manifestName);
 
     Console.WriteLine($"The HLS (MP4) manifest for the Live stream  : {manifests[0]}");
     Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
@@ -424,7 +436,7 @@ try
                     StreamingPolicyName = "Predefined_ClearStreamingOnly"
                 })).Value;
         Console.WriteLine("To playback the archived on-demand asset, Use the following urls:");
-        manifests = BuildManifestPaths(scheme, hostname, archiveLocator.Data.StreamingLocatorId.ToString(), manifestName);
+        manifests = BuildManifestPaths(scheme, hostname, archiveLocator.Data.StreamingLocatorId, manifestName);
         Console.WriteLine($"The HLS (MP4) manifest for the archived asset without a DVR filter is : {manifests[0]}");
         Console.WriteLine("Open the following URL to playback the live stream in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device");
         Console.WriteLine($"{manifests[0]}");
@@ -467,12 +479,15 @@ finally
         await processorClient.StopProcessingAsync();
         Console.WriteLine();
 
-        // It is encouraged that you unregister your handlers when you have
-        // finished using the Event Processor to ensure proper cleanup.  This
-        // is especially important when using lambda expressions or handlers
-        // in any form that may contain closure scopes or hold other references.
-        processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
-        processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
+        if (mediaEventProcessor != null)
+        {
+            // It is encouraged that you unregister your handlers when you have
+            // finished using the Event Processor to ensure proper cleanup.  This
+            // is especially important when using lambda expressions or handlers
+            // in any form that may contain closure scopes or hold other references.
+            processorClient.ProcessEventAsync -= mediaEventProcessor.ProcessEventsAsync;
+            processorClient.ProcessErrorAsync -= mediaEventProcessor.ProcessErrorAsync;
+        }
     }
 
     if (stopEndpoint)
@@ -496,13 +511,12 @@ finally
 
 
 
-
-List<string> BuildManifestPaths(string scheme, string hostname, string streamingLocatorId, string manifestName)
+List<string> BuildManifestPaths(string scheme, string hostname, Guid? streamingLocatorId, string manifestName)
 {
     const string hlsFormat = "format=m3u8-cmaf";
     const string dashFormat = "format=mpd-time-cmaf";
 
-    List<string> manifests = new();
+    var manifests = new List<string>();
 
     var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}.ism/manifest";
     var hlsManifest = $"{manifestBase}({hlsFormat})";
@@ -552,9 +566,7 @@ async Task CleanupLiveEventAndOutputAsync(MediaServicesAccountResource mediaServ
         Console.WriteLine("CleanupLiveEventAndOutputAsync -- Hit ErrorResponseException");
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
-
     }
-
 }
 // </CleanupLiveEventAndOutput>
 
@@ -576,5 +588,54 @@ static async Task CleanupLocatorandAssetAsync(MediaServicesAccountResource media
         Console.WriteLine($"{e.Message}");
         Console.WriteLine();
     }
+}
 
+
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    [Required]
+    public string? AZURE_STORAGE_ACCOUNT_NAME { get; set; }
+
+    [Required]
+    public string? AZURE_STORAGE_ACCOUNT_KEY { get; set; }
+
+    [Required]
+    public string? AZURE_BLOB_CONTAINER_NAME { get; set; }
+
+    [Required]
+    public string? CONSUMER_GROUP_NAME { get; set; }
+
+    [Required]
+    public string? EVENTHUB_CONNECTION_STRING { get; set; }
+
+    [Required]
+    public string? EVENTHUB_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
 }

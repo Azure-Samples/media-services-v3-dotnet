@@ -5,18 +5,18 @@ languages:
 products:
   - azure
   - azure-media-services
-description: "The samples in this repo show how to encode, package, and protect with Azure Media Services v3 using .NET 6.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
+description: "The samples in this repo show how to encode, package, and protect with Azure Media Services v3 using .NET 7.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
 ---
  
-# Azure Media Services v3 samples using .NET 6.0
+# Azure Media Services v3 samples using .NET 7.0
 
 This project is part of the Azure Media Services API samples. For more information and links to more samples, see [Azure Media Services](https://media.microsoft.com).
 
-The samples in this repo show how to encode, package, live stream, and protect your videos with Azure Media Services v3 using [.NET 6.0 SDK](https://dotnet.microsoft.com/download).
+The samples in this repo show how to encode, package, live stream, and protect your videos with Azure Media Services v3 using [.NET 7.0 SDK](https://dotnet.microsoft.com/download).
 
 The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the samples.
 
-To install the latest version of the Microsoft.Azure.Management.Media client SDK go to the Nuget package [Microsoft.Azure.Management.Media](https://www.nuget.org/packages/Microsoft.Azure.Management.Media)
+To install the latest version of the Azure.ResourceManager.Media client SDK go to the Nuget package [Azure.ResourceManager.Media](https://www.nuget.org/packages/Azure.ResourceManager.Media)
 
 ## .NET solution files and how to launch projects
 
@@ -32,8 +32,8 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 | Folder | Description |
 |-------------|-------------|
 | [Account/CreateAccount](/Account/CreateAccount)|The sample shows how to create a Media Services account and set the primary storage account, in addition to advanced configuration settings including Key Delivery IP allowlist, Managed Identity, storage auth, and bring your own encryption key.|
+| [Assets/AssetManagement](/Assets/AssetManagement)|The sample shows how to manage assets in Media Services. Demonstrates how to create assets, set the container name, alternate identification, as well as list assets using paging and oData filters.|
 | [Account/Quotas](/Account/Quotas)|The sample shows how to get account quotas.|
-| [Assets](/Assets)|The sample shows how to manage assets in Media Services. Demonstrates how to create assets, set the container name, alternate identification, as well as list assets using paging and oData filters.|
 | [VideoEncoding/Encoding_PredefinedPreset](/VideoEncoding/Encoding_PredefinedPreset)|The sample shows how to submit a job using a built-in preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_H264](/VideoEncoding/Encoding_H264)|The sample shows how to submit a job using a custom H.264 encoding preset and an HTTP URL input, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_H264_ContentAware](/VideoEncoding/Encoding_H264_ContentAware)|The sample shows how to submit a job using a the built in Content Aware encoding preset for H.264. For details on the Content Aware Encoding preset, see the article - [Content Aware Encoding](https://docs.microsoft.com/azure/media-services/latest/encode-content-aware-concept).|
@@ -59,7 +59,7 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 - A Windows 10/11 PC, Mac or Linux
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (Windows 10/11), or optional [Visual Studio Code](https://code.visualstudio.com/) (Windows, Mac or Linux)
-- .NET 6.0 SDK : <https://dotnet.microsoft.com/download>
+- .NET 7.0 SDK : <https://dotnet.microsoft.com/download>
 
 ## Setup
 

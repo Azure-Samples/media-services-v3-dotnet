@@ -30,9 +30,7 @@ When a user requests PlayReady or Widevine protected content for the first time,
 * Azure.Messaging.EventHubs.Processor
 * Azure.Storage.Blobs
 * Microsoft.Azure.Management.Media
-* Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.EnvironmentVariables
-* Microsoft.Extensions.Configuration.Json
+* Microsoft.Extensions.Hosting
 * Microsoft.Identity.Client
 * Microsoft.IdentityModel.Tokens
 * System.IdentityModel.Tokens.Jwt

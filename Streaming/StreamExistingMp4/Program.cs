@@ -38,11 +38,11 @@ namespace StreamExistingMp4
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                    .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                    .Build());
 
             try
             {
@@ -192,7 +192,7 @@ namespace StreamExistingMp4
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -266,7 +266,7 @@ namespace StreamExistingMp4
             const string hlsFormat = "format=m3u8-cmaf";
             const string dashFormat = "format=mpd-time-cmaf";
 
-            List<string> manifests = new();
+            var manifests = new List<string>();
 
             var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}/manifest";
             var hlsManifest = $"{manifestBase}({hlsFormat})";

@@ -40,11 +40,11 @@ namespace AssetFilters
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                 .Build());
 
             try
             {
@@ -315,7 +315,7 @@ namespace AssetFilters
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -337,7 +337,7 @@ namespace AssetFilters
             string accountName, string assetName)
         {
 
-            Asset outputAsset = new();
+            var outputAsset = new Asset();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -498,7 +498,7 @@ namespace AssetFilters
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Bitrate, "0-1000000", FilterTrackPropertyCompareOperation.Equal)
             };
 
-            List<FilterTrackSelection> includedTracks = new()
+            var includedTracks = new List<FilterTrackSelection>()
             {
                 new FilterTrackSelection(audioConditions),
                 new FilterTrackSelection(videoConditions)
@@ -532,7 +532,7 @@ namespace AssetFilters
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new()
+                var uriBuilder = new UriBuilder()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName,

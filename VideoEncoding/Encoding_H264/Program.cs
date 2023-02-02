@@ -44,11 +44,11 @@ namespace EncodingWithMESCustomH264
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                  .SetBasePath(Directory.GetCurrentDirectory())
+                  .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                  .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                  .Build());
 
             try
             {
@@ -161,7 +161,7 @@ namespace EncodingWithMESCustomH264
                     //    storageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new(false);
+                    var jobWaitingEvent = new AutoResetEvent(false);
 
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
@@ -395,7 +395,7 @@ namespace EncodingWithMESCustomH264
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            var outputAsset = new Asset();
 
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -544,7 +544,7 @@ namespace EncodingWithMESCustomH264
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -574,8 +574,8 @@ namespace EncodingWithMESCustomH264
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new(containerSasUrl);
+            var containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            var container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -667,7 +667,7 @@ namespace EncodingWithMESCustomH264
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new()
+                    var uriBuilder = new UriBuilder()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,

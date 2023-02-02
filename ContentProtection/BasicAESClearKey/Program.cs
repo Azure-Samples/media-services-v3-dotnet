@@ -7,32 +7,48 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
-using System.IO;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
-const string InputMP4FileName = "ignite.mp4";
 const string Issuer = "myIssuer";
 const string Audience = "myAudience";
-byte[] TokenSigningKey = new byte[40];
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
+byte[] TokenSigningKey = new byte[40];
+const string SourceUri = "https://nimbuscdn-nimbuspm.streaming.mediaservices.windows.net/2b533311-b215-4409-80af-529c3e853622/Ignite-short.mp4";
 
-var MediaServiceAccount = MediaServicesAccountResource.CreateResourceIdentifier(
-    subscriptionId: "---set-your-subscription-id-here---",
-    resourceGroupName: "---set-your-resource-group-name-here---",
-    accountName: "---set-your-media-services-account-name-here---");
+
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
+{
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServiceAccountId = MediaServicesAccountResource.CreateResourceIdentifier(
+   subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+   resourceGroupName: options.AZURE_RESOURCE_GROUP,
+   accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
 var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
 var armClient = new ArmClient(credential);
 
-var mediaServicesAccount = armClient.GetMediaServicesAccountResource(MediaServiceAccount);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServiceAccountId);
 
 // Creating a unique suffix so that we don't have name collisions if you run the sample
 // multiple times without cleaning up.
@@ -49,13 +65,10 @@ bool stopStreamingEndpoint = false;
 // Ensure that you have customized encoding Transform. This is a one-time setup operation.
 var transform = await CreateTransformAsync(mediaServicesAccount, AdaptiveStreamingTransformName);
 
-// Create a new input Asset and upload the specified local video file into it.
-var inputAsset = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
-
 // Output from the Job must be written to an Asset, so let's create one.
 var outputAsset = await CreateOutputAssetAsync(mediaServicesAccount, outputAssetName);
 
-var job = await SubmitJobAsync(transform, jobName, inputAsset, outputAsset);
+var job = await SubmitJobAsync(transform, jobName, new Uri(SourceUri), outputAsset);
 
 Console.WriteLine("Polling Job status...");
 job = await WaitForJobToFinishAsync(job);
@@ -64,7 +77,7 @@ if (job.Data.State == MediaJobState.Error)
 {
     Console.WriteLine($"ERROR: Job finished with error message: {job.Data.Outputs[0].Error.Message}");
     Console.WriteLine($"ERROR:                   error details: {job.Data.Outputs[0].Error.Details[0].Message}");
-    await CleanUpAsync(transform, job, inputAsset, outputAsset, null, stopStreamingEndpoint, null, null);
+    await CleanUpAsync(transform, job, null, outputAsset, null, stopStreamingEndpoint, null, null);
     return;
 }
 
@@ -116,7 +129,7 @@ Console.WriteLine("When finished, press ENTER to cleanup.");
 Console.WriteLine();
 Console.ReadLine();
 
-await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint, contentKeyPolicy);
+await CleanUpAsync(transform, job, null, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint, contentKeyPolicy);
 
 
 /// <summary>
@@ -193,60 +206,6 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
 }
 
 /// <summary>
-/// Creates a new input Asset and uploads the specified local video file into it.
-/// </summary>
-/// <param name="mediaServicesAccount">The Media Services account.</param>
-/// <param name="assetName">The Asset name.</param>
-/// <param name="fileToUpload">The file you want to upload into the Asset.</param>
-/// <returns></returns>
-static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName, string fileToUpload)
-{
-    // In this example, we are assuming that the Asset name is unique.
-    MediaAssetResource asset;
-
-    try
-    {
-        asset = await mediaServicesAccount.GetMediaAssets().GetAsync(assetName);
-
-        // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-        // an existing Asset, use an unique name.
-        Console.WriteLine($"Warning: The Asset named {assetName} already exists. It will be overwritten.");
-    }
-    catch (RequestFailedException)
-    {
-        // Call Media Services API to create an Asset.
-        // This method creates a container in storage for the Asset.
-        // The files (blobs) associated with the Asset will be stored in this container.
-        Console.WriteLine("Creating an input Asset...");
-        asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, assetName, new MediaAssetData())).Value;
-    }
-
-    // Use Media Services API to get back a response that contains
-    // SAS URL for the Asset container into which to upload blobs.
-    // That is where you would specify read-write permissions 
-    // and the expiration time for the SAS URL.
-    var sasUriCollection = asset.GetStorageContainerUrisAsync(
-        new MediaAssetStorageContainerSasContent
-        {
-            Permissions = MediaAssetContainerPermission.ReadWrite,
-            ExpireOn = DateTime.UtcNow.AddHours(1)
-        });
-
-    var sasUri = await sasUriCollection.FirstOrDefaultAsync();
-
-    // Use Storage API to get a reference to the Asset container
-    // that was created by calling Asset's CreateOrUpdate method.  
-    BlobContainerClient container = new(sasUri);
-    BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
-
-    // Use Storage API to upload the file into the container in storage.
-    Console.WriteLine("Uploading a media file to the Asset...");
-    await blob.UploadAsync(fileToUpload);
-
-    return asset;
-}
-
-/// <summary>
 /// Creates an output Asset. The output from the encoding Job must be written to an Asset.
 /// </summary>
 /// <param name="mediaServicesAccount">The Media Services account.</param>
@@ -268,12 +227,12 @@ static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccoun
 /// </summary>
 /// <param name="transform">The media transform.</param>
 /// <param name="jobName">The (unique) name of the Job.</param>
-/// <param name="inputAsset">The input Asset.</param>
+/// <param name="sourceUri">The input source Uri.</param>
 /// <param name="outputAsset">The output Asset that will store the result of the encoding Job.</param>
 static async Task<MediaJobResource> SubmitJobAsync(
     MediaTransformResource transform,
     string jobName,
-    MediaAssetResource inputAsset,
+    Uri sourceUri,
     MediaAssetResource outputAsset)
 {
     // In this example, we are assuming that the Job name is unique.
@@ -282,12 +241,20 @@ static async Task<MediaJobResource> SubmitJobAsync(
     // to get the existing Job. In Media Services v3, Get methods on entities returns ErrorResponseException 
     // if the entity doesn't exist (a case-insensitive check on the name).
     Console.WriteLine("Creating a Job...");
+
+    var baseUri = new Uri(sourceUri.GetLeftPart(UriPartial.Authority));
+    var file = sourceUri.AbsolutePath;
+
     var job = await transform.GetMediaJobs().CreateOrUpdateAsync(
         WaitUntil.Completed,
         jobName,
         new MediaJobData
         {
-            Input = new MediaJobInputAsset(assetName: inputAsset.Data.Name),
+            Input = new MediaJobInputHttp()
+            {
+                BaseUri = baseUri,
+                Files = { file }
+            },
             Outputs =
             {
                 new MediaJobOutputAsset(outputAsset.Data.Name)
@@ -310,7 +277,7 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
     do
     {
         job = await job.GetAsync();
-        state = job.Data.State.Value;
+        state = job.Data.State.GetValueOrDefault();
 
         Console.WriteLine($"Job is '{state}'.");
         for (int i = 0; i < job.Data.Outputs.Count; i++)
@@ -378,21 +345,21 @@ static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
 // <GetToken>
 static string GetToken(string issuer, string audience, string keyIdentifier, ContentKeyPolicySymmetricTokenKey ckTokenKey)
 {
-    SymmetricSecurityKey tokenSigningKey = new(ckTokenKey.KeyValue);
+    var tokenSigningKey = new SymmetricSecurityKey(ckTokenKey.KeyValue);
 
-    SigningCredentials cred = new(
+    var cred = new SigningCredentials(
         tokenSigningKey,
         // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
         SecurityAlgorithms.HmacSha256,
         SecurityAlgorithms.Sha256Digest);
 
-    List<Claim> claims = new()
+    var claims = new List<Claim>()
     {
         new Claim("urn:microsoft:azure:mediaservices:contentkeyidentifier", keyIdentifier),
         new Claim("urn:microsoft:azure:mediaservices:maxuses", "5")
     };
 
-    JwtSecurityToken token = new(
+    var token = new JwtSecurityToken(
         issuer: issuer,
         audience: audience,
         claims: claims,
@@ -400,7 +367,7 @@ static string GetToken(string issuer, string audience, string keyIdentifier, Con
         expires: DateTime.Now.AddMinutes(60),
         signingCredentials: cred);
 
-    JwtSecurityTokenHandler handler = new();
+    var handler = new JwtSecurityTokenHandler();
 
     return handler.WriteToken(token);
 }
@@ -421,7 +388,7 @@ static async Task PrintStreamingUrlsAsync(
         Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
         foreach (string streamingFormatPath in path.Paths)
         {
-            UriBuilder uriBuilder = new()
+            var uriBuilder = new UriBuilder()
             {
                 Scheme = "https",
                 Host = streamingEndpoint.Data.HostName,
@@ -471,16 +438,21 @@ static async Task<Uri> ReturnSmoothStreamingUrlAsync(
 static async Task CleanUpAsync(
     MediaTransformResource transform,
     MediaJobResource job,
-    MediaAssetResource inputAsset,
+    MediaAssetResource? inputAsset,
     MediaAssetResource outputAsset,
-    StreamingLocatorResource streamingLocator,
+    StreamingLocatorResource? streamingLocator,
     bool stopEndpoint,
-    StreamingEndpointResource streamingEndpoint,
-    ContentKeyPolicyResource contentKeyPolicy)
+    StreamingEndpointResource? streamingEndpoint,
+    ContentKeyPolicyResource? contentKeyPolicy)
 {
     await job.DeleteAsync(WaitUntil.Completed);
     await transform.DeleteAsync(WaitUntil.Completed);
-    await inputAsset.DeleteAsync(WaitUntil.Completed);
+
+    if (inputAsset != null)
+    {
+        await inputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
     await outputAsset.DeleteAsync(WaitUntil.Completed);
 
     if (streamingLocator != null)
@@ -493,15 +465,50 @@ static async Task CleanUpAsync(
         await contentKeyPolicy.DeleteAsync(WaitUntil.Completed);
     }
 
-    if (stopEndpoint)
+    if (streamingEndpoint != null)
     {
-        // Because we started the endpoint, we'll stop it.
-        await streamingEndpoint.StopAsync(WaitUntil.Completed);
+        if (stopEndpoint)
+        {
+            // Because we started the endpoint, we'll stop it.
+            await streamingEndpoint.StopAsync(WaitUntil.Completed);
+        }
+        else
+        {
+            // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+            // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+            Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        }
     }
-    else
+}
+
+
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {
-        // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
-        // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
-        Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
     }
 }

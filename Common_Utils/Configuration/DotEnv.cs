@@ -25,11 +25,11 @@ namespace Common_Utils
             }
 
             // Load the appsettings.json file if it exists, then finally load environment variables in deployment to override settings
-            ConfigWrapper config = new(new ConfigurationBuilder()
-             .SetBasePath(Directory.GetCurrentDirectory())
-             .AddJsonFile("appsettings.json", true)
-             .AddEnvironmentVariables()
-             .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                 .Build());
 
             return config;
         }

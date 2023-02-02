@@ -40,7 +40,7 @@ namespace EncodingH264ContentAwareConstrained
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
+            var config = new ConfigWrapper(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
@@ -108,7 +108,7 @@ namespace EncodingH264ContentAwareConstrained
                 // This sample uses constraints on the CAE encoding preset to reduce the number of tracks output and resolutions to a specific range. 
                 // First we will create a PresetConfigurations object to define the constraints that we want to use
 
-                PresetConfigurations presetConfigurations = new PresetConfigurations(
+                var presetConfigurations = new PresetConfigurations(
                     // Allows you to configure the encoder settings to control the balance between speed and quality. Example: set Complexity as Speed for faster encoding but less compression efficiency.
                     complexity: Complexity.Speed,
                     // The output includes both audio and video.
@@ -192,7 +192,7 @@ namespace EncodingH264ContentAwareConstrained
                     //    storageConnectionString, config.StorageContainerName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new(false);
+                    var jobWaitingEvent = new AutoResetEvent(false);
 
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
@@ -355,7 +355,7 @@ namespace EncodingH264ContentAwareConstrained
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            var outputAsset = new Asset();
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -503,7 +503,7 @@ namespace EncodingH264ContentAwareConstrained
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -533,8 +533,8 @@ namespace EncodingH264ContentAwareConstrained
                             expiryTime: DateTime.UtcNow.AddHours(1).ToUniversalTime()
                             );
 
-            Uri containerSasUrl = new(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
-            BlobContainerClient container = new(containerSasUrl);
+            var containerSasUrl = new Uri(assetContainerSas.AssetContainerSasUrls.FirstOrDefault());
+            var container = new BlobContainerClient(containerSasUrl);
 
             string directory = Path.Combine(outputFolderName, assetName);
             Directory.CreateDirectory(directory);
@@ -626,7 +626,7 @@ namespace EncodingH264ContentAwareConstrained
                 Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
                 foreach (string streamingFormatPath in path.Paths)
                 {
-                    UriBuilder uriBuilder = new()
+                    var uriBuilder = new UriBuilder()
                     {
                         Scheme = "https",
                         Host = streamingEndpoint.HostName,

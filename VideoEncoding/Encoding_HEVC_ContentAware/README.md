@@ -27,9 +27,7 @@ To learn more about Content Aware Encoding, see the article on [Content Aware En
 * Azure.Messaging.EventGrid
 * Azure.Messaging.EventHubs.Processor
 * Microsoft.Azure.Management.Media
-* Microsoft.Extensions.Configuration
-* Microsoft.Extensions.Configuration.EnvironmentVariables
-* Microsoft.Extensions.Configuration.Json
+* Microsoft.Extensions.Hosting
 * Microsoft.Identity.Client
 * Azure.Identity
 

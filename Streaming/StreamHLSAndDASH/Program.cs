@@ -39,11 +39,11 @@ namespace StreamHLSAndDASH
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                 .SetBasePath(Directory.GetCurrentDirectory())
+                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                 .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                 .Build());
 
             try
             {
@@ -205,7 +205,7 @@ namespace StreamHLSAndDASH
 
             // Use Storage API to get a reference to the Asset container
             // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
+            var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
             // Use Storage API to upload the file into the container in storage.
@@ -225,7 +225,7 @@ namespace StreamHLSAndDASH
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset outputAsset = new Asset();
+            var outputAsset = new Asset();
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
         }
@@ -431,7 +431,7 @@ namespace StreamHLSAndDASH
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new()
+                var uriBuilder = new UriBuilder()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName,

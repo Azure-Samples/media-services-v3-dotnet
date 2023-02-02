@@ -49,11 +49,11 @@ namespace BasicWidevine
 
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+            var config = new ConfigWrapper(new ConfigurationBuilder()
+                   .SetBasePath(Directory.GetCurrentDirectory())
+                   .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                   .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
+                   .Build());
 
             try
             {
@@ -152,7 +152,7 @@ namespace BasicWidevine
                         eventHubName);
 
                     // Create an AutoResetEvent to wait for the job to finish and pass it to EventProcessor so that it can be set when a final state event is received.
-                    AutoResetEvent jobWaitingEvent = new(false);
+                    var jobWaitingEvent = new AutoResetEvent(false);
 
                     // Create a Task list, adding a job waiting task and a timer task. Other tasks can be added too.
                     IList<Task> tasks = new List<Task>();
@@ -308,18 +308,17 @@ namespace BasicWidevine
 
             if (createPolicy)
             {
-                ContentKeyPolicySymmetricTokenKey primaryKey = new(tokenSigningKey);
-                List<ContentKeyPolicyTokenClaim> requiredClaims = new()
+                var primaryKey = new ContentKeyPolicySymmetricTokenKey(tokenSigningKey);
+                var requiredClaims = new List<ContentKeyPolicyTokenClaim>()
                 {
                     ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim
                 };
                 List<ContentKeyPolicyRestrictionTokenKey> alternateKeys = null;
-                ContentKeyPolicyTokenRestriction restriction
-                    = new(Issuer, Audience, primaryKey, ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims);
+                var restriction = new ContentKeyPolicyTokenRestriction(Issuer, Audience, primaryKey, ContentKeyPolicyRestrictionTokenType.Jwt, alternateKeys, requiredClaims);
 
                 ContentKeyPolicyWidevineConfiguration widevineConfig = ConfigureWidevineLicenseTempate();
 
-                List<ContentKeyPolicyOption> options = new()
+                var options = new List<ContentKeyPolicyOption>()
                 {
                     new ContentKeyPolicyOption()
                     {
@@ -396,7 +395,7 @@ namespace BasicWidevine
         /// <returns></returns>
         private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName, string assetName)
         {
-            Asset asset = new();
+            var asset = new Asset();
 
             Console.WriteLine("Creating an output asset...");
             return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, asset);
@@ -502,7 +501,7 @@ namespace BasicWidevine
         /// <returns></returns>
         private static ContentKeyPolicyWidevineConfiguration ConfigureWidevineLicenseTempate()
         {
-            WidevineTemplate template = new()
+            var template = new WidevineTemplate()
             {
                 AllowedTrackTypes = "SD_HD",
                 ContentKeySpecs = new ContentKeySpec[]
@@ -531,7 +530,7 @@ namespace BasicWidevine
                 }
             };
 
-            ContentKeyPolicyWidevineConfiguration objContentKeyPolicyWidevineConfiguration = new()
+            var objContentKeyPolicyWidevineConfiguration = new ContentKeyPolicyWidevineConfiguration()
             {
                 WidevineTemplate = Newtonsoft.Json.JsonConvert.SerializeObject(template)
             };
@@ -611,7 +610,7 @@ namespace BasicWidevine
         {
             var tokenSigningKey = new SymmetricSecurityKey(tokenVerificationKey);
 
-            SigningCredentials cred = new(
+            var cred = new SigningCredentials(
                 tokenSigningKey,
                 // Use the  HmacSha256 and not the HmacSha256Signature option, or the token will not work!
                 SecurityAlgorithms.HmacSha256,
@@ -622,7 +621,7 @@ namespace BasicWidevine
                 new Claim(ContentKeyPolicyTokenClaim.ContentKeyIdentifierClaim.ClaimType, keyIdentifier)
             };
 
-            JwtSecurityToken token = new(
+            var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
@@ -630,7 +629,7 @@ namespace BasicWidevine
                 expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: cred);
 
-            JwtSecurityTokenHandler handler = new();
+            var handler = new JwtSecurityTokenHandler();
 
             return handler.WriteToken(token);
         }
@@ -659,7 +658,7 @@ namespace BasicWidevine
 
             foreach (StreamingPath path in paths.StreamingPaths)
             {
-                UriBuilder uriBuilder = new()
+                var uriBuilder = new UriBuilder()
                 {
                     Scheme = "https",
                     Host = streamingEndpoint.HostName
