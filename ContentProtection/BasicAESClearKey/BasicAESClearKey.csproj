@@ -28,10 +28,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="ignite.mp4">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

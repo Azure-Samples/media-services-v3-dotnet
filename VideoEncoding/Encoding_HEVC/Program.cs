@@ -460,7 +460,7 @@ static async Task PrintStreamingUrlsAsync(
 static async Task CleanUpAsync(
     MediaTransformResource transform,
     MediaJobResource job,
-    MediaAssetResource inputAsset,
+    MediaAssetResource? inputAsset,
     MediaAssetResource outputAsset,
     StreamingLocatorResource? streamingLocator,
     bool stopEndpoint,
@@ -468,7 +468,12 @@ static async Task CleanUpAsync(
 {
     await job.DeleteAsync(WaitUntil.Completed);
     await transform.DeleteAsync(WaitUntil.Completed);
-    await inputAsset.DeleteAsync(WaitUntil.Completed);
+
+    if (inputAsset != null)
+    {
+        await inputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
     await outputAsset.DeleteAsync(WaitUntil.Completed);
 
     if (streamingLocator != null)
