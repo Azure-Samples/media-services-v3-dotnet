@@ -51,10 +51,10 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Assets/bin/Debug/net7.0/Assets.exe",
+      "program": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0/AssetManagement.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Assets/",
+      "cwd": "${workspaceFolder}/Assets/AssetManagement/",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",

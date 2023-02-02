@@ -5,6 +5,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>8624fdbd-ef64-44f0-b13e-58103ad0ed3b</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,8 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="appsettings.json">
+    <None Include="..\..\appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  <Link>appsettings.json</Link>
     </None>
   </ItemGroup>
 

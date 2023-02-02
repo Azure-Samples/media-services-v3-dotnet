@@ -17,8 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="appsettings.json">
+    <None Include="..\..\appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Link>appsettings.json</Link>
     </None>
   </ItemGroup>
 

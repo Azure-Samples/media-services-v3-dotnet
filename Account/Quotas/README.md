@@ -32,7 +32,7 @@ Jobs Scheduled               0
 * Azure.ResourceManager.Media
 * Azure.Monitor.Query
 
-Update the settings in **appsetting.json** to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsetting.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).
 

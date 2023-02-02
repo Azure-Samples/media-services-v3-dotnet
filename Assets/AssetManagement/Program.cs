@@ -58,7 +58,7 @@ var newAsset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
         Container = "my-custom-name-" + Guid.NewGuid()
     });
 
-Console.WriteLine($"Created a new asset: '{newAsset.Value.Data.Name}' in with storage container '{newAsset.Value.Data.Container}'");
+Console.WriteLine($"Created a new asset: '{newAsset.Value.Data.Name}' in storage container '{newAsset.Value.Data.Container}'");
 
 // List assets filtering by date
 var dateFilter = DateTime.UtcNow.AddDays(-1).ToString("O", DateTimeFormatInfo.InvariantInfo);

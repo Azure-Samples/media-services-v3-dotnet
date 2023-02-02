@@ -39,7 +39,8 @@ When a stream is requested by a player, Media Services uses the specified key to
 
 ## Build and run
 
-Update the settings in **appsetting.json** to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsetting.json** in the root folder to match your Azure subscription, resource group and Media Services account.
+Then build and run the sample in Visual Studio or VS Code.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).
 

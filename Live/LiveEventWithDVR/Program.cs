@@ -64,8 +64,8 @@ Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}
 Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
 Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
 Console.WriteLine($"Blob container name:         {options.AZURE_BLOB_CONTAINER_NAME}");
-Console.WriteLine($"Consumer group:              {options.AZURE_CONSUMER_GROUP}");
-Console.WriteLine($"Event hub name:              {options.AZURE_EVENT_HUB_NAME}");
+Console.WriteLine($"Consumer group:              {options.CONSUMER_GROUP_NAME}");
+Console.WriteLine($"Event hub name:              {options.EVENTHUB_NAME}");
 Console.WriteLine($"Storage account name:        {options.AZURE_STORAGE_ACCOUNT_NAME}");
 
 Console.WriteLine();
@@ -200,7 +200,7 @@ try
             );
 
         storageClient = new BlobContainerClient(storageConnectionString, options.AZURE_BLOB_CONTAINER_NAME);
-        processorClient = new EventProcessorClient(storageClient, options.AZURE_CONSUMER_GROUP, options.AZURE_EVENT_HUBS_CONNECTION_STRING, options.AZURE_EVENT_HUB_NAME);
+        processorClient = new EventProcessorClient(storageClient, options.CONSUMER_GROUP_NAME, options.EVENTHUB_CONNECTION_STRING, options.EVENTHUB_NAME);
         mediaEventProcessor = new MediaServicesEventProcessor(null, null, liveEventName);
 
         processorClient.ProcessEventAsync += mediaEventProcessor.ProcessEventsAsync;
@@ -615,13 +615,13 @@ internal class Options
     public string? AZURE_BLOB_CONTAINER_NAME { get; set; }
 
     [Required]
-    public string? AZURE_CONSUMER_GROUP { get; set; }
+    public string? CONSUMER_GROUP_NAME { get; set; }
 
     [Required]
-    public string? AZURE_EVENT_HUBS_CONNECTION_STRING { get; set; }
+    public string? EVENTHUB_CONNECTION_STRING { get; set; }
 
     [Required]
-    public string? AZURE_EVENT_HUB_NAME { get; set; }
+    public string? EVENTHUB_NAME { get; set; }
 
     static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {

@@ -41,7 +41,7 @@ For details on the various types of live events see the article [Live events and
 
 ## Build and run
 
-Update **appsettings.json** in the project folder.
+Update the settings in **appsetting.json** in the root folder of the repository.
 For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
 
 Then build and run the sample in Visual Studio or VS Code.
