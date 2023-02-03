@@ -6,10 +6,8 @@ using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
-using Azure.Storage.Blobs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
@@ -91,7 +89,7 @@ var ckTokenSigningKey = new ContentKeyPolicySymmetricTokenKey(TokenSigningKey);
 // via the Key Delivery component of Azure Media Services.
 var contentKeyPolicy = await GetOrCreateContentKeyPolicyAsync(mediaServicesAccount, contentKeyPolicyName, ckTokenSigningKey);
 
-var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, contentKeyPolicy.Data.Name);
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, contentKeyPolicy.Data.Name, "Predefined_ClearKey");
 
 // We are using the ContentKeyIdentifierClaim in the ContentKeyPolicy which means that the token presented
 // to the Key Delivery Component must have the identifier of the content key in it.  Since we didn't specify
@@ -302,7 +300,6 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
     return job;
 }
 
-
 /// <summary>
 /// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
 /// Once the StreamingLocator is created the output Asset is available to clients for playback.
@@ -310,13 +307,15 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
 /// <param name="mediaServicesAccount">The Media Services client.</param>
 /// <param name="asset">The asset.</param>
 /// <param name="locatorName">The name of the locator to create.</param>
-/// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
+/// <param name="contentPolicyName">The content key policy name.</param>
+/// <param name="streamingPolicyName">The streaming policy name.</param>
 /// <returns></returns>
 static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
     MediaServicesAccountResource mediaServicesAccount,
     MediaAssetResource asset,
     string locatorName,
-    string contentPolicyName)
+    string contentPolicyName,
+    string streamingPolicyName)
 {
     Console.WriteLine("Creating a streaming locator...");
 
@@ -326,7 +325,7 @@ static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
         new StreamingLocatorData
         {
             AssetName = asset.Data.Name,
-            StreamingPolicyName = "Predefined_ClearKey",
+            StreamingPolicyName = streamingPolicyName,
             DefaultContentKeyPolicyName = contentPolicyName
         });
 
