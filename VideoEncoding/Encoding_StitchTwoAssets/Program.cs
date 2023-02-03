@@ -16,7 +16,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-
 namespace Encoding_StitchTwoAssets
 {
     public class Program

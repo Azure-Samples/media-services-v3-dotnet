@@ -26,14 +26,14 @@ Console.WriteLine();
 
 var quotas = new QuotaMetrics[]
 {
-                new QuotaMetrics("Assets", "AssetCount", "AssetQuota"),
-                new QuotaMetrics("Content Key Polices", "ContentKeyPolicyCount", "ContentKeyPolicyQuota"),
-                new QuotaMetrics("Streaming Policies", "StreamingPolicyCount", "StreamingPolicyQuota"),
-                new QuotaMetrics("Live Events", "ChannelsAndLiveEventsCount", "MaxChannelsAndLiveEventsCount"),
-                new QuotaMetrics("Running Live Events", "RunningChannelsAndLiveEventsCount", "MaxRunningChannelsAndLiveEventsCount"),
-                new QuotaMetrics("Transforms", null, "TransformQuota"),
-                new QuotaMetrics("Jobs", null, "JobQuota"),
-                new QuotaMetrics("Jobs Scheduled", "JobsScheduled", null)
+    new QuotaMetrics("Assets", "AssetCount", "AssetQuota"),
+    new QuotaMetrics("Content Key Polices", "ContentKeyPolicyCount", "ContentKeyPolicyQuota"),
+    new QuotaMetrics("Streaming Policies", "StreamingPolicyCount", "StreamingPolicyQuota"),
+    new QuotaMetrics("Live Events", "ChannelsAndLiveEventsCount", "MaxChannelsAndLiveEventsCount"),
+    new QuotaMetrics("Running Live Events", "RunningChannelsAndLiveEventsCount", "MaxRunningChannelsAndLiveEventsCount"),
+    new QuotaMetrics("Transforms", null, "TransformQuota"),
+    new QuotaMetrics("Jobs", null, "JobQuota"),
+    new QuotaMetrics("Jobs Scheduled", "JobsScheduled", null)
 };
 
 var allQuotaNames = quotas

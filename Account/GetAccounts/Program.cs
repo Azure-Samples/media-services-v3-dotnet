@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
@@ -7,8 +8,6 @@ using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-
-// Based on the guidelines in https://github.com/Azure/azure-sdk-for-net/blob/main/doc/dev/mgmt_quickstart.md
 
 // Loading the settings from the appsettings.json file or from the command line parameters
 var configuration = new ConfigurationBuilder()

@@ -16,15 +16,12 @@
 
   <ItemGroup>
     <None Include="..\..\appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>appsettings.json</Link>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="ignite.mp4">
+    <None Include="..\..\Media\ignite.mp4">
+      <Link>ignite.mp4</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>
