@@ -16,9 +16,8 @@
 
   <ItemGroup>
     <None Include="..\..\appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>appsettings.json</Link>
     </None>
   </ItemGroup>
-
 </Project>

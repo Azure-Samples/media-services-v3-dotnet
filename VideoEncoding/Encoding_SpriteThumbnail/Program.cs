@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-
 namespace Encoding_SpriteThumbnail
 {
     public class Program

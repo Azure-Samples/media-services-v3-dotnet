@@ -9,13 +9,6 @@ using Common_Utils;
 using Microsoft.Azure.Management.Media;
 using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 
 namespace Encoding_MultiChannel_Audio
 {
@@ -39,7 +32,7 @@ namespace Encoding_MultiChannel_Audio
         // 7. Back left 
         // 8. Back right
         //
-        // The channel mapping support is limited to only outputing a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
+        // The channel mapping support is limited to only outputting a single AAC stereo track, followed by a 5.1 audio AAC track in this sample. 
 
         private const string InputFileName = @"surround-audio.mp4"; // provide a sample file with 8 discrete audio tracks as layout is defined above. 
 
@@ -446,7 +439,7 @@ namespace Encoding_MultiChannel_Audio
         /// <param name="jobName">The (unique) name of the job.</param>
         /// <param name="inputDefinitions">The input Asset name</param>
         /// <param name="inputDefinitions">This contains the list of InputDefinitions with the audio track mappings to use in the Transform. This allows you to select specific audio channels from the source file.</param>
-        /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
+        /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job.</param>
         private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client,
             string resourceGroupName,
             string accountName,
