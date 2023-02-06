@@ -8,9 +8,6 @@ This sample shows how to create a custom encoding Transform using HEVC encoding 
 1. Downloads the output asset.
 1. Prints URLs for streaming.
 
-> [!TIP]
-> The `Program.cs` file has extensive comments.
-
 ## Prerequisites
 
 * Required Assemblies

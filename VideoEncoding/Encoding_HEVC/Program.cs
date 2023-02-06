@@ -192,8 +192,8 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                         // Specify the format for the output files - one for video+audio, and another for the thumbnails
                         formats: new MediaFormatBase[]
                         {
-                            // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                            // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
+                            // Mux the H.265 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
+                            // Note that since you have multiple H265Layers defined above, you have to use a macro that produces unique names per H254Layer
                             // Either {Label} or {Bitrate} should suffice
                             new Mp4Format(filenamePattern: "Video-{Basename}-{Label}-{Bitrate}{Extension}"),
                             new PngFormat(filenamePattern: "Thumbnail-{Basename}-{Index}{Extension}")
@@ -334,7 +334,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 
     // Use Media Services API to get back a response that contains
     // SAS URL for the Asset container into which to upload blobs.
-    // That is where you would specify read-write permissions 
+    // That is where you would specify read-write permissions
     // and the expiration time for the SAS URL.
     var sasUriCollection = asset.GetStorageContainerUrisAsync(
         new MediaAssetStorageContainerSasContent
@@ -346,7 +346,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
     var sasUri = await sasUriCollection.FirstOrDefaultAsync();
 
     // Use Storage API to get a reference to the Asset container
-    // that was created by calling Asset's CreateOrUpdate method.  
+    // that was created by calling Asset's CreateOrUpdate method.
     var container = new BlobContainerClient (sasUri);
     BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
