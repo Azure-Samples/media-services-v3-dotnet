@@ -190,7 +190,7 @@ namespace StreamExistingMp4
             var sasUri = new Uri(response.AssetContainerSasUrls.First());
 
             // Use Storage API to get a reference to the Asset container
-            // that was created by calling Asset's CreateOrUpdate method.  
+            // that was created by calling Asset's CreateOrUpdate method.
             var container = new BlobContainerClient (sasUri);
             BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
 
