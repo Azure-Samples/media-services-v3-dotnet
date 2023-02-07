@@ -143,7 +143,7 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
+                // Create a new TransformOutput with a custom Standard Encoder Preset using the H.264 (H264Layer) codec
                 // This demonstrates how to create custom codec and layer output settings
                 new MediaTransformOutput(
                     preset: new StandardEncoderPreset(
@@ -151,10 +151,10 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                         {
                             // Add an AAC Audio layer for the audio encoding
                             new AacAudio(),
-                            // Next, add a HEVC (H.265) for the video encoding
+                            // Next, add a H.264 for the video encoding
                             new H264Video
                             {
-                                // Set the GOP interval to 2 seconds for all H265Layers
+                                // Set the GOP interval to 2 seconds for all H264Layers
                                 KeyFrameInterval = TimeSpan.FromSeconds(2),
                                 Layers =
                                 {

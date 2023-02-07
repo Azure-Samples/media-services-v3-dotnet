@@ -1,7 +1,7 @@
-# Encode with a custom Transform
-This sample shows how to create a custom encoding Transform using the StandardEncoderPreset settings. It shows how to perform the following tasks:
+# Stitch two Assets
+This sample shows how to stitch two videos using a sequence job input. It shows how to perform the following tasks:
 1. Creates a custom encoding transform.
-1. Creates an input asset and upload a media file into it.
+1. Creates two input assets and uploads media files into them.
 1. Submits a job and monitoring the job using polling method.
 1. Downloads the output asset.
 1. Prints URLs for streaming.

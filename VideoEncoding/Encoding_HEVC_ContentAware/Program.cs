@@ -124,90 +124,11 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
-                // This demonstrates how to create custom codec and layer output settings
                 new MediaTransformOutput(
-                    preset: new StandardEncoderPreset(
-                        codecs: new MediaCodecBase[]
-                        {
-                            // Add an AAC Audio layer for the audio encoding
-                            new AacAudio
-                            {
-                                Channels = 2,
-                                SamplingRate = 48000,
-                                Bitrate = 128000,
-                                Profile = AacAudioProfile.AacLc
-                            },
-                            // Next, add a HEVC (H.265) for the video encoding
-                            new H265Video
-                            {
-                                // Set the GOP interval to 2 seconds for all H265Layers
-                                KeyFrameInterval = TimeSpan.FromSeconds(2),
-                                Complexity = H265Complexity.Speed, // HEVC encoding is priced at 3 complexity levels. Speed, Balanced, and Quality
-                        
-                                // Add H265Layers. Assign a label that you can use for the output filename
-                                Layers =
-                                {
-                                    new H265Layer(bitrate: 1800000)
-                                    {
-                                        MaxBitrate = 1800000, // unit is in bits per second and not kbps or Mbps
-                                        Width = "1280",
-                                        Height = "720",
-                                        BFrames = 4,
-                                        Label = "HD-1800kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H265Layer(bitrate: 800000)
-                                    {
-                                        MaxBitrate = 800000, // unit is in bits per second and not kbps or Mbps
-                                        Width = "960",
-                                        Height = "540",
-                                        BFrames = 4,
-                                        Label = "SD-800kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H265Layer(bitrate: 300000)
-                                    {
-                                        MaxBitrate = 300000, // unit is in bits per second and not kbps or Mbps
-                                        Width = "640",
-                                        Height = "360",
-                                        BFrames = 4,
-                                        Label = "SD-300kbps" // This label is used to modify the file name in the output formats
-                                    }
-                                }
-                            },
-                            // Also generate a set of PNG thumbnails
-                            new PngImage(start: "25%")
-                            {
-                                Step = "25%",
-                                Range = "80%",
-                                Layers =
-                                {
-                                    new PngLayer
-                                    {
-                                        Width = "50%",
-                                        Height = "50%"
-                                    }
-                                }
-                            }
-                        },
-                        // Specify the format for the output files - one for video+audio, and another for the thumbnails
-                        formats: new MediaFormatBase[]
-                        {
-                            // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                            // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
-                            // Either {Label} or {Bitrate} should suffice
-                            new Mp4Format(filenamePattern: "Video-{Basename}-{Label}-{Bitrate}{Extension}"),
-                            new PngFormat(filenamePattern: "Thumbnail-{Basename}-{Index}{Extension}")
-                        }
-                    )
+                    preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.H265ContentAwareEncoding)
                 )
-                {
-                    OnError = MediaTransformOnErrorType.StopProcessingJob,
-                    RelativePriority = MediaJobPriority.Normal
-                }
-            },
-            Description = "A custom encoding transform for HEVC with 3 MP4 bitrates"
+            }
         });
-
     return transform.Value;
 }
 #endregion EnsureTransformExists

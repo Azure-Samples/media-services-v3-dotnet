@@ -147,7 +147,6 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
                 // This demonstrates how to create custom codec and layer output settings
                 new MediaTransformOutput(
                     preset: new StandardEncoderPreset(

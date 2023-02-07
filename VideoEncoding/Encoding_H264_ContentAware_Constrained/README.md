@@ -27,35 +27,42 @@ Available values are:
 Next, pass this new object into the [BuiltInStandardEncodingPreset.configurations](https://github.com/Azure/azure-rest-api-specs/blob/32d5a0348f38da79fafdf14b945df0f9b8119df4/specification/mediaservices/resource-manager/Microsoft.Media/stable/2021-06-01/Encoding.json#L1354) property.
 
 ``` csharp
-
-     PresetConfigurations presetConfigurations = new PresetConfigurations(
-        // Allows you to configure the encoder settings to control the balance between speed and quality. Example: set Complexity as Speed for faster encoding but less compression efficiency.
-        complexity: Complexity.Speed,
-        // The output includes both audio and video.
-        interleaveOutput: InterleaveOutput.InterleavedOutput,
-        // The key frame interval in seconds. Example: set as 2 to reduce the playback buffering for some players.
-        keyFrameIntervalInSeconds: 2,
-        // The maximum bitrate in bits per second (threshold for the top video layer). Example: set MaxBitrateBps as 6000000 to avoid producing very high bitrate outputs for contents with high complexity.
-        maxBitrateBps : 6000000,
-        // The minimum bitrate in bits per second (threshold for the bottom video layer). Example: set MinBitrateBps as 200000 to have a bottom layer that covers users with low network bandwidth.
-        minBitrateBps : 200000,
-        maxHeight: 720,
-        // The minimum height of output video layers. Example: set MinHeight as 360 to avoid output layers of smaller resolutions like 180P.
-        minHeight: 240,
-        // The maximum number of output video layers. Example: set MaxLayers as 4 to make sure at most 4 output layers are produced to control the overall cost of the encoding job.
-        maxLayers: 3
-     );
-
-    var contentAwareEncodingPreset = new BuiltInStandardEncoderPreset(
-        configurations: presetConfigurations,
-        presetName: EncoderNamedPreset.ContentAwareEncoding           
-    );
-
-    Transform transform = await EnsureTransformExists(client,
-                                                    config.ResourceGroup,
-                                                    config.AccountName,
-                                                    ContentAwareTransform,
-                                                    preset: contentAwareEncodingPreset;
+var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
+    WaitUntil.Completed,
+    transformName,
+    new MediaTransformData
+    {
+        Outputs =
+        {
+            new MediaTransformOutput(
+                preset: new BuiltInStandardEncoderPreset(EncoderNamedPreset.ContentAwareEncoding)
+                {
+                    Configurations = new EncoderPresetConfigurations
+                    {
+                        // Allows you to configure the encoder settings to control the balance between speed and quality. Example: set Complexity
+                        // as Speed for faster encoding but less compression efficiency.
+                        Complexity = EncodingComplexity.Speed,
+                        // The output includes both audio and video.
+                        InterleaveOutput = InterleaveOutput.InterleavedOutput,
+                        // The key frame interval in seconds. Example: set as 2 to reduce the playback buffering for some players.
+                        KeyFrameIntervalInSeconds = 2,
+                        // The maximum bitrate in bits per second (threshold for the top video layer). Example: set MaxBitrateBps as 6000000 to
+                        // avoid producing very high bitrate outputs for contents with high complexity.
+                        MaxBitrateBps = 6000000,
+                        // The minimum bitrate in bits per second (threshold for the bottom video layer). Example: set MinBitrateBps as 200000 to
+                        // have a bottom layer that covers users with low network bandwidth.
+                        MinBitrateBps = 200000,
+                        MaxHeight = 720,
+                        // The minimum height of output video layers. Example: set MinHeight as 360 to avoid output layers of smaller resolutions like 180P.
+                        MinHeight = 270,
+                        // The maximum number of output video layers. Example: set MaxLayers as 4 to make sure at most 4 output layers are produced
+                        // to control the overall cost of the encoding job.
+                        MaxLayers = 3
+                    }
+                }
+            )
+        }
+    });
 ```
 
 ## Benefits of using the PresetConfigurations on the Content Aware Encoding Preset
