@@ -47,7 +47,8 @@ var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServic
 string uniqueness = Guid.NewGuid().ToString()[..13];
 string jobName = $"job-{uniqueness}";
 string locatorName = $"locator-{uniqueness}";
-string inputAssetName = $"input-{uniqueness}";
+string inputAssetName1 = $"input-1-{uniqueness}";
+string inputAssetName2 = $"input-2-{uniqueness}";
 string outputAssetName = $"output-{uniqueness}";
 bool stopStreamingEndpoint = false;
 
@@ -55,10 +56,10 @@ bool stopStreamingEndpoint = false;
 var transform = await CreateTransformAsync(mediaServicesAccount, CustomTransform);
 
 // Create a new input Asset and upload the specified local video file into it. This is our video "bumper" to stitch to the front.
-var inputAsset1 = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, BumperMP4FileName);
+var inputAsset1 = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName1, BumperMP4FileName);
 
 // Create a new input Asset and upload the specified local video file into it.
-var inputAsset2 = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
+var inputAsset2 = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName2, InputMP4FileName);
 
 // Output from the Job must be written to an Asset, so let's create one.
 var outputAsset = await CreateOutputAssetAsync(mediaServicesAccount, outputAssetName);
