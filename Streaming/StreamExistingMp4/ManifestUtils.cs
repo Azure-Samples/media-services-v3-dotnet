@@ -4,7 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ManifestUtils
+namespace StreamExistingMP4Utils
 {
     public static class ManifestUtils
     {
@@ -84,7 +84,7 @@ namespace ManifestUtils
             {
                 // Prepare the manifest
                 string mp4fileuniqueaudio = null;
-                XDocument doc = XDocument.Load(Path.Combine(Environment.CurrentDirectory, @"./manifest/manifest.ism"));
+                XDocument doc = XDocument.Load(Path.Combine(Environment.CurrentDirectory, @"./manifest.ism"));
 
                 XNamespace ns = "http://www.w3.org/2001/SMIL20/Language";
 
