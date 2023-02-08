@@ -190,78 +190,6 @@ static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccoun
 }
 
 /// <summary>
-/// Submits a request to Media Services to apply the specified Transform to a given input video.
-/// </summary>
-/// <param name="transform">The media transform.</param>
-/// <param name="jobName">The (unique) name of the Job.</param>
-/// <param name="inputAsset">The input Asset.</param>
-/// <param name="outputAsset">The output Asset that will store the result of the encoding Job.</param>
-static async Task<MediaJobResource> SubmitJobAsync(
-    MediaTransformResource transform,
-    string jobName,
-    MediaAssetResource inputAsset,
-    MediaAssetResource outputAsset)
-{
-    // In this example, we are assuming that the Job name is unique.
-    //
-    // If you already have a Job with the desired name, use the Jobs.Get method
-    // to get the existing Job. In Media Services v3, Get methods on entities returns ErrorResponseException 
-    // if the entity doesn't exist (a case-insensitive check on the name).
-    Console.WriteLine("Creating a Job...");
-    var job = await transform.GetMediaJobs().CreateOrUpdateAsync(
-        WaitUntil.Completed,
-        jobName,
-        new MediaJobData
-        {
-            Input = new MediaJobInputAsset(assetName: inputAsset.Data.Name),
-            Outputs =
-            {
-                new MediaJobOutputAsset(outputAsset.Data.Name)
-            }
-        });
-
-    return job.Value;
-}
-
-/// <summary>
-/// Polls Media Services for the status of the Job.
-/// </summary>
-/// <param name="job">The Job.</param>
-/// <returns>The updated Job.</returns>
-static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job)
-{
-    var sleepInterval = TimeSpan.FromSeconds(30);
-    MediaJobState state;
-
-    do
-    {
-        job = await job.GetAsync();
-        state = job.Data.State.GetValueOrDefault();
-
-        Console.WriteLine($"Job is '{state}'.");
-        for (int i = 0; i < job.Data.Outputs.Count; i++)
-        {
-            var output = job.Data.Outputs[i];
-            Console.Write($"\tJobOutput[{i}] is '{output.State}'.");
-            if (output.State == MediaJobState.Processing)
-            {
-                Console.Write($"  Progress: '{output.Progress}'.");
-            }
-
-            Console.WriteLine();
-        }
-
-        if (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled)
-        {
-            await Task.Delay(sleepInterval);
-        }
-    }
-    while (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled);
-
-    return job;
-}
-
-/// <summary>
 /// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
 /// Once the StreamingLocator is created the output Asset is available to clients for playback.
 /// </summary>
@@ -348,7 +276,6 @@ static async Task<IList<string>> CreateServerManifestsAsync(MediaServicesAccount
         ms.Position = 0;
         blob.Upload(ms);
     }
-
 
     // Get a manifest file list from the Storage container.
     // In this sectino we are going to check for the existence of a client manifest and determine if we need to generate a new one. 
@@ -440,8 +367,6 @@ static async Task<string> GetStringFromBlobAsync(BlobContainerClient storageCont
     await blobClient.DownloadToAsync(ms);
     return System.Text.Encoding.UTF8.GetString(ms.ToArray());
 }
-
-
 
 /// <summary>
 /// Gets the smooth streaming Url.
