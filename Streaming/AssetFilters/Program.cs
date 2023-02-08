@@ -77,7 +77,7 @@ if (job.Data.State == MediaJobState.Error)
 
 Console.WriteLine("Job finished.");
 
-var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName);
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName);
 
 var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
 
@@ -138,7 +138,7 @@ IList<string> filters = new List<string>
     assetFilter.Data.Name,
     accountFilter.Data.Name
 };
-streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, filters);
+streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName, filters);
 
 urls = await ReturnStreamingUrlAsync(streamingLocator, streamingEndpoint);
 Console.WriteLine("Since we have associated filters with the new streaming locator, No need to append filters to the url(s):");

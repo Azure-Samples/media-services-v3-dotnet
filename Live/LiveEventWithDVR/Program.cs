@@ -8,12 +8,12 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Media;
 using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
-using Common_Utils;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using EventProcessor;
 
 //////////////////////////////////////////////////////////////////////////////////////
 ////  Azure Media Services Live streaming sample 

@@ -3,13 +3,10 @@
 
 using Azure.Messaging.EventGrid.SystemEvents;
 using Azure.Messaging.EventHubs.Processor;
-using System;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Common_Utils
+namespace EventProcessor
 {
     /// <summary>
     /// Implementation of IEventProcessor to handle events from Event Hub.
@@ -216,10 +213,8 @@ namespace Common_Utils
                         }
                         break;
 
-
                 }
             }
-
         }
     }
 }

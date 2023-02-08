@@ -1,4 +1,4 @@
-﻿namespace Common_Utils
+﻿namespace StreamExistingMP4Utils
 {
     public class GeneratedServerManifest
     {
