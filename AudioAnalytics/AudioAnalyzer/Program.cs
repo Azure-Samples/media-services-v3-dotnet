@@ -229,9 +229,7 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
 /// <summary>
 /// Creates a new input Asset and uploads the specified local video file into it.
 /// </summary>
-/// <param name="client">The Media Services client.</param>
-/// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-/// <param name="accountName"> The Media Services account name.</param>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
 /// <param name="assetName">The Asset name.</param>
 /// <param name="fileToUpload">The file you want to upload into the Asset.</param>
 /// <returns></returns>
@@ -285,7 +283,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 /// <summary>
 /// Downloads the specified output Asset.
 /// </summary>
-/// <param name="assetName">The Asset to download from.</param>
+/// <param name="asset">The Asset to download from.</param>
 /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
 /// <returns></returns>
 async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFolderName)

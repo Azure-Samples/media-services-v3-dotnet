@@ -32,7 +32,7 @@ When a user requests PlayReady-protected content, the player application request
 * System.IdentityModel.Tokens.Jwt
 * System.Security.Claims
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 

@@ -19,10 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>appsettings.json</Link>

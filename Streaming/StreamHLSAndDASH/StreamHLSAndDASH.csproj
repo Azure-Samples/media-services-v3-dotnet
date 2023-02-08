@@ -11,17 +11,14 @@
     <PackageReference Include="Azure.Identity" Version="1.8.1" />
     <PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
-    <PackageReference Include="Microsoft.Azure.Management.Media" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.49.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="appsettings.json">
+    <None Include="..\..\appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>appsettings.json</Link>
     </None>
     <None Include="..\..\Media\ignite.mp4">
       <Link>ignite.mp4</Link>

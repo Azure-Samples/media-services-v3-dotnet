@@ -8,7 +8,7 @@ This sample shows how to overlay an image onto video using a custom encoding Tra
 1. Downloads the output asset.
 1. Prints URLs for streaming.
 
-See the article [Create an overlay Transform](https://docs.microsoft.com/azure/media-services/latest/transform-create-overlay-how-to) for details.
+See the article [Create an overlay Transform](https://learn.microsoft.com/azure/media-services/latest/transform-create-overlay-how-to) for details.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ See the article [Create an overlay Transform](https://docs.microsoft.com/azure/m
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
@@ -28,6 +28,5 @@ Then build and run the sample in Visual Studio or VS Code.
 
 ## Next steps
 
-* [Streaming videos](https://docs.microsoft.com/en-us/azure/media-services/latest/stream-files-tutorial-with-api)
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)

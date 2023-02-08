@@ -39,4 +39,4 @@ The sample will authenticate using any of the methods supported by [`DefaultAzur
 ## Next steps
 
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)

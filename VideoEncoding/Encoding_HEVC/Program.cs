@@ -77,7 +77,7 @@ Directory.CreateDirectory(OutputFolder);
 
 await DownloadResultsAsync(outputAsset, OutputFolder);
 
-var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName);
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName);
 
 var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
 
@@ -304,9 +304,7 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
 /// <summary>
 /// Creates a new input Asset and uploads the specified local video file into it.
 /// </summary>
-/// <param name="client">The Media Services client.</param>
-/// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-/// <param name="accountName"> The Media Services account name.</param>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
 /// <param name="assetName">The Asset name.</param>
 /// <param name="fileToUpload">The file you want to upload into the Asset.</param>
 /// <returns></returns>
@@ -360,7 +358,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 /// <summary>
 /// Downloads the specified output Asset.
 /// </summary>
-/// <param name="assetName">The Asset to download from.</param>
+/// <param name="asset">The Asset to download from.</param>
 /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
 /// <returns></returns>
 async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFolderName)
@@ -395,15 +393,13 @@ async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFo
 /// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
 /// Once the StreamingLocator is created the output Asset is available to clients for playback.
 /// </summary>
-/// <param name="client">The Media Services client.</param>
-/// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-/// <param name="accountName"> The Media Services account name.</param>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
 /// <param name="assetName">The name of the output Asset.</param>
 /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
 /// <returns></returns>
 static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
     MediaServicesAccountResource mediaServicesAccount,
-    MediaAssetResource asset,
+    string assetName,
     string locatorName)
 {
     var locator = await mediaServicesAccount.GetStreamingLocators().CreateOrUpdateAsync(
@@ -411,7 +407,7 @@ static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
         locatorName,
         new StreamingLocatorData
         {
-            AssetName = asset.Data.Name,
+            AssetName = assetName,
             StreamingPolicyName = "Predefined_ClearStreamingOnly"
         });
 
