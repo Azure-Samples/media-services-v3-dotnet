@@ -72,7 +72,7 @@ var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAs
 - Improves speed of encoding by reducing the output options
 
 ## Sample Workflow 
-To learn more about Content Aware Encoding, see the article on [Content Aware Encoding](https://docs.microsoft.com/azure/media-services/latest/encode-content-aware-concept)
+To learn more about Content Aware Encoding, see the article on [Content Aware Encoding](https://learn.microsoft.com/azure/media-services/latest/encode-content-aware-concept)
 
 1. Creates a Content Aware Encoding transform for H.264 with settings.
 1. Configures the PresetConfigurations class to control the number of outputs and resolutions allowed when using the CAE Encoder
@@ -90,7 +90,7 @@ To learn more about Content Aware Encoding, see the article on [Content Aware En
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
@@ -99,6 +99,5 @@ Then build and run the sample in Visual Studio or VS Code.
 
 ## Next steps
 
-* [Streaming videos](https://docs.microsoft.com/en-us/azure/media-services/latest/stream-files-tutorial-with-api)
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)

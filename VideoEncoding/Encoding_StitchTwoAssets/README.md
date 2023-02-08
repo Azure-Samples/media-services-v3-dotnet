@@ -15,7 +15,7 @@ This sample shows how to stitch two videos using a sequence job input. It shows 
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
@@ -24,6 +24,5 @@ Then build and run the sample in Visual Studio or VS Code.
 
 ## Next steps
 
-* [Streaming videos](https://docs.microsoft.com/en-us/azure/media-services/latest/stream-files-tutorial-with-api)
-* [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+- [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
+- [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)

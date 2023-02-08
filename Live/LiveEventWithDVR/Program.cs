@@ -105,12 +105,12 @@ try
     Console.WriteLine();
 
     // Creating the LiveEvent - the primary object for live streaming in AMS. 
-    // See the overview - https://docs.microsoft.com/azure/media-services/latest/live-streaming-overview
+    // See the overview - https://learn.microsoft.com/azure/media-services/latest/live-event-concept
 
     // Create the LiveEvent
 
     // Understand the concepts of what a live event and a live output is in AMS first!
-    // Read the following - https://docs.microsoft.com/azure/media-services/latest/live-events-outputs-concept
+    // Read the following - https://learn.microsoft.com/azure/media-services/latest/live-events-outputs-concept
     // 1) Understand the billing implications for the various states
     // 2) Understand the different live event types, pass-through and encoding
     // 3) Understand how to use long-running async operations 
@@ -118,8 +118,8 @@ try
     // 5) Understand the differences between a LiveOutput and the Asset that it records to.  They are two different concepts.
     //    A live output can be considered as the "tape recorder" and the Asset is the tape that is inserted into it for recording.
     // 6) Understand the advanced options such as low latency, and live transcription/captioning support. 
-    //    Live Transcription - https://docs.microsoft.com/en-us/azure/media-services/latest/live-transcription
-    //    Low Latency - https://docs.microsoft.com/en-us/azure/media-services/latest/live-event-latency
+    //    Live Transcription - https://learn.microsoft.com/azure/media-services/latest/live-event-live-transcription-how-to
+    //    Low Latency - https://learn.microsoft.com/azure/media-services/latest/live-event-latency-reference
 
     // When broadcasting to a live event, please use one of the verified on-premises live streaming encoders.
     // While operating this tutorial, it is recommended to start out using OBS Studio before moving to another encoder. 
@@ -222,7 +222,7 @@ try
     // You must explicitly call Stop on the Live Event resource to halt further billing.
     // The following operation can sometimes take awhile. Be patient.
     // On optional workflow is to first call allocate() instead of create. 
-    // https://docs.microsoft.com/en-us/rest/api/media/liveevents/allocate 
+    // https://learn.microsoft.com/rest/api/media/live-events/allocate 
     // This allows you to allocate the resources and place the live event into a "Standby" mode until 
     // you are ready to transition to "Running". This is useful when you want to pool resources in a warm "Standby" state at a reduced cost.
     // The transition from Standby to "Running" is much faster than cold creation to "Running" using the autostart property.
@@ -278,7 +278,7 @@ try
 
     watch = Stopwatch.StartNew();
     // See the REST API for details on each of the settings on Live Output
-    // https://docs.microsoft.com/rest/api/media/liveoutputs/create
+    // https://learn.microsoft.com/rest/api/media/live-outputs/create
     var liveOutput = new MediaLiveOutputData
     {
         AssetName = asset.Data.Name,

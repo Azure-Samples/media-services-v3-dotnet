@@ -8,7 +8,7 @@ input content, and uses the results to determine the optimal number of layers, a
 This preset is particularly effective for low and medium complexity videos, where the output files will be at lower bitrates than the Adaptive Streaming preset but at a quality that still 
 delivers a good experience to viewers. The output will contain MP4 files with video and audio interleaved.
 
-To learn more about Content Aware Encoding, see the article on [Content Aware Encoding](https://docs.microsoft.com/azure/media-services/latest/encode-content-aware-concept)
+To learn more about Content Aware Encoding, see the article on [Content Aware Encoding](https://learn.microsoft.com/azure/media-services/latest/encode-content-aware-concept)
 
 1. Creates a Content Aware Encoding transform for HEVC (H.265) with settings.
 1. Creates an input asset and upload a media file into it.
@@ -25,7 +25,7 @@ To learn more about Content Aware Encoding, see the article on [Content Aware En
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://docs.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
@@ -34,6 +34,5 @@ Then build and run the sample in Visual Studio or VS Code.
 
 ## Next steps
 
-* [Streaming videos](https://docs.microsoft.com/en-us/azure/media-services/latest/stream-files-tutorial-with-api)
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)

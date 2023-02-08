@@ -32,7 +32,7 @@ This sample demonstrates how to filter content using asset and account filters. 
 ## Build and run
 
 Update **appsettings.json** in the project folder OR create a **.env file** at the root of the solution with your account settings. Please choose one of these two methods.
-For more information, see [Access APIs](https://docs.microsoft.com/azure/media-services/latest/access-api-howto).
+For more information, see [Access APIs](https://learn.microsoft.com/azure/media-services/latest/access-api-howto).
 
 (The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the sample. In that case, secret and app Id are not needed in the appsettings.json or .env file. The System browser will be launched to authenticate the user when running the sample.)
 
@@ -65,10 +65,10 @@ Connect to the Azure portal with your browser and go to your media services acco
 
 ## Key concepts
 
-* [Dynamic packaging](https://docs.microsoft.com/azure/media-services/latest/dynamic-packaging-overview)
-* [Streaming Policies](https://docs.microsoft.com/azure/media-services/latest/streaming-policy-concept)
+* [Dynamic packaging](https://learn.microsoft.com/azure/media-services/latest/dynamic-packaging-overview)
+* [Streaming Policies](https://learn.microsoft.com/azure/media-services/latest/streaming-policy-concept)
 
 ## Next steps
 
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](https://docs.microsoft.com/azure/media-services/latest/)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)
