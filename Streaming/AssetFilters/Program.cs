@@ -335,19 +335,19 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
 /// Once the StreamingLocator is created the output Asset is available to clients for playback.
 /// </summary>
 /// <param name="mediaServicesAccount">The Media Services client.</param>
-/// <param name="asset">The output Asset.</param>
+/// <param name="assetName">The name of the output Asset.</param>
 /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
 /// <param name="filters">List of filter names to associate to locator (optional).</param>
 /// <returns></returns>
 static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
     MediaServicesAccountResource mediaServicesAccount,
-    MediaAssetResource asset,
+    string assetName,
     string locatorName,
     IList<string>? filters = null)
 {
     var locatorData = new StreamingLocatorData
     {
-        AssetName = asset.Data.Name,
+        AssetName = assetName,
         StreamingPolicyName = "Predefined_ClearStreamingOnly"
 
     };
