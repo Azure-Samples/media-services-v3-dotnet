@@ -2,7 +2,7 @@
 {
     public class GeneratedServerManifest
     {
-        public string FileName;
-        public string Content;
+        public string? FileName;
+        public string? Content;
     }
 }

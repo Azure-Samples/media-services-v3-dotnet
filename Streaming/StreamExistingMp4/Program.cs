@@ -84,40 +84,6 @@ Console.ReadLine();
 
 await CleanUpAsync(null, null, inputAsset, null, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
 
-
-/// <summary>
-/// If the specified transform exists, return that transform. If the it does not
-/// exist, creates a new transform with the specified output. In this case, the
-/// output is set to encode a video using a built-in encoding preset.
-/// </summary>
-/// <param name="mediaServicesAccount">The Media Services account.</param>
-/// <param name="transformName">The transform name.</param>
-/// <returns></returns>
-static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAccountResource mediaServicesAccount, string transformName)
-{
-    var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
-       WaitUntil.Completed,
-       transformName,
-       new MediaTransformData
-       {
-           Outputs =
-           {
-               new MediaTransformOutput
-               (
-                   // The preset for the Transform is set to one of Media Services built-in sample presets.
-                   // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
-                   preset: new BuiltInStandardEncoderPreset(
-                       // This sample uses the built-in encoding preset for Adaptive Bit-rate Streaming.
-                       presetName: EncoderNamedPreset.AdaptiveStreaming
-                       )
-                   )
-           }
-       }
-       );
-
-    return transform.Value;
-}
-
 /// <summary>
 /// Creates a new input Asset and uploads the specified local video file into it.
 /// </summary>
@@ -170,23 +136,6 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
     await blob.UploadAsync(fileToUpload);
 
     return asset;
-}
-
-/// <summary>
-/// Creates an output Asset. The output from the encoding Job must be written to an Asset.
-/// </summary>
-/// <param name="mediaServicesAccount">The Media Services account.</param>
-/// <param name="assetName">The output Asset name.</param>
-/// <returns></returns>
-static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName)
-{
-    Console.WriteLine("Creating an output Asset...");
-    var asset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
-        WaitUntil.Completed,
-        assetName,
-        new MediaAssetData());
-
-    return asset.Value;
 }
 
 /// <summary>
