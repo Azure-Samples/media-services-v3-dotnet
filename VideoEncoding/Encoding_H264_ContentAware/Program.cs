@@ -280,7 +280,7 @@ static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccount
 /// <summary>
 /// Downloads the specified output Asset.
 /// </summary>
-/// <param name="assetName">The Asset to download from.</param>
+/// <param name="asset">The Asset to download from.</param>
 /// <param name="outputFolderName">The name of the folder into which to download the results.</param>
 /// <returns></returns>
 async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFolderName)

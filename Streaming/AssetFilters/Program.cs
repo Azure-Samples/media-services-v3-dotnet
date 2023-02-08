@@ -94,7 +94,6 @@ Console.WriteLine();
 Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
 await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
 
-var smoothPath = await ReturnSmoothStreamingUrlAsync(streamingLocator, streamingEndpoint);
 var urls = await ReturnStreamingUrlAsync(streamingLocator, streamingEndpoint);
 
 Console.WriteLine("Creating an asset filter...");
@@ -141,7 +140,6 @@ IList<string> filters = new List<string>
 };
 streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, filters);
 
-
 urls = await ReturnStreamingUrlAsync(streamingLocator, streamingEndpoint);
 Console.WriteLine("Since we have associated filters with the new streaming locator, No need to append filters to the url(s):");
 foreach (var url in urls)
@@ -155,7 +153,6 @@ Console.WriteLine();
 Console.ReadLine();
 
 await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
-
 
 /// <summary>
 /// If the specified transform exists, return that transform. If the it does not
@@ -484,29 +481,6 @@ static async Task<IEnumerable<Uri>> ReturnStreamingUrlAsync(
 }
 
 /// <summary>
-/// Gets the smooth streaming Url.
-/// </summary>
-/// <param name="locator">The streaming locator.</param>
-/// <param name="streamingEndpoint">The streaming endpoint.</param>
-static async Task<Uri> ReturnSmoothStreamingUrlAsync(
-    StreamingLocatorResource locator,
-    StreamingEndpointResource streamingEndpoint)
-{
-    var paths = await locator.GetStreamingPathsAsync();
-
-    var smooth = paths.Value.StreamingPaths.Where(p => p.StreamingProtocol == StreamingPolicyStreamingProtocol.SmoothStreaming).First();
-
-    var urib = new UriBuilder()
-    {
-        Scheme = "https",
-        Host = streamingEndpoint.Data.HostName,
-        Path = smooth.Paths[0]
-    };
-
-    return urib.Uri;
-}
-
-/// <summary>
 /// Delete the resources that were created.
 /// </summary>
 /// <param name="transform">The transform.</param>
@@ -556,8 +530,6 @@ static async Task CleanUpAsync(
         }
     }
 }
-
-
 
 /// <summary>
 /// Class to manage the settings which come from appsettings.json or command line parameters.
