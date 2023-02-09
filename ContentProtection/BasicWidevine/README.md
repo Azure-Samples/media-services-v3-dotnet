@@ -10,9 +10,6 @@ This sample demonstrates how to dynamically encrypt your content with Widevine D
 
 When a user requests Widevine-protected content, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player. A Widevine license contains the decryption key that can be used by the client player to decrypt and stream the content.
 
-> [!TIP]
-> The `Program.cs` file (in the `BasicWidevine` folder) has extensive comments.
-
 ## Prerequisites
 
 Required Assemblies:

@@ -11,9 +11,6 @@ This sample demonstrates how to dynamically encrypt your content with FairPlay D
 
 When a user requests FairPlay protected content for the first time, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player and the license is persisted. Because the license is persisted, subsequent playback won't send a request to license service again.
 
-> [!TIP]
-> The `Program.cs` file (in the `BasicWidevine` folder) has extensive comments.
-
 ## Prerequisites
 
 Required Assemblies:
@@ -31,7 +28,7 @@ Also required:
 
 ## Build and run
 
-Update the settings in **appsettings.json** in the root folder to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder to match your Azure subscription, resource group, Media Services account and FairPlay data.
 Then build and run the sample in Visual Studio or VS Code.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).
