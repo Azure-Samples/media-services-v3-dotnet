@@ -129,8 +129,7 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
     var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
         WaitUntil.Completed,
         transformName,
-        transformData
-        );
+        transformData);
 
     return transform.Value;
 }
