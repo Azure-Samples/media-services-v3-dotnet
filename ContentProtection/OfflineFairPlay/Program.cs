@@ -162,7 +162,7 @@ static async Task<ContentKeyPolicyResource> GetOrCreateContentKeyPolicyAsync(
             {
                  new ContentKeyPolicyOption(
                        configuration: ConfigureFairPlayLicenseTemplate(options.AskHex, options.FairPlayPfxPath, options.FairPlayPfxPassword),
-                       restriction:  new ContentKeyPolicyOpenRestriction())                      
+                       restriction:  new ContentKeyPolicyOpenRestriction())
             }
         }
         );

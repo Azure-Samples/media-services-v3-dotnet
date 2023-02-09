@@ -239,7 +239,7 @@ static async Task<ContentKeyPolicyResource> GetOrCreateContentKeyPolicyAsync(
         }
         );
 
-return policy.Value;
+    return policy.Value;
 }
 
 /// <summary>
