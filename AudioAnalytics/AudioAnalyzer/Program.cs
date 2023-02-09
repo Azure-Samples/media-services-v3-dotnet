@@ -97,22 +97,16 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
 {
     Console.WriteLine("Creating a Transform...");
 
-    // Create the custom Transform with the outputs defined above
-    // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
-    // In production code, you may want to be cautious about that. It really depends on your scenario.
-    var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
-        WaitUntil.Completed,
-        transformName,
-        new MediaTransformData
-        {
-            Outputs =
+    var transformData = new MediaTransformData
+    {
+        Outputs =
             {
                 // Create an AudioAnalyzer preset with audio insights and Basic audio mode.
                 new MediaTransformOutput(
                     preset: new AudioAnalyzerPreset
                     {
                         AudioLanguage = "en-US",
-
+                       
                         //
                         // There are two modes available, Basic and Standard
                         // Basic : This mode performs speech-to-text transcription and generation of a VTT subtitle/caption file. 
@@ -127,7 +121,16 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                     RelativePriority = MediaJobPriority.Normal
                 }
             }
-        });
+    };
+
+    // Create the custom Transform with the outputs defined above
+    // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+    // In production code, you may want to be cautious about that. It really depends on your scenario.
+    var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        transformName,
+        transformData
+        );
 
     return transform.Value;
 }
