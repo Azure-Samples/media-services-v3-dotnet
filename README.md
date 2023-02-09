@@ -23,8 +23,6 @@ The main solution contains all of the projects.  You can select the active proje
 
 When using VS Code, select the project you wish to Launch in the Debugger console (Ctrl-shift-D).
 
-There is a separate solution file provided for the [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/Readme.md) sample. Please switch to this solution, or open it in a new Visual Studio instance.
-
 ## Contents
 
 | Folder | Description |
