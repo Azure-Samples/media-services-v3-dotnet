@@ -1,29 +1,14 @@
-# Prints quotas for a Media Services account
+# Get Media Services accounts from a resource group
 
-This sample shows how to use the metrics API to retrieve account quotas.
-
-## Example output
-
-```
-Resource               Current     Quota
---------            ----------  --------
-Assets                      19   1000000
-Content Key Polices          1   1000000
-Streaming Policies           0       100
-Live Events                  2         5
-Running Live Events          0         5
-Transforms                           100
-Jobs                              500000
-Jobs Scheduled               0
-```
+This sample shows how to list all Media Services accounts in a resource group and select one by its name.
 
 ## Prerequisites
 
 Required Assemblies:
 
 * Azure.Identity
-* Azure.Monitor.Query
 * Azure.ResourceManager.Media
+* Microsoft.Extensions.Hosting
 
 ## Build and run
 
