@@ -1,16 +1,9 @@
----
-topic: sample
-languages:
-  - csharp
-products:
-  - azure-media-services
----
-
 # Prints quotas for a Media Services account
 
 This sample shows how to use the metrics API to retrieve account quotas.
 
 ## Example output
+
 ```
 Resource               Current     Quota
 --------            ----------  --------
@@ -26,13 +19,13 @@ Jobs Scheduled               0
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Azure.Monitor.Query
 
-Update the settings in **appsetting.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).
 

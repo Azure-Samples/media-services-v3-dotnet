@@ -1,11 +1,3 @@
----
-topic: sample
-languages:
-  - c#
-products:
-  - azure-media-services
----
-
 # Dynamically encrypt your content with Widevine DRM
 
 This sample demonstrates how to dynamically encrypt your content with Widevine DRM. It shows how to perform the following tasks:
@@ -23,7 +15,7 @@ When a user requests Widevine-protected content, the player application requests
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
@@ -33,11 +25,11 @@ When a user requests Widevine-protected content, the player application requests
 * System.IdentityModel.Tokens.Jwt
 * System.Security.Claims
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
+An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
-Update the settings in **appsetting.json** in the root folder to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder to match your Azure subscription, resource group and Media Services account.
 Then build and run the sample in Visual Studio or VS Code.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).

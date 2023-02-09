@@ -18,14 +18,14 @@ To learn more about Content Aware Encoding, see the article on [Content Aware En
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
+An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 

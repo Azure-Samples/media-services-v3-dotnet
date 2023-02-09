@@ -1,11 +1,3 @@
----
-topic: sample
-languages:
-  - c#
-products:
-  - azure-media-services
----
-
 # Offline playback with FairPlay DRM
 
 This sample demonstrates how to dynamically encrypt your content with FairPlay DRM and play the content without requesting a license from license service. It shows how to perform the following tasks:
@@ -24,21 +16,22 @@ When a user requests FairPlay protected content for the first time, the player a
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Microsoft.Extensions.Hosting
 * Newtonsoft.Json
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
+Also required:
 
+* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 * An Apple ASK (Application Secret Key).
 * An Apple certificate(.pfx) and password.
 
 ## Build and run
 
-Update the settings in **appsetting.json** in the root folder to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder to match your Azure subscription, resource group and Media Services account.
 Then build and run the sample in Visual Studio or VS Code.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).

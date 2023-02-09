@@ -1,11 +1,3 @@
----
-topic: sample
-languages:
-  - csharp
-products:
-  - azure-media-services
----
-
 # Manage, create, list, and modify assets in a Media Services account
 
 This sample demonstrates how to do common asset management with Media Services asset resource in a specific region using the SDK.
@@ -19,7 +11,7 @@ This sample demonstrates how to do common asset management with Media Services a
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
@@ -27,7 +19,7 @@ This sample demonstrates how to do common asset management with Media Services a
 
 ## Build and run
 
-Update the settings in **appsetting.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
 
 The sample will authenticate using any of the methods supported by [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential?view=azure-dotnet).
 

@@ -14,9 +14,7 @@ This project is part of the Azure Media Services API samples. For more informati
 
 The samples in this repo show how to encode, package, live stream, and protect your videos with Azure Media Services v3 using [.NET 7.0 SDK](https://dotnet.microsoft.com/download).
 
-The default authentication is done using a Service Principal. It is possible to switch to interactive authentication by setting the boolean 'UseInteractiveAuth' to true in the samples.
-
-To install the latest version of the Azure.ResourceManager.Media client SDK go to the Nuget package [Azure.ResourceManager.Media](https://www.nuget.org/packages/Azure.ResourceManager.Media)
+To install the latest version of the Azure.ResourceManager.Media client SDK, go to the Nuget package [Azure.ResourceManager.Media](https://www.nuget.org/packages/Azure.ResourceManager.Media).
 
 ## .NET solution files and how to launch projects
 
@@ -24,8 +22,6 @@ Open the root /Media-services-v3-dotnet.sln (or just open the folder in VS Code)
 The main solution contains all of the projects.  You can select the active project to launch in Visual Studio.
 
 When using VS Code, select the project you wish to Launch in the Debugger console (Ctrl-shift-D).
-
-There is a separate solution file provided for the [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/Readme.md) sample. Please switch to this solution, or open it in a new Visual Studio instance.
 
 ## Contents
 
@@ -53,8 +49,6 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 | [Streaming/AssetFilters](/Streaming/AssetFilters)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, create an asset-filter and an account-filter, associate the filters to streaming locators and print urls for playback.|
 | [Streaming/StreamHLSAndDASH](/Streaming/StreamHLSAndDASH)|This sample demonstrates how to create a transform with built-in AdaptiveStreaming preset, submit a job, publish output asset for HLS and DASH streaming.|
 | [Streaming/StreamExistingMp4](/Streaming/StreamExistingMp4)|This sample demonstrates how upload and stream from an existing, pre-encoded MP4 file.  This can be useful if you have content encoded in FFMPEG or an external encoder tool or service that you would like to upload and stream from Media Services.  This sample shows the process for uploading the MP4 file (single bitrate), the code for generating the server manifest (.ism) as well as the client manifest (.ismc) that are required for streaming with Dynamic Packaging from the Streaming Endpoint (origin server)|
-| [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/) | This sample provides guidance and best practices for a production system using on-demand encoding or analytics. Readers should start with the companion article [High Availability with Media Services and VOD](https://learn.microsoft.com/azure/media-services/latest/media-services-high-availability-encoding). There is a separate solution file provided for the [HighAvailabilityEncodingStreaming](/HighAvailabilityEncodingStreaming/Readme.md) sample. |
-| [Common_Utils](/Common_Utils/) | Library used by the samples for the authentication using MSAL and other shared code. |
 
 ## Prerequisites
 
@@ -66,6 +60,7 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 - Clone or download this sample repository.
 - Open the solution file media-services-v3-dotnet.sln in Visual Studio 2022, or open the folder in Visual Studio Code.
+- Update the settings in **appsettings.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
 - Read sample's README.md to see what key concepts to review and how to set up and run the sample.
 - Select the project to Run in the Debugger (ctrl-shift-D in VS Code on Window) and press F5 to launch
 
@@ -79,6 +74,7 @@ There is a separate solution file provided for the [HighAvailabilityEncodingStre
 
 - Nodejs samples : <https://github.com/Azure-Samples/media-services-v3-node-tutorials>
 - Java samples: <https://github.com/Azure-Samples/media-services-v3-java>
+- Python samples: <https://github.com/Azure-Samples/media-services-v3-python>
 
 ## Next steps
 

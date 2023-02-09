@@ -1,6 +1,7 @@
 # Dynamic packaging VOD content into HLS/DASH and streaming
 
 This sample demonstrates how to dynamically package VOD content into HLS/DASH for streaming. It performs the following tasks:
+
 1. Creates an encoding Transform that uses a built-in preset for adaptive bitrate encoding.
 1. Ingests a file.
 1. Submits a job.
@@ -8,18 +9,18 @@ This sample demonstrates how to dynamically package VOD content into HLS/DASH fo
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
+An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
-Update the settings in **appsetting.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
+Update the settings in **appsettings.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
 Then build and run the sample in Visual Studio or VS Code.
 
 ## Key concepts
