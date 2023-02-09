@@ -1,12 +1,3 @@
----
-topic: sample
-languages:
-  - csharp
-products:
-  - azure-media-services
-description: "This sample demonstrates how to create an encoding Transform that uses a built-in preset for adaptive bitrate encoding."
----
-
 # Encoding for multi-channel audio with channel mapping Preset
 
 This sample demonstrates how to create an encoding Transform that uses channel mapping and audio track selection from the input source to output two new AAC audio tracks.
@@ -114,14 +105,14 @@ After encoding, you will be able to playback the asset in the Azure Media Player
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.ResourceManager.Media
 * Azure.Storage.Blobs
 * System.Linq.Async
 
-* An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
+An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/en-us/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 

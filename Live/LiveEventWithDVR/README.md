@@ -1,11 +1,3 @@
----
-topic: sample
-languages:
-  - c#
-products:
-  - azure-media-services
----
-
 # Live event with DVR
 
 This sample demonstrates how to create and use LiveEvents and LiveOutputs in the v3 Media Services API. It performs the following tasks:
@@ -25,7 +17,7 @@ For details on the various types of live events see the article [Live events and
 
 ## Prerequisites
 
-* Required Assemblies
+Required Assemblies:
 
 * Azure.Identity
 * Azure.Messaging.EventGrid
@@ -35,13 +27,15 @@ For details on the various types of live events see the article [Live events and
 * Microsoft.Extensions.Hosting
 * System.Linq.Async
 
+Also required:
+
 * A camera connected to your computer.
 * A media encoder. For a recommended encoder, please visit [Recommended encoders](https://learn.microsoft.com/azure/media-services/latest/encode-recommended-on-premises-live-encoders).
 * An Azure Media Services account. See the steps described in [Create a Media Services account](https://learn.microsoft.com/azure/media-services/latest/account-create-how-to).
 
 ## Build and run
 
-Update the settings in **appsetting.json** in the root folder of the repository.
+Update the settings in **appsettings.json** in the root folder of the repository.
 For more information, see [Access APIs](https://learn.microsoft.com/azure/media-services/latest/access-api-howto).
 
 Then build and run the sample in Visual Studio or VS Code.
