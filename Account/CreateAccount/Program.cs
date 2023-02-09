@@ -56,10 +56,10 @@ ArmOperation<MediaServicesAccountResource> createAccountOperation = await mediaS
     new MediaServicesAccountData(location)
     {
         StorageAccounts = {
-                        new MediaServicesStorageAccount(MediaServicesStorageAccountType.Primary)
-                        {
-                            Id = new ResourceIdentifier($"/subscriptions/{options.AZURE_SUBSCRIPTION_ID}/resourceGroups/{options.AZURE_STORAGE_RESOURCE_GROUP}/providers/Microsoft.Storage/storageAccounts/{options.AZURE_STORAGE_ACCOUNT_NAME}")
-                        }
+            new MediaServicesStorageAccount(MediaServicesStorageAccountType.Primary)
+            {
+                Id = new ResourceIdentifier($"/subscriptions/{options.AZURE_SUBSCRIPTION_ID}/resourceGroups/{options.AZURE_STORAGE_RESOURCE_GROUP}/providers/Microsoft.Storage/storageAccounts/{options.AZURE_STORAGE_ACCOUNT_NAME}")
+            }
         }
     });
 

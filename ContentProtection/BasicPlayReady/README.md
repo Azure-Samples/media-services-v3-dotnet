@@ -10,9 +10,6 @@ This sample demonstrates how to dynamically encrypt your content with PlayReady 
 
 When a user requests PlayReady-protected content, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player. A PlayReady license contains the decryption key that can be used by the client player to decrypt and stream the content.
 
-> [!TIP]
-> The `Program.cs` file (in the `BasicPlayReady` folder) has extensive comments.
-
 ## Prerequisites
 
 Required Assemblies:

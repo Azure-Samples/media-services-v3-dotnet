@@ -10,9 +10,6 @@ This sample demonstrates how to dynamically encrypt your content with PlayReady 
 
 When a user requests PlayReady or Widevine protected content for the first time, the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player and the license is persisted. Because the license is persisted, subsequent playback won't send a request to Media Services license service again.
 
-> [!TIP]
-> The `Program.cs` file (in the `BasicWidevine` folder) has extensive comments.
-
 ## Prerequisites
 
 Required Assemblies:

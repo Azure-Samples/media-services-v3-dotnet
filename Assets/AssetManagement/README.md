@@ -6,8 +6,7 @@ This sample demonstrates how to do common asset management with Media Services a
 1. Create a new asset and provide alternate identifiers, descriptions, and storage container
 1. List and filter assets using OData
 
-> [!TIP]
-> Use interactive login in this sample with an account that has subscription level write access to the 'Microsoft.Media/mediaservices/write' path.
+Use interactive login in this sample with an account that has subscription level write access to the 'Microsoft.Media/mediaservices/write' path.
 
 ## Prerequisites
 
