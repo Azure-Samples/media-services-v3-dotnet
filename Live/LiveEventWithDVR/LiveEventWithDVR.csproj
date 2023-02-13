@@ -1,36 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
-    <PackageReference Include="Azure.Identity" Version="1.6.0" />
-    <PackageReference Include="Azure.Messaging.EventGrid" Version="4.11.0" />
-    <PackageReference Include="Azure.Messaging.EventHubs.Processor" Version="5.7.1" />
-    <PackageReference Include="Microsoft.Azure.Management.Media" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.45.0" />
-
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Common_Utils\Common_Utils.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <RootNamespace>LiveSample</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <StartupObject />
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>8624fdbd-ef64-44f0-b13e-58103ad0ed3b</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.8.2" />
+    <PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.14.1" />
+    <PackageReference Include="Azure.Messaging.EventGrid" Version="4.13.0" />
+    <PackageReference Include="Azure.Messaging.EventHubs.Processor" Version="5.7.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>appsettings.json</Link>
+    </None>
+  </ItemGroup>
 </Project>

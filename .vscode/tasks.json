@@ -5,10 +5,12 @@
     "tasks": [
         {
             "label": "build",
-            "command": "dotnet",
+            "command": "dotnet ",
             "type": "shell",
+            "options": {},
             "args": [
                 "build",
+                "${input:project}",
                 // Ask dotnet build to generate full paths for file names.
                 "/property:GenerateFullPaths=true",
                 // Do not generate summary otherwise it leads to duplicate errors in Problems panel
@@ -16,9 +18,30 @@
             ],
             "group": "build",
             "presentation": {
-                "reveal": "silent"
+                "reveal": "silent",
             },
             "problemMatcher": "$msCompile"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "project",
+            "type": "pickString",
+            "description": "Pick the project to build before launching. Add new ones to the inputs list in tasks.json",
+            "options": [
+                {
+                    "label": "Build All",
+                    "value": "${workspaceFolder}"
+                },
+                {
+                    "label": "Build CreateAccount",
+                    "value": "${workspaceFolder}/Account/CreateAccount"
+                },
+                {
+                    "label": "Build GetAccounts",
+                    "value": "${workspaceFolder}/Account/GetAccounts"
+                }
+            ]
         }
     ]
 }

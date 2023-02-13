@@ -1,309 +1,433 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Media;
+using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
-using Common_Utils;
-using Microsoft.Azure.Management.Media;
-using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Xml.Linq;
+using System.Text;
+using StreamExistingMP4Utils;
 
+const string InputMP4FileName = "IgniteHD1800kbps.mp4";
+const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name.
 
-namespace StreamExistingMp4
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
 {
-    public class Program
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServiceAccountId = MediaServicesAccountResource.CreateResourceIdentifier(
+   subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+   resourceGroupName: options.AZURE_RESOURCE_GROUP,
+   accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+
+var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var armClient = new ArmClient(credential);
+
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServiceAccountId);
+
+// Creating a unique suffix so that we don't have name collisions if you run the sample
+// multiple times without cleaning up.
+string uniqueness = Guid.NewGuid().ToString()[..13];
+string locatorName = $"locator-{uniqueness}";
+string inputAssetName = $"input-{uniqueness}";
+bool stopStreamingEndpoint = false;
+
+
+// Create a new input Asset and upload the specified local video file into it.
+var inputAsset = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
+
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, inputAsset.Data.Name, locatorName);
+
+var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
+
+if (streamingEndpoint.Data.ResourceState != StreamingEndpointResourceState.Running)
+{
+    Console.WriteLine("Streaming Endpoint is not running, starting now...");
+    await streamingEndpoint.StartAsync(WaitUntil.Completed);
+
+    // Since we started the endpoint, we should stop it in cleanup.
+    stopStreamingEndpoint = true;
+}
+
+// Generate the Server manifest for streaming .ism file.
+// This file is a simple SMIL 2.0 file format schema that includes references to the uploaded MP4 files in the XML.
+var manifestsList = await CreateServerManifestsAsync(mediaServicesAccount, inputAsset, streamingLocator, streamingEndpoint);
+var ismManifestName = manifestsList.FirstOrDefault();
+
+
+Console.WriteLine();
+Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
+await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
+
+Console.WriteLine("To try streaming, copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+Console.WriteLine("When finished, press ENTER to cleanup.");
+Console.WriteLine();
+Console.ReadLine();
+
+await CleanUpAsync(null, null, inputAsset, null, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
+
+/// <summary>
+/// Creates a new input Asset and uploads the specified local video file into it.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="assetName">The Asset name.</param>
+/// <param name="fileToUpload">The file you want to upload into the Asset.</param>
+/// <returns></returns>
+static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName, string fileToUpload)
+{
+    // In this example, we are assuming that the Asset name is unique.
+    MediaAssetResource asset;
+
+    try
     {
-        private const string InputMP4FileName = @"IgniteHD1800kbps.mp4";
-        private const string DefaultStreamingEndpointName = "default";
+        asset = await mediaServicesAccount.GetMediaAssets().GetAsync(assetName);
 
-        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
-        private const bool UseInteractiveAuth = false;
+        // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+        // an existing Asset, use an unique name.
+        Console.WriteLine($"Warning: The Asset named {assetName} already exists. It will be overwritten.");
+    }
+    catch (RequestFailedException)
+    {
+        // Call Media Services API to create an Asset.
+        // This method creates a container in storage for the Asset.
+        // The files (blobs) associated with the Asset will be stored in this container.
+        Console.WriteLine("Creating an input Asset...");
+        asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, assetName, new MediaAssetData())).Value;
+    }
 
-
-        public static async Task Main(string[] args)
+    // Use Media Services API to get back a response that contains
+    // SAS URL for the Asset container into which to upload blobs.
+    // That is where you would specify read-write permissions 
+    // and the expiration time for the SAS URL.
+    var sasUriCollection = asset.GetStorageContainerUrisAsync(
+        new MediaAssetStorageContainerSasContent
         {
-            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
-            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
-            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
-            try
+            Permissions = MediaAssetContainerPermission.ReadWrite,
+            ExpireOn = DateTime.UtcNow.AddHours(1)
+        });
+
+    var sasUri = await sasUriCollection.FirstOrDefaultAsync();
+
+    // Use Storage API to get a reference to the Asset container
+    // that was created by calling Asset's CreateOrUpdate method.
+    var container = new BlobContainerClient(sasUri);
+    BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
+
+    // Use Storage API to upload the file into the container in storage.
+    Console.WriteLine("Uploading a media file to the Asset...");
+    await blob.UploadAsync(fileToUpload);
+
+    return asset;
+}
+
+/// <summary>
+/// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
+/// Once the StreamingLocator is created the output Asset is available to clients for playback.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="assetName">The name of the output Asset.</param>
+/// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
+/// <returns></returns>
+static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
+    MediaServicesAccountResource mediaServicesAccount,
+    string assetName,
+    string locatorName)
+{
+    var locator = await mediaServicesAccount.GetStreamingLocators().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        locatorName,
+        new StreamingLocatorData
+        {
+            AssetName = assetName,
+            StreamingPolicyName = "Predefined_ClearStreamingOnly"
+        });
+
+    return locator.Value;
+}
+
+/// <summary>
+/// Prints the streaming URLs.
+/// </summary>
+/// <param name="locator">The streaming locator.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+static async Task PrintStreamingUrlsAsync(
+    StreamingLocatorResource locator,
+    StreamingEndpointResource streamingEndpoint)
+{
+    var paths = await locator.GetStreamingPathsAsync();
+
+    foreach (StreamingPath path in paths.Value.StreamingPaths)
+    {
+        Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
+        foreach (string streamingFormatPath in path.Paths)
+        {
+            var uriBuilder = new UriBuilder()
             {
-                DotEnv.Load(".env");
-            }
-            catch
-            {
+                Scheme = "https",
+                Host = streamingEndpoint.Data.HostName,
+                Path = streamingFormatPath
+            };
+            Console.WriteLine($"\t{uriBuilder}");
+        }
+        Console.WriteLine();
+    }
+}
 
-            }
+/// <summary>
+/// Creates the Server side .ism manifest files required to stream an Mp4 file uploaded to an asset with the proper encoding settings. 
+/// </summary>
+/// <returns>
+/// A list of server side manifest files (.ism) created in the Asset folder. Typically this is only going to be a single .ism file. 
+/// </returns>
+static async Task<IList<string>> CreateServerManifestsAsync(MediaServicesAccountResource mediaServicesAccount, MediaAssetResource asset, StreamingLocatorResource locator, StreamingEndpointResource streamingEndpoint)
+{
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
+    // Create a short lived SAS URL to upload content into the Asset's container.  We use 5 minutes in this sample, but this can be a lot shorter.
+    var assetContainerSas = asset.GetStorageContainerUrisAsync(new MediaAssetStorageContainerSasContent
+    {
+        Permissions = MediaAssetContainerPermission.ReadWriteDelete,
+        ExpireOn = DateTime.Now.AddMinutes(5).ToUniversalTime()
+    });
 
-            try
-            {
-                await RunAsync(config);
-            }
-            catch (Exception exception)
-            {
-                Console.Error.WriteLine($"{exception.Message}");
+    var containerSasUrl = await assetContainerSas.FirstAsync();
+    var storageContainer = new BlobContainerClient(containerSasUrl);
 
-                if (exception.GetBaseException() is ErrorResponseException apiException)
-                {
-                    Console.Error.WriteLine(
-                        $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
-                }
-            }
+    // Create the Server Manifest .ism file here.  This is a SMIL 2.0 format XML file that points to the uploaded MP4 files in the asset container.
+    // This file is required by the Streaming Endpoint to dynamically generate the HLS and DASH streams from the MP4 source file (when properly encoded.)
+    GeneratedServerManifest serverManifest = await ManifestUtils.LoadAndUpdateManifestTemplateAsync(storageContainer);
 
-            Console.WriteLine("Press Enter to continue.");
-            Console.ReadLine();
+    // Load the server manifest .ism content
+    XDocument doc = XDocument.Parse(serverManifest.Content);
+
+    // Upload the ism file to the Asset's container as blob
+    BlobClient blob = storageContainer.GetBlobClient(serverManifest.FileName);
+    using (var ms = new MemoryStream())
+    {
+        doc.Save(ms);
+        ms.Position = 0;
+        blob.Upload(ms);
+    }
+
+    // Get a manifest file list from the Storage container.
+    // In this sectino we are going to check for the existence of a client manifest and determine if we need to generate a new one. 
+    // If one exists, we do not generate it again. 
+
+    var manifestFiles = await ManifestUtils.GetManifestFilesListFromStorageAsync(storageContainer);
+    string ismcFileName = manifestFiles.FirstOrDefault(a => a.ToLower().Contains(".ismc"));
+    string ismManifestFileName = manifestFiles.FirstOrDefault(a => a.ToLower().EndsWith(".ism"));
+
+    // If there is no .ism then there's no reason to continue.  If there's no .ismc we need to add it.
+
+    if (ismManifestFileName != null && ismcFileName == null)
+    {
+        Console.WriteLine("Asset {0} : it does not have an ISMC file.", asset.Data.Name);
+
+        // let's try to read client manifest
+        XDocument manifest = null;
+        try
+        {
+            manifest = await GetClientManifestAsync(locator, streamingEndpoint);
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("Error when trying to read client manifest for asset '{0}'.", asset.Data.Name);
+            return null;
         }
 
-        /// <summary>
-        /// Run the sample async.
-        /// </summary>
-        /// <param name="config">The param is of type ConfigWrapper. This class reads values from local configuration file.</param>
-        /// <returns></returns>
-        private static async Task RunAsync(ConfigWrapper config)
+        string ismcContentXml = manifest.ToString();
+        if (ismcContentXml.Length == 0)
         {
-            IAzureMediaServicesClient client;
-            try
-            {
-                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
-                Console.Error.WriteLine($"{e.Message}");
-                return;
-            }
-
-            // Set the polling interval for long running operations to 2 seconds.
-            // The default value is 30 seconds for the .NET client SDK
-            client.LongRunningOperationRetryTimeout = 2;
-
-            // Creating a unique suffix so that we don't have name collisions if you run the sample
-            // multiple times without cleaning up.
-            string uniqueness = Guid.NewGuid().ToString("N");
-            string locatorName = $"locator-{uniqueness}";
-            string inputAssetName = $"input-{uniqueness}";
-            bool stopEndpoint = false;
-
-            try
-            {
-                // Create a new input Asset and upload the Mp4 local video file into it that is already encoded with the following settings:
-                //  GOP size: 2 seconds
-                //  Constant Bitrate Encoded - CBR mode
-                //  Key Frame distance max 2 seconds
-                //  Min Key frame distance 2 seconds
-                //  Video Codec: H.264 or HEVC
-                //  Audio COdec: AAC
-
-                var inputAsset = await CreateInputAssetAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
-
-                StreamingLocator locator = await CreateStreamingLocatorAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, locatorName);
-
-                // Generate the Server manifest for streaming .ism file.
-                // This file is a simple SMIL 2.0 file format schema that includes references to the uploaded MP4 files in the XML.
-                var manifestsList = await AssetUtils.CreateServerManifestsAsync(client, config.ResourceGroup, config.AccountName, inputAsset, locator);
-                var ismManifestName = manifestsList.FirstOrDefault();
-
-                // v3 API throws an ErrorResponseException if the resource is not found.
-                StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
-                if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                {
-                    Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                    await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
-
-                    // Since we started the endpoint, we should stop it in cleanup.
-                    stopEndpoint = true;
-                }
-
-                IList<string> urls = GetHLSAndDASHStreamingUrlsAsync(locator, ismManifestName, streamingEndpoint);
-                Console.WriteLine();
-                foreach (var url in urls)
-                {
-                    Console.WriteLine(url);
-                }
-                Console.WriteLine();
-                Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                Console.WriteLine("When finished press enter to cleanup.");
-                Console.Out.Flush();
-                Console.ReadLine();
-
-            }
-            catch (ErrorResponseException e)
-            {
-                Console.WriteLine("Hit ErrorResponseException");
-                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
-                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
-                Console.WriteLine();
-                Console.WriteLine("Exiting, cleanup may be necessary...");
-                Console.ReadLine();
-            }
-            finally
-            {
-                Console.WriteLine("Cleaning up...");
-                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, stopEndpoint, DefaultStreamingEndpointName);
-                Console.WriteLine("Done.");
-            }
+            Console.WriteLine("Asset {0} : client manifest is empty.", asset.Data.Name);
+            //error state, skip this asset
+            return null;
         }
 
-
-        /// <summary>
-        /// Creates a new input Asset and uploads the specified local video file into it.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="assetName">The asset name.</param>
-        /// <param name="fileToUpload">The file you want to upload into the asset.</param>
-        /// <returns></returns>
-        private static async Task<Asset> CreateInputAssetAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroupName,
-            string accountName,
-            string assetName,
-            string fileToUpload)
+        if (ismcContentXml.IndexOf("<Protection>") > 0)
         {
-            // In this example, we are assuming that the asset name is unique.
-            //
-            // If you already have an asset with the desired name, use the Assets.Get method
-            // to get the existing asset. In Media Services v3, the Get method throws an ErrorResponseException if the resource is not found on a get. 
-            Console.WriteLine("Creating an input asset...");
-            Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-
-            // Use Media Services API to get back a response that contains
-            // SAS URL for the Asset container into which to upload blobs.
-            // That is where you would specify read-write permissions 
-            // and the expiration time for the SAS URL.
-            var response = await client.Assets.ListContainerSasAsync(
-                resourceGroupName,
-                accountName,
-                assetName,
-                permissions: AssetContainerPermission.ReadWrite,
-                expiryTime: DateTime.UtcNow.AddHours(4).ToUniversalTime());
-
-            var sasUri = new Uri(response.AssetContainerSasUrls.First());
-
-            // Use Storage API to get a reference to the Asset container
-            // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
-            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
-
-            // Use Storage API to upload the file into the container in storage.
-            Console.WriteLine("Uploading a media file to the asset...");
-            await blob.UploadAsync(fileToUpload);
-
-            return asset;
+            Console.WriteLine("Asset {0} : content is encrypted. Removing the protection header from the client manifest.", asset.Data.Name);
+            //remove DRM from the ISCM manifest
+            ismcContentXml = ManifestUtils.RemoveXmlNode(ismcContentXml);
         }
 
+        string newIsmcFileName = ismManifestFileName.Substring(0, ismManifestFileName.IndexOf(".")) + ".ismc";
+        await WriteStringToBlobAsync(ismcContentXml, newIsmcFileName, storageContainer);
+        Console.WriteLine("Asset {0} : client manifest created.", asset.Data.Name);
 
-        /// <summary>
-        /// Creates a StreamingLocator for the specified asset and with the specified streaming policy name.
-        /// Once the StreamingLocator is created the output asset is available to clients for playback.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="assetName">The name of the output asset.</param>
-        /// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
-        /// <returns></returns>
-        private static async Task<StreamingLocator> CreateStreamingLocatorAsync(
-            IAzureMediaServicesClient client,
-            string resourceGroup,
-            string accountName,
-            string assetName,
-            string locatorName)
+        // Download the ISM so that we can modify it to include the ISMC file link.
+        string ismXmlContent = await GetStringFromBlobAsync(storageContainer, ismManifestFileName);
+        ismXmlContent = ManifestUtils.AddIsmcToIsm(ismXmlContent, newIsmcFileName);
+        await WriteStringToBlobAsync(ismXmlContent, ismManifestFileName, storageContainer);
+        Console.WriteLine("Asset {0} : server manifest updated.", asset.Data.Name);
+
+        // update the ism to point to the ismc (download, modify, delete original, upload new)
+    }
+
+    // return the .ism manifest
+    return (await ManifestUtils.GetManifestFilesListFromStorageAsync(storageContainer)).Where(a => a.ToLower().EndsWith(".ism")).ToList();
+}
+
+
+static async Task<XDocument> GetClientManifestAsync(StreamingLocatorResource locator, StreamingEndpointResource streamingEndpoint)
+{
+    Uri myuri = await ReturnSmoothStreamingUrlAsync(locator, streamingEndpoint);
+
+    if (myuri != null)
+    {
+        return XDocument.Load(myuri.ToString());
+    }
+    else
+    {
+        throw new Exception("Streaming locator is null");
+    }
+}
+
+static async Task WriteStringToBlobAsync(string ContentXml, string fileName, BlobContainerClient storageContainer)
+{
+    BlobClient blobClient = storageContainer.GetBlobClient(fileName);
+
+    var content = Encoding.UTF8.GetBytes(ContentXml);
+    using var ms = new MemoryStream(content);
+    await blobClient.UploadAsync(ms, true);
+}
+
+static async Task<string> GetStringFromBlobAsync(BlobContainerClient storageContainer, string ismManifestFileName)
+{
+    BlobClient blobClient = storageContainer.GetBlobClient(ismManifestFileName);
+
+    using var ms = new MemoryStream();
+    await blobClient.DownloadToAsync(ms);
+    return System.Text.Encoding.UTF8.GetString(ms.ToArray());
+}
+
+/// <summary>
+/// Gets the smooth streaming Url.
+/// </summary>
+/// <param name="locator">The streaming locator.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+static async Task<Uri> ReturnSmoothStreamingUrlAsync(
+    StreamingLocatorResource locator,
+    StreamingEndpointResource streamingEndpoint)
+{
+    var paths = await locator.GetStreamingPathsAsync();
+
+    var smooth = paths.Value.StreamingPaths.Where(p => p.StreamingProtocol == StreamingPolicyStreamingProtocol.SmoothStreaming).First();
+
+    var urib = new UriBuilder()
+    {
+        Scheme = "https",
+        Host = streamingEndpoint.Data.HostName,
+        Path = smooth.Paths[0]
+    };
+
+    return urib.Uri;
+}
+
+/// <summary>
+/// Delete the resources that were created.
+/// </summary>
+/// <param name="transform">The transform.</param>
+/// <param name="job">The Job.</param>
+/// <param name="inputAsset">The input Asset.</param>
+/// <param name="outputAsset">The output Asset.</param>
+/// <param name="streamingLocator">The streaming locator. </param>
+/// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+/// <returns>A task.</returns>
+static async Task CleanUpAsync(
+    MediaTransformResource? transform,
+    MediaJobResource? job,
+    MediaAssetResource? inputAsset,
+    MediaAssetResource? outputAsset,
+    StreamingLocatorResource? streamingLocator,
+    bool stopEndpoint,
+    StreamingEndpointResource? streamingEndpoint)
+{
+    if (job != null)
+    {
+        await job.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (transform != null)
+    {
+        await transform.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (inputAsset != null)
+    {
+        await inputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (outputAsset != null)
+    {
+        await outputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (streamingLocator != null)
+    {
+        await streamingLocator.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (streamingEndpoint != null)
+    {
+        if (stopEndpoint)
         {
-            StreamingLocator locator = await client.StreamingLocators.CreateAsync(
-                resourceGroup,
-                accountName,
-                locatorName,
-                new StreamingLocator
-                {
-                    AssetName = assetName,
-                    StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
-                });
-
-            return locator;
+            // Because we started the endpoint, we'll stop it.
+            await streamingEndpoint.StopAsync(WaitUntil.Completed);
         }
-
-        /// <summary>
-        /// Builds the streaming URLs.
-        /// </summary>
-        /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
-        /// <param name="streamingEndpoint">The streaming endpoint.</param>
-        /// <returns></returns>
-        private static IList<string> GetHLSAndDASHStreamingUrlsAsync(
-            StreamingLocator locator,
-            string manifestName,
-            StreamingEndpoint streamingEndpoint)
+        else
         {
-            var hostname = streamingEndpoint.HostName;
-            var scheme = "https";
-            IList<string> manifests = BuildManifestPaths(scheme, hostname, locator.StreamingLocatorId.ToString(), manifestName);
-
-            Console.WriteLine($"The HLS (MP4) manifest for the uploaded asset is : {manifests[0]}");
-            Console.WriteLine("Copy the following URL to use in an HLS compliant player (HLS.js, Shaka, ExoPlayer) or directly in an iOS device. Just send it in email to your phone and you can click and play it.");
-            Console.WriteLine($"{manifests[0]}");
-            Console.WriteLine();
-            Console.WriteLine($"The DASH manifest URL for the uploaded asset is  : {manifests[1]}");
-            Console.WriteLine("Open the following URL to playback the uploaded Mp4 file using quickstart heuristics in the Azure Media Player");
-            Console.WriteLine($"https://ampdemo.azureedge.net/?url={manifests[1]}&heuristicprofile=quickstart");
-            Console.WriteLine();
-            Console.Out.Flush();
-            Console.ReadLine();
-            return manifests;
+            // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+            // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+            Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
         }
+    }
+}
 
-        private static List<string> BuildManifestPaths(string scheme, string hostname, string streamingLocatorId, string manifestName)
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
         {
-            const string hlsFormat = "format=m3u8-cmaf";
-            const string dashFormat = "format=mpd-time-cmaf";
-
-            List<string> manifests = new();
-
-            var manifestBase = $"{scheme}://{hostname}/{streamingLocatorId}/{manifestName}/manifest";
-            var hlsManifest = $"{manifestBase}({hlsFormat})";
-            manifests.Add(hlsManifest);
-
-            var dashManifest = $"{manifestBase}({dashFormat})";
-            manifests.Add(dashManifest);
-
-            return manifests;
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
         }
-
-        /// <summary>
-        /// Deletes the jobs and assets that were created.
-        /// Generally, you should clean up everything except objects 
-        /// that you are planning to reuse (typically, you will reuse Transforms, and you will persist StreamingLocators).
-        /// </summary>
-        /// <param name="client"></param>
-        /// <param name="resourceGroupName"></param>
-        /// <param name="accountName"></param>
-        /// <param name="transformName"></param>
-        private static async Task CleanUpAsync(
-            IAzureMediaServicesClient client, string resourceGroupName, string accountName,
-           string inputAssetName, bool stopEndpoint, string streamingEndpointName)
+        catch (Exception ex)
         {
-            await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
-
-            if (stopEndpoint)
-            {
-                // Because we started the endpoint, we'll stop it.
-                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
-            }
-            else
-            {
-                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
-                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
-                Console.WriteLine($"WARNING: The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
-            }
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
         }
     }
 }

@@ -1,588 +1,563 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using Azure;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Media;
+using Azure.ResourceManager.Media.Models;
 using Azure.Storage.Blobs;
-using Common_Utils;
-using Microsoft.Azure.Management.Media;
-using Microsoft.Azure.Management.Media.Models;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
+const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
+const string InputMP4FileName = "ignite.mp4";
+const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name.
 
-namespace AssetFilters
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
 {
-    class Program
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServiceAccountId = MediaServicesAccountResource.CreateResourceIdentifier(
+   subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+   resourceGroupName: options.AZURE_RESOURCE_GROUP,
+   accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+
+var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var armClient = new ArmClient(credential);
+
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServiceAccountId);
+
+// Creating a unique suffix so that we don't have name collisions if you run the sample
+// multiple times without cleaning up.
+string uniqueness = Guid.NewGuid().ToString()[..13];
+string jobName = $"job-{uniqueness}";
+string locatorName = $"locator-{uniqueness}";
+string inputAssetName = $"input-{uniqueness}";
+string outputAssetName = $"output-{uniqueness}";
+string assetFilterName = $"assetFilter-{uniqueness}";
+string accountFilterName = $"accountFilter-{uniqueness}";
+bool stopStreamingEndpoint = false;
+
+// Ensure that you have customized encoding Transform. This is a one-time setup operation.
+var transform = await CreateTransformAsync(mediaServicesAccount, AdaptiveStreamingTransformName);
+
+// Create a new input Asset and upload the specified local video file into it.
+var inputAsset = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
+
+// Output from the Job must be written to an Asset, so let's create one.
+var outputAsset = await CreateOutputAssetAsync(mediaServicesAccount, outputAssetName);
+
+var job = await SubmitJobAsync(transform, jobName, inputAsset, outputAsset);
+
+Console.WriteLine("Polling Job status...");
+job = await WaitForJobToFinishAsync(job);
+
+if (job.Data.State == MediaJobState.Error)
+{
+    Console.WriteLine($"ERROR: Job finished with error message: {job.Data.Outputs[0].Error.Message}");
+    Console.WriteLine($"ERROR:                   error details: {job.Data.Outputs[0].Error.Details[0].Message}");
+    await CleanUpAsync(transform, job, inputAsset, outputAsset, null, stopStreamingEndpoint, null);
+    return;
+}
+
+Console.WriteLine("Job finished.");
+
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName);
+
+var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
+
+if (streamingEndpoint.Data.ResourceState != StreamingEndpointResourceState.Running)
+{
+    Console.WriteLine("Streaming Endpoint is not running, starting now...");
+    await streamingEndpoint.StartAsync(WaitUntil.Completed);
+
+    // Since we started the endpoint, we should stop it in cleanup.
+    stopStreamingEndpoint = true;
+}
+
+Console.WriteLine();
+Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
+await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
+
+var urls = await ReturnStreamingUrlAsync(streamingLocator, streamingEndpoint);
+
+Console.WriteLine("Creating an asset filter...");
+Console.WriteLine();
+var assetFilter = await CreateAssetFilterAsync(outputAsset, assetFilterName);
+
+Console.WriteLine("Creating an account filter...");
+Console.WriteLine();
+var accountFilter = await CreateAccountFilterAsync(mediaServicesAccount, accountFilterName);
+
+Console.WriteLine("We are going to use two different ways to show how to filter content. First, we will append the filters to the url(s).");
+Console.WriteLine("Url(s) with filters:");
+foreach (var url in urls)
+{
+    if (url.ToString().EndsWith(")"))
     {
-        private const string adaptiveTransformName = "MyTransformWithAdaptiveStreamingPreset";
-        private const string InputMP4FileName = @"ignite.mp4";
-        private const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name.
+        Console.WriteLine(Regex.Replace(url.ToString(), @"\)$", $",filter={assetFilter.Data.Name};{accountFilter.Data.Name})"));
+    }
+    else
+    {
+        Console.WriteLine($"{url}(filter={assetFilter.Data.Name};{accountFilter.Data.Name})");
+    }
+}
 
-        // Set this variable to true if you want to authenticate Interactively through the browser using your Azure user account
-        private const bool UseInteractiveAuth = false;
+Console.WriteLine();
+Console.WriteLine("Copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+Console.WriteLine("Please note that we have used two filters in the url(s), one trimmed the start and the end of the media");
+Console.WriteLine("and the other removed high resolution video tracks. To stream the original content, remove the filters");
+Console.WriteLine("from the url(s) and update player.");
+Console.WriteLine("When finished, press ENTER to continue.");
+Console.WriteLine();
+Console.Out.Flush();
+Console.ReadLine();
 
+// Create a new StreamingLocator and associate filters with it.
+Console.WriteLine("Next, we will associate the filters with a new streaming locator.");
+await streamingLocator.DeleteAsync(WaitUntil.Completed); // Delete the old locator.
 
-        public static async Task Main(string[] args)
+Console.WriteLine("Creating a new streaming locator...");
+IList<string> filters = new List<string>
+{
+    assetFilter.Data.Name,
+    accountFilter.Data.Name
+};
+streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName, filters);
+
+urls = await ReturnStreamingUrlAsync(streamingLocator, streamingEndpoint);
+Console.WriteLine("Since we have associated filters with the new streaming locator, No need to append filters to the url(s):");
+foreach (var url in urls)
+{
+    Console.WriteLine(url);
+}
+Console.WriteLine();
+Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+Console.WriteLine("When finished, press ENTER to cleanup.");
+Console.WriteLine();
+Console.ReadLine();
+
+await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
+
+/// <summary>
+/// If the specified transform exists, return that transform. If the it does not
+/// exist, creates a new transform with the specified output. In this case, the
+/// output is set to encode a video using a built-in encoding preset.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services account.</param>
+/// <param name="transformName">The transform name.</param>
+/// <returns></returns>
+static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAccountResource mediaServicesAccount, string transformName)
+{
+    var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
+       WaitUntil.Completed,
+       transformName,
+       new MediaTransformData
+       {
+           Outputs =
+           {
+               new MediaTransformOutput
+               (
+                   // The preset for the Transform is set to one of Media Services built-in sample presets.
+                   // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
+                   preset: new BuiltInStandardEncoderPreset(
+                       // This sample uses the built-in encoding preset for Adaptive Bit-rate Streaming.
+                       presetName: EncoderNamedPreset.AdaptiveStreaming
+                       )
+                   )
+           }
+       }
+       );
+
+    return transform.Value;
+}
+
+/// <summary>
+/// Creates a new input Asset and uploads the specified local video file into it.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="assetName">The Asset name.</param>
+/// <param name="fileToUpload">The file you want to upload into the Asset.</param>
+/// <returns></returns>
+static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName, string fileToUpload)
+{
+    // In this example, we are assuming that the Asset name is unique.
+    MediaAssetResource asset;
+
+    try
+    {
+        asset = await mediaServicesAccount.GetMediaAssets().GetAsync(assetName);
+
+        // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
+        // an existing Asset, use an unique name.
+        Console.WriteLine($"Warning: The Asset named {assetName} already exists. It will be overwritten.");
+    }
+    catch (RequestFailedException)
+    {
+        // Call Media Services API to create an Asset.
+        // This method creates a container in storage for the Asset.
+        // The files (blobs) associated with the Asset will be stored in this container.
+        Console.WriteLine("Creating an input Asset...");
+        asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, assetName, new MediaAssetData())).Value;
+    }
+
+    // Use Media Services API to get back a response that contains
+    // SAS URL for the Asset container into which to upload blobs.
+    // That is where you would specify read-write permissions 
+    // and the expiration time for the SAS URL.
+    var sasUriCollection = asset.GetStorageContainerUrisAsync(
+        new MediaAssetStorageContainerSasContent
         {
-            // If Visual Studio is used, let's read the .env file which should be in the root folder (same folder than the solution .sln file).
-            // Same code will work in VS Code, but VS Code uses also launch.json to get the .env file.
-            // You can create this ".env" file by saving the "sample.env" file as ".env" file and fill it with the right values.
-            try
+            Permissions = MediaAssetContainerPermission.ReadWrite,
+            ExpireOn = DateTime.UtcNow.AddHours(1)
+        });
+
+    var sasUri = await sasUriCollection.FirstOrDefaultAsync();
+
+    // Use Storage API to get a reference to the Asset container
+    // that was created by calling Asset's CreateOrUpdate method.
+    var container = new BlobContainerClient(sasUri);
+    BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
+
+    // Use Storage API to upload the file into the container in storage.
+    Console.WriteLine("Uploading a media file to the Asset...");
+    await blob.UploadAsync(fileToUpload);
+
+    return asset;
+}
+
+/// <summary>
+/// Creates an output Asset. The output from the encoding Job must be written to an Asset.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services account.</param>
+/// <param name="assetName">The output Asset name.</param>
+/// <returns></returns>
+static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName)
+{
+    Console.WriteLine("Creating an output Asset...");
+    var asset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        assetName,
+        new MediaAssetData());
+
+    return asset.Value;
+}
+
+/// <summary>
+/// Submits a request to Media Services to apply the specified Transform to a given input video.
+/// </summary>
+/// <param name="transform">The media transform.</param>
+/// <param name="jobName">The (unique) name of the Job.</param>
+/// <param name="inputAsset">The input Asset.</param>
+/// <param name="outputAsset">The output Asset that will store the result of the encoding Job.</param>
+static async Task<MediaJobResource> SubmitJobAsync(
+    MediaTransformResource transform,
+    string jobName,
+    MediaAssetResource inputAsset,
+    MediaAssetResource outputAsset)
+{
+    // In this example, we are assuming that the Job name is unique.
+    //
+    // If you already have a Job with the desired name, use the Jobs.Get method
+    // to get the existing Job. In Media Services v3, Get methods on entities returns ErrorResponseException 
+    // if the entity doesn't exist (a case-insensitive check on the name).
+    Console.WriteLine("Creating a Job...");
+    var job = await transform.GetMediaJobs().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        jobName,
+        new MediaJobData
+        {
+            Input = new MediaJobInputAsset(assetName: inputAsset.Data.Name),
+            Outputs =
             {
-                DotEnv.Load(".env");
+                new MediaJobOutputAsset(outputAsset.Data.Name)
             }
-            catch
+        });
+
+    return job.Value;
+}
+
+/// <summary>
+/// Polls Media Services for the status of the Job.
+/// </summary>
+/// <param name="job">The Job.</param>
+/// <returns>The updated Job.</returns>
+static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job)
+{
+    var sleepInterval = TimeSpan.FromSeconds(30);
+    MediaJobState state;
+
+    do
+    {
+        job = await job.GetAsync();
+        state = job.Data.State.GetValueOrDefault();
+
+        Console.WriteLine($"Job is '{state}'.");
+        for (int i = 0; i < job.Data.Outputs.Count; i++)
+        {
+            var output = job.Data.Outputs[i];
+            Console.Write($"\tJobOutput[{i}] is '{output.State}'.");
+            if (output.State == MediaJobState.Processing)
             {
-
+                Console.Write($"  Progress: '{output.Progress}'.");
             }
 
-            ConfigWrapper config = new(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables() // parses the values from the optional .env file at the solution root
-                .Build());
-
-            try
-            {
-                await RunAsync(config);
-            }
-            catch (Exception exception)
-            {
-                Console.Error.WriteLine($"{exception.Message}");
-
-                if (exception.GetBaseException() is ErrorResponseException apiException)
-                {
-                    Console.Error.WriteLine(
-                        $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
-                }
-            }
-
-            Console.WriteLine("Press Enter to continue.");
-            Console.ReadLine();
+            Console.WriteLine();
         }
 
-        /// <summary>
-        /// Run the sample async.
-        /// </summary>
-        /// <param name="config">This param is of type ConfigWrapper, which reads values from local configuration file.</param>
-        /// <returns>A task.</returns>
-        private static async Task RunAsync(ConfigWrapper config)
+        if (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled)
         {
-            IAzureMediaServicesClient client;
-            try
-            {
-                client = await Authentication.CreateMediaServicesClientAsync(config, UseInteractiveAuth);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("TIP: Make sure that you have filled out the appsettings.json or .env file before running this sample.");
-                Console.Error.WriteLine($"{e.Message}");
-                return;
-            }
-
-            // Set the polling interval for long running operations to 2 seconds.
-            // The default value is 30 seconds for the .NET client SDK
-            client.LongRunningOperationRetryTimeout = 2;
-
-            // Creating a unique suffix so that we don't have name collisions if you run the sample
-            // multiple times without cleaning up.
-            string uniqueness = Guid.NewGuid().ToString().Substring(0, 13);
-            string jobName = "job-" + uniqueness;
-            string locatorName = "locator-" + uniqueness;
-            string outputAssetName = "output-" + uniqueness;
-            string assetFilterName = "assetFilter-" + uniqueness;
-            string accountFilterName = "accountFilter-" + uniqueness;
-            string inputAssetName = "input-" + uniqueness;
-            bool stopEndpoint = false;
-
-            try
-            {
-                // Ensure that you have customized encoding Transform.  This is really a one time setup operation.
-                Transform adaptiveEncodeTransform = await GetOrCreateTransformAsync(client, config.ResourceGroup, config.AccountName,
-                    adaptiveTransformName);
-
-                // Create a new input Asset and upload the specified local video file into it.
-                Asset inputAsset = await CreateInputAssetAndUploadVideoAsync(client, config.ResourceGroup, config.AccountName, inputAssetName, InputMP4FileName);
-
-                // Output from the encoding Job must be written to an Asset, so let's create one.
-                Asset outputAsset = await CreateOutputAssetAsync(client, config.ResourceGroup, config.AccountName, outputAssetName);
-
-                Console.WriteLine("Creating a job...");
-                Job job = await SubmitJobAsync(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, jobName, inputAssetName, outputAsset.Name);
-
-                DateTime startedTime = DateTime.Now;
-
-                // In this demo code, we will poll for Job status. Polling is not a recommended best practice for production
-                // applications because of the latency it introduces. Overuse of this API may trigger throttling. Developers
-                // should instead use Event Grid. To see how to implement the event grid, see the sample
-                // https://github.com/Azure-Samples/media-services-v3-dotnet/tree/master/ContentProtection/BasicAESClearKey.
-                job = WaitForJobToFinish(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, jobName);
-
-                TimeSpan elapsed = DateTime.Now - startedTime;
-                Console.WriteLine($"Job elapsed time: {elapsed}");
-
-                if (job.State == JobState.Finished)
-                {
-                    Console.WriteLine("Job finished.");
-
-                    // Now that the content has been encoded, publish it for Streaming by creating
-                    // a StreamingLocator.
-                    StreamingLocator locator = await client.StreamingLocators.CreateAsync(
-                        config.ResourceGroup,
-                        config.AccountName,
-                        locatorName,
-                        new StreamingLocator
-                        {
-                            AssetName = outputAsset.Name,
-                            StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly
-                        });
-
-                    // v3 API throws an ErrorResponseException if the resource is not found.
-                    StreamingEndpoint streamingEndpoint = await client.StreamingEndpoints.GetAsync(config.ResourceGroup,
-                        config.AccountName, DefaultStreamingEndpointName);
-
-                    if (streamingEndpoint.ResourceState != StreamingEndpointResourceState.Running)
-                    {
-                        Console.WriteLine("Streaming Endpoint was Stopped, restarting now..");
-                        await client.StreamingEndpoints.StartAsync(config.ResourceGroup, config.AccountName, DefaultStreamingEndpointName);
-
-                        // Since we started the endpoint, we should stop it in cleanup.
-                        stopEndpoint = true;
-                    }
-
-                    IList<string> urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
-
-                    Console.WriteLine("Creating an asset filter...");
-                    Console.WriteLine();
-                    AssetFilter assetFilter = await CreateAssetFilterAsync(client, config.ResourceGroup, config.AccountName, outputAsset.Name, assetFilterName);
-
-                    Console.WriteLine("Creating an account filter...");
-                    Console.WriteLine();
-                    AccountFilter accountFilter = await CreateAccountFilterAsync(client, config.ResourceGroup, config.AccountName, accountFilterName);
-
-                    Console.WriteLine("We are going to use two different ways to show how to filter content. First, we will append the filters to the url(s).");
-                    Console.WriteLine("Url(s) with filters:");
-                    foreach (var url in urls)
-                    {
-                        if (url.EndsWith(")"))
-                        {
-                            Console.WriteLine(Regex.Replace(url, @"\)$", $",filter={assetFilter.Name};{accountFilter.Name})"));
-                        }
-                        else
-                        {
-                            Console.WriteLine($"{url}(filter={assetFilter.Name};{accountFilter.Name})");
-                        }
-                    }
-
-                    Console.WriteLine();
-                    Console.WriteLine("Copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                    Console.WriteLine("Please note that we have used two filters in the url(s), one trimmed the start and the end of the media");
-                    Console.WriteLine("and the other removed high resolution video tracks. To stream the original content, remove the filters");
-                    Console.WriteLine("from the url(s) and update player.");
-                    Console.WriteLine("When finished, press ENTER to continue.");
-                    Console.WriteLine();
-                    Console.Out.Flush();
-                    Console.ReadLine();
-
-                    // Create a new StreamingLocator and associate filters with it.
-                    Console.WriteLine("Next, we will associate the filters with a new streaming locator.");
-                    await client.StreamingLocators.DeleteAsync(config.ResourceGroup, config.AccountName, locatorName); // Delete the old locator.
-                    Console.WriteLine("Creating a new streaming locator...");
-                    IList<string> filters = new List<string>
-                    {
-                        assetFilter.Name,
-                        accountFilter.Name
-                    };
-                    locator = await client.StreamingLocators.CreateAsync(
-                        config.ResourceGroup,
-                        config.AccountName,
-                        locatorName,
-                        new StreamingLocator
-                        {
-                            AssetName = outputAsset.Name,
-                            StreamingPolicyName = PredefinedStreamingPolicy.ClearStreamingOnly,
-                            Filters = filters
-                        });
-
-                    urls = await GetDashStreamingUrlsAsync(client, config.ResourceGroup, config.AccountName, locator.Name, streamingEndpoint);
-                    Console.WriteLine("Since we have associated filters with the new streaming locator, No need to append filters to the url(s):");
-                    foreach (string url in urls)
-                    {
-                        Console.WriteLine(url);
-                    }
-                    Console.WriteLine();
-                    Console.WriteLine("Copy and paste the Streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
-                    Console.WriteLine("When finished, press ENTER to continue.");
-                    Console.Out.Flush();
-                    Console.ReadLine();
-                }
-                else if (job.State == JobState.Error)
-                {
-                    Console.WriteLine($"ERROR: Job finished with error message: {job.Outputs[0].Error.Message}");
-                    Console.WriteLine($"ERROR:                   error details: {job.Outputs[0].Error.Details[0].Message}");
-                }
-            }
-            catch (ErrorResponseException e)
-            {
-                Console.WriteLine("Hit ErrorResponseException");
-                Console.WriteLine($"\tCode: {e.Body.Error.Code}");
-                Console.WriteLine($"\tMessage: {e.Body.Error.Message}");
-                Console.WriteLine();
-                Console.WriteLine("Exiting, cleanup may be necessary...");
-                Console.ReadLine();
-            }
-            finally
-            {
-                Console.WriteLine("Cleaning up...");
-                await CleanUpAsync(client, config.ResourceGroup, config.AccountName, adaptiveTransformName, jobName,
-                        inputAssetName, outputAssetName, accountFilterName, locatorName, stopEndpoint, DefaultStreamingEndpointName);
-
-                Console.WriteLine("Done.");
-            }
+            await Task.Delay(sleepInterval);
         }
+    }
+    while (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled);
 
+    return job;
+}
 
-        /// <summary>
-        /// If the specified transform exists, get that transform.
-        /// If the it does not exist, creates a new transform with the specified output. 
-        /// In this case, the output is set to encode a video using one of the built-in encoding presets.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="transformName">The name of the transform.</param>
-        /// <returns></returns>
-        private static async Task<Transform> GetOrCreateTransformAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string transformName)
+/// <summary>
+/// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
+/// Once the StreamingLocator is created the output Asset is available to clients for playback.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="assetName">The name of the output Asset.</param>
+/// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
+/// <param name="filters">List of filter names to associate to locator (optional).</param>
+/// <returns></returns>
+static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
+    MediaServicesAccountResource mediaServicesAccount,
+    string assetName,
+    string locatorName,
+    IList<string>? filters = null)
+{
+    var locatorData = new StreamingLocatorData
+    {
+        AssetName = assetName,
+        StreamingPolicyName = "Predefined_ClearStreamingOnly"
+
+    };
+    if (filters != null)
+    {
+        foreach (var filter in filters)
         {
-
-            // You need to specify what you want it to produce as an output
-            TransformOutput[] output = new TransformOutput[]
-            {
-                new TransformOutput
-                {
-                    // The preset for the Transform is set to one of Media Services built-in sample presets.
-                    // You can  customize the encoding settings by changing this to use "StandardEncoderPreset" class.
-                    Preset = new BuiltInStandardEncoderPreset()
-                    {
-                        // This sample uses the built-in encoding preset for Adaptive Bitrate Streaming.
-                        PresetName = EncoderNamedPreset.AdaptiveStreaming
-                    }
-                }
-            };
-
-            // Create the Transform with the output defined above
-            // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
-            // In production code, you may want to be cautious about that. It really depends on your scenario.
-            Transform transform = await client.Transforms.CreateOrUpdateAsync(resourceGroupName, accountName, transformName, output);
-
-            return transform;
+            locatorData.Filters.Add(filter);
         }
+    }
 
-        /// <summary>
-        /// Creates a new input Asset and uploads the specified local video file into it.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="assetName">The asset name.</param>
-        /// <param name="fileToUpload">The file you want to upload into the asset.</param>
-        /// <returns></returns>
-        private static async Task<Asset> CreateInputAssetAndUploadVideoAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string assetName, string fileToUpload)
+    var locator = await mediaServicesAccount.GetStreamingLocators().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        locatorName,
+        locatorData
+        );
+
+    return locator.Value;
+}
+
+/// <summary>
+/// Create an asset filter.
+/// </summary>
+/// <param name="asset">The asset.</param>
+/// <param name="assetFilterName"> The AssetFilter name.</param>
+/// <returns></returns>
+static async Task<MediaAssetFilterResource> CreateAssetFilterAsync(MediaAssetResource asset, string assetFilterName)
+{
+    // startTimestamp = 100000000 and endTimestamp = 300000000 using the default timescale will generate
+    // a play-list that contains fragments from between 10 seconds and 30 seconds of the VoD presentation.
+    // If a fragment straddles the boundary, the entire fragment will be included in the manifest.
+    var assetFilter = await asset.GetMediaAssetFilters().CreateOrUpdateAsync(
+       WaitUntil.Completed,
+        assetFilterName,
+        new MediaAssetFilterData
         {
-            // In this example, we are assuming that the asset name is unique.
-            // If you already have an asset with the desired name, use the Assets.Get method
-            // to get the existing asset. In Media Services v3, the Get method on entities throws an ErrorResponseException if the resource is not found.
-            Asset asset = await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, new Asset());
-
-            // Use Media Services API to get back a response that contains
-            // SAS URL for the Asset container into which to upload blobs.
-            // That is where you would specify read-write permissions 
-            // and the expiration time for the SAS URL.
-            var response = await client.Assets.ListContainerSasAsync(
-                resourceGroupName,
-                accountName,
-                assetName,
-                permissions: AssetContainerPermission.ReadWrite,
-                expiryTime: DateTime.UtcNow.AddHours(4).ToUniversalTime());
-
-            var sasUri = new Uri(response.AssetContainerSasUrls.First());
-
-            // Use Storage API to get a reference to the Asset container
-            // that was created by calling Asset's CreateOrUpdate method.  
-            BlobContainerClient container = new(sasUri);
-            BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
-
-            // Use Storage API to upload the file into the container in storage.
-            Console.WriteLine("Uploading a media file to the asset...");
-            await blob.UploadAsync(fileToUpload);
-
-            return asset;
-        }
-
-        /// <summary>
-        /// Creates an output asset. The output from the encoding Job must be written to an Asset.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="assetName">The output asset name.</param>
-        /// <returns></returns>
-        private static async Task<Asset> CreateOutputAssetAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string assetName)
-        {
-
-            Asset outputAsset = new Asset();
-
-            return await client.Assets.CreateOrUpdateAsync(resourceGroupName, accountName, assetName, outputAsset);
-        }
-
-        /// <summary>
-        /// Submits a request to Media Services to apply the specified Transform to a given input video.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="transformName">The name of the transform.</param>
-        /// <param name="jobName">The (unique) name of the job.</param>
-        /// <param name="inputAssetName">The name of the input asset.</param>
-        /// <param name="outputAssetName">The (unique) name of the  output asset that will store the result of the encoding job. </param>
-        private static async Task<Job> SubmitJobAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string transformName, string jobName, string inputAssetName, string outputAssetName)
-        {
-            // Use the name of the created input asset to create the job input.
-            JobInput jobInput = new JobInputAsset(assetName: inputAssetName);
-
-            JobOutput[] jobOutputs =
+            PresentationTimeRange = new PresentationTimeRange
             {
-                new JobOutputAsset(outputAssetName),
-            };
-
-            // In this example, we are assuming that the job name is unique.
-            // If you already have a job with the desired name, use the Jobs.Get method
-            // to get the existing job. In Media Services v3, the Get method on entities returns ErrorResponseException 
-            // if the entity doesn't exist (a case-insensitive check on the name).
-            Job job;
-            try
-            {
-                job = await client.Jobs.CreateAsync(
-                    resourceGroupName,
-                    accountName,
-                    transformName,
-                    jobName,
-                    new Job
-                    {
-                        Input = jobInput,
-                        Outputs = jobOutputs,
-                    }
-                );
+                StartTimestamp = 100000000L,
+                EndTimestamp = 300000000L
             }
-            catch (Exception exception)
-            {
-                if (exception.GetBaseException() is ErrorResponseException apiException)
-                {
-                    Console.Error.WriteLine(
-                        $"ERROR: API call failed with error code '{apiException.Body.Error.Code}' and message '{apiException.Body.Error.Message}'.");
-                }
-                throw;
-            }
+        });
 
-            return job;
-        }
 
-        /// <summary>
-        /// Wait for the job to finish.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
-        /// <param name="transformName">The name of the transform.</param>
-        /// <param name="jobName">The name of the job.</param>
-        /// <returns></returns>
-        private static Job WaitForJobToFinish(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
-            string transformName, string jobName)
-        {
-            const int SleepInterval = 10 * 1000;
+    return assetFilter.Value;
+}
 
-            Job job;
-            bool exit = false;
-
-            do
-            {
-                job = client.Jobs.Get(resourceGroupName, accountName, transformName, jobName);
-
-                if (job.State == JobState.Finished || job.State == JobState.Error || job.State == JobState.Canceled)
-                {
-                    exit = true;
-                }
-                else
-                {
-                    Console.WriteLine($"Job is {job.State}.");
-
-                    for (int i = 0; i < job.Outputs.Count; i++)
-                    {
-                        JobOutput output = job.Outputs[i];
-
-                        Console.Write($"\tJobOutput[{i}] is {output.State}.");
-
-                        if (output.State == JobState.Processing)
-                        {
-                            Console.Write($"  Progress: {output.Progress}");
-                        }
-
-                        Console.WriteLine();
-                    }
-
-                    System.Threading.Thread.Sleep(SleepInterval);
-                }
-            }
-            while (!exit);
-
-            return job;
-        }
-
-        /// <summary>
-        /// Create an asset filter.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
-        /// <param name="assetName">The asset name.</param>
-        /// <param name="assetFilterName"> The AssetFilter name.</param>
-        /// <returns></returns>
-        private async static Task<AssetFilter> CreateAssetFilterAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string assetName, string assetFilterName)
-        {
-            // startTimestamp = 100000000 and endTimestamp = 300000000 using the default timescale will generate
-            // a play-list that contains fragments from between 10 seconds and 30 seconds of the VoD presentation.
-            // If a fragment straddles the boundary, the entire fragment will be included in the manifest.
-            AssetFilter assetFilter = await client.AssetFilters.CreateOrUpdateAsync(
-                resourceGroupName,
-                accountName,
-                assetName,
-                assetFilterName,
-                new AssetFilter(
-                    presentationTimeRange: new PresentationTimeRange(
-                        startTimestamp: 100000000L,
-                        endTimestamp: 300000000L))
-                );
-
-            return assetFilter;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName">The Media Services account name.</param>
-        /// <param name="accountFilterName">The AccountFilter name</param>
-        /// <returns></returns>
-        private async static Task<AccountFilter> CreateAccountFilterAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string accountFilterName)
-        {
-            var audioConditions = new List<FilterTrackPropertyCondition>()
+/// <summary>
+/// 
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="accountFilterName">The AccountFilter name</param>
+/// <returns></returns>
+static async Task<MediaServicesAccountFilterResource> CreateAccountFilterAsync(MediaServicesAccountResource mediaServicesAccount, string accountFilterName)
+{
+    var audioConditions = new List<FilterTrackPropertyCondition>()
             {
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Type, "Audio", FilterTrackPropertyCompareOperation.Equal),
-                new FilterTrackPropertyCondition(FilterTrackPropertyType.FourCC, "EC-3", FilterTrackPropertyCompareOperation.Equal)
+                new FilterTrackPropertyCondition(FilterTrackPropertyType.FourCC, "EC-3", FilterTrackPropertyCompareOperation.NotEqual)
             };
 
-            var videoConditions = new List<FilterTrackPropertyCondition>()
+    var videoConditions = new List<FilterTrackPropertyCondition>()
             {
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Type, "Video", FilterTrackPropertyCompareOperation.Equal),
                 new FilterTrackPropertyCondition(FilterTrackPropertyType.Bitrate, "0-1000000", FilterTrackPropertyCompareOperation.Equal)
             };
 
-            List<FilterTrackSelection> includedTracks = new()
-            {
+    var accountFilter = await mediaServicesAccount.GetMediaServicesAccountFilters().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        accountFilterName,
+        new MediaServicesAccountFilterData
+        {
+            Tracks = {
                 new FilterTrackSelection(audioConditions),
                 new FilterTrackSelection(videoConditions)
+            }
+        });
+
+    return accountFilter.Value;
+}
+
+/// <summary>
+/// Prints the streaming URLs.
+/// </summary>
+/// <param name="locator">The streaming locator.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+static async Task PrintStreamingUrlsAsync(
+    StreamingLocatorResource locator,
+    StreamingEndpointResource streamingEndpoint)
+{
+    var paths = await locator.GetStreamingPathsAsync();
+
+    foreach (StreamingPath path in paths.Value.StreamingPaths)
+    {
+        Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
+        foreach (string streamingFormatPath in path.Paths)
+        {
+            var uriBuilder = new UriBuilder()
+            {
+                Scheme = "https",
+                Host = streamingEndpoint.Data.HostName,
+                Path = streamingFormatPath
             };
-
-            AccountFilter accountFilter = await client.AccountFilters.CreateOrUpdateAsync(
-                resourceGroupName,
-                accountName,
-                accountFilterName,
-                new AccountFilter(tracks: includedTracks));
-
-            return accountFilter;
+            Console.WriteLine($"\t{uriBuilder}");
         }
+        Console.WriteLine();
+    }
+}
 
-        /// <summary>
-        /// Checks if the streaming endpoint is in the running state,
-        /// if not, starts it. Then, builds the streaming URLs.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="locatorName">The name of the StreamingLocator that was created.</param>
-        /// <param name="streamingEndpoint">The streaming endpoint.</param>
-        /// <returns>A task.</returns>
-        private static async Task<IList<string>> GetDashStreamingUrlsAsync(IAzureMediaServicesClient client, string resourceGroupName,
-            string accountName, string locatorName, StreamingEndpoint streamingEndpoint)
+/// <summary>
+/// Gets the streaming Urls.
+/// </summary>
+/// <param name="locator">The streaming locator.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+static async Task<IEnumerable<Uri>> ReturnStreamingUrlAsync(
+    StreamingLocatorResource locator,
+    StreamingEndpointResource streamingEndpoint)
+{
+    var paths = await locator.GetStreamingPathsAsync();
+
+    var listUri = paths.Value.StreamingPaths.Select(p =>
+    new UriBuilder()
+    {
+        Scheme = "https",
+        Host = streamingEndpoint.Data.HostName,
+        Path = p.Paths[0]
+    }.Uri
+    );
+
+    return listUri;
+}
+
+/// <summary>
+/// Delete the resources that were created.
+/// </summary>
+/// <param name="transform">The transform.</param>
+/// <param name="job">The Job.</param>
+/// <param name="inputAsset">The input Asset.</param>
+/// <param name="outputAsset">The output Asset.</param>
+/// <param name="streamingLocator">The streaming locator. </param>
+/// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+/// <returns>A task.</returns>
+static async Task CleanUpAsync(
+    MediaTransformResource transform,
+    MediaJobResource job,
+    MediaAssetResource? inputAsset,
+    MediaAssetResource outputAsset,
+    StreamingLocatorResource? streamingLocator,
+    bool stopEndpoint,
+    StreamingEndpointResource? streamingEndpoint)
+{
+    await job.DeleteAsync(WaitUntil.Completed);
+    await transform.DeleteAsync(WaitUntil.Completed);
+
+    if (inputAsset != null)
+    {
+        await inputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
+    await outputAsset.DeleteAsync(WaitUntil.Completed);
+
+    if (streamingLocator != null)
+    {
+        await streamingLocator.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (streamingEndpoint != null)
+    {
+        if (stopEndpoint)
         {
-            IList<string> streamingUrls = new List<string>();
-
-            ListPathsResponse paths = await client.StreamingLocators.ListPathsAsync(resourceGroupName, accountName, locatorName);
-
-            foreach (StreamingPath path in paths.StreamingPaths)
-            {
-                UriBuilder uriBuilder = new()
-                {
-                    Scheme = "https",
-                    Host = streamingEndpoint.HostName,
-                    Path = path.Paths[0]
-                };
-                if (path.StreamingProtocol == StreamingPolicyStreamingProtocol.Dash)
-                {
-                    streamingUrls.Add(uriBuilder.ToString());
-                }
-            }
-
-            return streamingUrls;
+            // Because we started the endpoint, we'll stop it.
+            await streamingEndpoint.StopAsync(WaitUntil.Completed);
         }
-
-        /// <summary>
-        /// Delete the objects that were created.
-        /// </summary>
-        /// <param name="client">The Media Services client.</param>
-        /// <param name="resourceGroupName">The name of the resource group within the Azure subscription.</param>
-        /// <param name="accountName"> The Media Services account name.</param>
-        /// <param name="transformName">The transform name.</param>
-        /// <param name="jobName">The job name.</param>
-        /// <param name="inputAssetName">The input asset name.</param>
-        /// <param name="outputAssetName">The output asset name.</param>
-        /// <param name="accountFilterName">The AccountFilter name.</param>
-        /// <param name="streamingLocatorName">The streaming locator name. </param>
-        /// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
-        /// <param name="streamingEndpointName">The endpoint name.</param>
-        /// <returns>A task.</returns>
-        private static async Task CleanUpAsync(IAzureMediaServicesClient client, string resourceGroupName, string accountName,
-            string transformName, string jobName, string inputAssetName, string outputAssetName, string accountFilterName,
-            string streamingLocatorName, bool stopEndpoint, string streamingEndpointName)
+        else
         {
-            await client.Jobs.DeleteAsync(resourceGroupName, accountName, transformName, jobName);
-            await client.Assets.DeleteAsync(resourceGroupName, accountName, inputAssetName);
-            await client.Assets.DeleteAsync(resourceGroupName, accountName, outputAssetName);
-            await client.AccountFilters.DeleteAsync(resourceGroupName, accountName, accountFilterName);
-            await client.StreamingLocators.DeleteAsync(resourceGroupName, accountName, streamingLocatorName);
+            // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+            // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+            Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        }
+    }
+}
 
-            if (stopEndpoint)
-            {
-                // Because we started the endpoint, we'll stop it.
-                await client.StreamingEndpoints.StopAsync(resourceGroupName, accountName, streamingEndpointName);
-            }
-            else
-            {
-                // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
-                // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
-                Console.WriteLine($"The endpoint {streamingEndpointName} is running. To halt further billing on the endpoint, please stop it in azure portal or AMS Explorer.");
-            }
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
         }
     }
 }
