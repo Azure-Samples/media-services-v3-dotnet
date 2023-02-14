@@ -32,14 +32,6 @@
                 {
                     "label": "Build All",
                     "value": "${workspaceFolder}"
-                },
-                {
-                    "label": "Build CreateAccount",
-                    "value": "${workspaceFolder}/Account/CreateAccount"
-                },
-                {
-                    "label": "Build GetAccounts",
-                    "value": "${workspaceFolder}/Account/GetAccounts"
                 }
             ]
         }
