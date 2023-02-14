@@ -216,6 +216,20 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
+      "name": "Launch Encoding Constant Rate Factor H264",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ConstantRateFactor/bin/Debug/net7.0/Encoding_H264_ConstantRateFactor.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ConstantRateFactor/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch Encoding Content Aware H264",
       "type": "coreclr",
       "request": "launch",
