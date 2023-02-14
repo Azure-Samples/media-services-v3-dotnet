@@ -12,7 +12,7 @@
       "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0/CreateAccount.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Account/CreateAccount",
+      "cwd": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -26,7 +26,7 @@
       "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0/GetAccounts.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Account/GetAccounts",
+      "cwd": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -40,7 +40,7 @@
       "program": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0/Quotas.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Account/Quotas",
+      "cwd": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -54,7 +54,7 @@
       "program": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0/AssetManagement.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Assets/AssetManagement/",
+      "cwd": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -68,7 +68,7 @@
       "program": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net7.0/AudioAnalyzer.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer",
+      "cwd": "${workspaceFolder}/AudioAnalytics/AudioAnalyzer/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -82,7 +82,7 @@
       "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0/BasicAESClearKey.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/ContentProtection/BasicAESClearKey",
+      "cwd": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -96,7 +96,7 @@
       "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0/BasicPlayReady.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReady",
+      "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -110,7 +110,7 @@
       "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0/BasicWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/ContentProtection/BasicWidevine",
+      "cwd": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -124,7 +124,7 @@
       "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0/OfflineFairPlay.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/ContentProtection/OfflineFairPlay",
+      "cwd": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -138,7 +138,7 @@
       "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0/OfflinePlayreadyAndWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine",
+      "cwd": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -152,7 +152,7 @@
       "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0/AssetFilters.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/AssetFilters",
+      "cwd": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -166,7 +166,7 @@
       "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0/StreamHLSAndDASH.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/StreamHLSAndDASH",
+      "cwd": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -180,7 +180,7 @@
       "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/StreamExistingMp4.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/",
+      "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/bin/Debug/net7.0",
       "externalConsole": true,
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
@@ -195,7 +195,7 @@
       "program": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net7.0/LiveEventWithDVR.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/Live/LiveEventWithDVR",
+      "cwd": "${workspaceFolder}/Live/LiveEventWithDVR/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -209,7 +209,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net7.0/Encoding_H264.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -223,7 +223,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net7.0/Encoding_H264_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -237,7 +237,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net7.0/Encoding_H264_ContentAware_Constrained.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -251,7 +251,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net7.0/Encoding_HEVC.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -265,7 +265,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net7.0/Encoding_HEVC_ContentAware.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -279,7 +279,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net7.0/Encoding_SpriteThumbnail.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_SpriteThumbnail/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -293,7 +293,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net7.0/Encoding_OverlayImage.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_OverlayImage/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -307,7 +307,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net7.0/Encoding_StitchTwoAssets.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_StitchTwoAssets/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -321,7 +321,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net7.0/Encoding_PredefinedPreset.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_PredefinedPreset/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -335,7 +335,7 @@
       "program": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net7.0/Encoding_MultiChannel_Audio.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_MultiChannel_Audio/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
