@@ -74,6 +74,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quotas", "Account\Quotas\Qu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetManagement", "Assets\AssetManagement\AssetManagement.csproj", "{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_H264_ConstantRateFactor", "VideoEncoding\Encoding_H264_ConstantRateFactor\Encoding_H264_ConstantRateFactor.csproj", "{4E899AAD-CBF0-419C-AD74-71FFB1656F59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -372,6 +374,18 @@ Global
 		{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}.Release|x64.Build.0 = Release|Any CPU
 		{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}.Release|x86.ActiveCfg = Release|Any CPU
 		{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}.Release|x86.Build.0 = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|x64.Build.0 = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Debug|x86.Build.0 = Debug|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x64.ActiveCfg = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x64.Build.0 = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x86.ActiveCfg = Release|Any CPU
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -401,6 +415,7 @@ Global
 		{2772EF4A-9E1F-4F3D-ADC5-7BA3F075BCAF} = {1A42B0C5-1101-44E1-A9D6-CC94319705AE}
 		{3234B0DC-3C65-464A-A012-17979DEF6774} = {1A42B0C5-1101-44E1-A9D6-CC94319705AE}
 		{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98} = {E550442C-98D5-430C-9DE8-22E97C99614C}
+		{4E899AAD-CBF0-419C-AD74-71FFB1656F59} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9DAB230D-4F3C-4230-9C72-C8B5198E2064}
