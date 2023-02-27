@@ -10,9 +10,6 @@ This sample demonstrates how to dynamically encrypt your content with AES-128. I
 
 When a stream is requested by a player, Media Services uses the specified key to dynamically encrypt your content with AES-128 and Azure Media Player uses the token to decrypt.
 
-> [!TIP]
-> The `Program.cs` file (in the `BasicAESClearKey` folder) has extensive comments.
-
 ## Prerequisites
 
 Required Assemblies:
@@ -42,4 +39,4 @@ The sample will authenticate using any of the methods supported by [`DefaultAzur
 ## Next steps
 
 * [Azure Media Services pricing](https://azure.microsoft.com/pricing/details/media-services/)
-* [Azure Media Services v3 Documentation](* [Streaming Policies](https://learn.microsoft.com/azure/media-services/latest/stream-streaming-policy-concept)
+* [Azure Media Services v3 Documentation](https://learn.microsoft.com/azure/media-services/latest/)
