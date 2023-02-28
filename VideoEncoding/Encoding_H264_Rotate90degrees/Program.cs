@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
 const string OutputFolder = "Output";
-const string CustomTransform = "Custom_H264_3Layer";
+const string CustomTransform = "Custom_H264_Rotate90";
 const string InputMP4FileName = "ignite.mp4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
@@ -152,18 +152,6 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                                         Width = "1280",
                                         Height = "720",
                                         Label = "HD-3600kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H264Layer(bitrate: 1600000)
-                                    {
-                                        Width = "960",
-                                        Height = "540",
-                                        Label = "SD-1600kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H264Layer(bitrate: 600000)
-                                    {
-                                        Width = "640",
-                                        Height = "360",
-                                        Label = "SD-600kbps" // This label is used to modify the file name in the output formats
                                     }
                                 }
                             },
@@ -193,13 +181,21 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                             new PngFormat(filenamePattern: "Thumbnail-{Basename}-{Index}{Extension}")
                         }
                     )
+                    {
+                        Filters = new FilteringOperations()
+                        {
+                            // Specify a 90 degrees rotation of the video
+                            // Other options here include Auto rotation if the content contains metadata
+                            Rotation = RotationSetting.Rotate90
+                        }
+                    }
                 )
                 {
                     OnError = MediaTransformOnErrorType.StopProcessingJob,
                     RelativePriority = MediaJobPriority.Normal
                 }
             },
-            Description = "A simple custom encoding transform with 3 MP4 bitrates"
+            Description = "A simple custom H264 encoding transform that rotates the video 90 degrees"
         });
 
     return transform.Value;

@@ -17,23 +17,23 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioAnalyzer", "AudioAnaly
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ContentProtection", "ContentProtection", "{B0C380B6-77AA-4917-9EA4-4A181AE92B87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicAESClearKey", "ContentProtection\BasicAESClearKey\BasicAESClearKey.csproj", "{7E0A1FCB-7DC6-47EA-A366-C70FEAB62B4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protection_BasicAESClearKey", "ContentProtection\BasicAESClearKey\Protection_BasicAESClearKey.csproj", "{7E0A1FCB-7DC6-47EA-A366-C70FEAB62B4C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicPlayReady", "ContentProtection\BasicPlayReady\BasicPlayReady.csproj", "{BA9C6363-2035-452C-8EF5-7C09DDEB4EC5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protection_BasicPlayReady", "ContentProtection\BasicPlayReady\Protection_BasicPlayReady.csproj", "{BA9C6363-2035-452C-8EF5-7C09DDEB4EC5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicWidevine", "ContentProtection\BasicWidevine\BasicWidevine.csproj", "{4A280A93-4914-44D1-938C-2CECEBAB9167}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protection_BasicWidevine", "ContentProtection\BasicWidevine\Protection_BasicWidevine.csproj", "{4A280A93-4914-44D1-938C-2CECEBAB9167}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OfflineFairPlay", "ContentProtection\OfflineFairPlay\OfflineFairPlay.csproj", "{6E7BD2FA-2A63-4441-9F32-48BA2436820B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protection_OfflineFairPlay", "ContentProtection\OfflineFairPlay\Protection_OfflineFairPlay.csproj", "{6E7BD2FA-2A63-4441-9F32-48BA2436820B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OfflinePlayReadyAndWidevine", "ContentProtection\OfflinePlayReadyAndWidevine\OfflinePlayReadyAndWidevine.csproj", "{C0C6331E-1BD3-4438-BCD8-8BDAC521DA63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Protection_OfflinePlayReadyAndWidevine", "ContentProtection\OfflinePlayReadyAndWidevine\Protection_OfflinePlayReadyAndWidevine.csproj", "{C0C6331E-1BD3-4438-BCD8-8BDAC521DA63}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Streaming", "Streaming", "{0C58E8F6-A6E7-4951-8A51-91F580B7E110}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetFilters", "Streaming\AssetFilters\AssetFilters.csproj", "{FE653362-7574-4731-AE5C-D83376CDD90F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streaming_AssetFilters", "Streaming\AssetFilters\Streaming_AssetFilters.csproj", "{FE653362-7574-4731-AE5C-D83376CDD90F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamHLSAndDASH", "Streaming\StreamHLSAndDASH\StreamHLSAndDASH.csproj", "{13B07524-BD0B-474F-B0EF-65A5E22BA589}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streaming_StreamHLSAndDASH", "Streaming\StreamHLSAndDASH\Streaming_StreamHLSAndDASH.csproj", "{13B07524-BD0B-474F-B0EF-65A5E22BA589}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StreamExistingMp4", "Streaming\StreamExistingMp4\StreamExistingMp4.csproj", "{60785C6A-7BF6-471D-9D89-A2B8790BBA75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Streaming_StreamExistingMp4", "Streaming\StreamExistingMp4\Streaming_StreamExistingMp4.csproj", "{60785C6A-7BF6-471D-9D89-A2B8790BBA75}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_HEVC", "VideoEncoding\Encoding_HEVC\Encoding_HEVC.csproj", "{EA4CE1B9-6A25-4491-8B87-421F63521C92}"
 EndProject
@@ -53,7 +53,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_StitchTwoAssets", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Account", "Account", "{1A42B0C5-1101-44E1-A9D6-CC94319705AE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateAccount", "Account\CreateAccount\CreateAccount.csproj", "{8A47C39E-3326-4536-8FB2-80F894B1F30F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Account_CreateAccount", "Account\CreateAccount\Account_CreateAccount.csproj", "{8A47C39E-3326-4536-8FB2-80F894B1F30F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1308567E-4030-4730-87C2-94DBAC602732}"
 	ProjectSection(SolutionItems) = preProject
@@ -68,13 +68,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_H264_ContentAware_
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Assets", "Assets", "{E550442C-98D5-430C-9DE8-22E97C99614C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GetAccounts", "Account\GetAccounts\GetAccounts.csproj", "{2772EF4A-9E1F-4F3D-ADC5-7BA3F075BCAF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Account_GetAccounts", "Account\GetAccounts\Account_GetAccounts.csproj", "{2772EF4A-9E1F-4F3D-ADC5-7BA3F075BCAF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Quotas", "Account\Quotas\Quotas.csproj", "{3234B0DC-3C65-464A-A012-17979DEF6774}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Account_Quotas", "Account\Quotas\Account_Quotas.csproj", "{3234B0DC-3C65-464A-A012-17979DEF6774}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssetManagement", "Assets\AssetManagement\AssetManagement.csproj", "{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assets_AssetManagement", "Assets\AssetManagement\Assets_AssetManagement.csproj", "{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_H264_ConstantRateFactor", "VideoEncoding\Encoding_H264_ConstantRateFactor\Encoding_H264_ConstantRateFactor.csproj", "{4E899AAD-CBF0-419C-AD74-71FFB1656F59}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_H264_Rotate90degrees", "VideoEncoding\Encoding_H264_Rotate90degrees\Encoding_H264_Rotate90degrees.csproj", "{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encoding_Builtin_CopyCodec", "VideoEncoding\Encoding_Builtin_CopyCodec\Encoding_Builtin_CopyCodec.csproj", "{CFA91106-A784-4585-9AE1-8EF4A4109ECA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -386,6 +390,30 @@ Global
 		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x64.Build.0 = Release|Any CPU
 		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x86.ActiveCfg = Release|Any CPU
 		{4E899AAD-CBF0-419C-AD74-71FFB1656F59}.Release|x86.Build.0 = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|x64.Build.0 = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Debug|x86.Build.0 = Debug|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|x64.ActiveCfg = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|x64.Build.0 = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|x86.ActiveCfg = Release|Any CPU
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C}.Release|x86.Build.0 = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|x64.Build.0 = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Debug|x86.Build.0 = Debug|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|x64.ActiveCfg = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|x64.Build.0 = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -416,6 +444,8 @@ Global
 		{3234B0DC-3C65-464A-A012-17979DEF6774} = {1A42B0C5-1101-44E1-A9D6-CC94319705AE}
 		{9777CD76-00CA-4E93-A3C6-8CBD35BB7D98} = {E550442C-98D5-430C-9DE8-22E97C99614C}
 		{4E899AAD-CBF0-419C-AD74-71FFB1656F59} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
+		{6461DA24-D1A8-4D7E-AED6-F52C6C780F5C} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
+		{CFA91106-A784-4585-9AE1-8EF4A4109ECA} = {83997E86-616B-4C40-9BB3-77AA805BDD4C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9DAB230D-4F3C-4230-9C72-C8B5198E2064}

@@ -202,6 +202,20 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
+      "name": "Launch Encoding CopyCodec H264",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_Builtin_CopyCodec/bin/Debug/net7.0/Encoding_Builtin_CopyCodec.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_Builtin_CopyCodec/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch Encoding H264",
       "type": "coreclr",
       "request": "launch",
@@ -252,6 +266,20 @@
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_ContentAware_Constrained/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Launch Encoding H264 Video Rotate 90 Degrees",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_H264_Rotate90degrees/bin/Debug/net7.0/Encoding_H264_Rotate90degrees.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_H264_Rotate90degrees/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
