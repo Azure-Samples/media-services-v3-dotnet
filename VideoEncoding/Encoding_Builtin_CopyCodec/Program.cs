@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
 const string OutputFolder = "Output";
-const string CustomTransform = "Custom_H264_3Layer";
+const string CustomTransform = "Custom_CopyCodec";
 const string InputMP4FileName = "ignite.mp4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
@@ -124,82 +124,16 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the H.264 (H264Layer) codec
-                // This demonstrates how to create custom codec and layer output settings
+                // uses the built in SaaS Copy Codec preset, which copies source audio and video to MP4 tracks.
                 new MediaTransformOutput(
-                    preset: new StandardEncoderPreset(
-                        codecs: new MediaCodecBase[]
-                        {
-                            // Add an AAC Audio layer for the audio encoding
-                            new AacAudio
-                            {
-                                Channels = 2,
-                                SamplingRate = 48000,
-                                Bitrate = 128000,
-                                Profile = AacAudioProfile.AacLc
-                            },
-                            // Next, add a H.264 for the video encoding
-                            new H264Video
-                            {
-                                // Set the GOP interval to 2 seconds for all H.264 layers
-                                KeyFrameInterval = TimeSpan.FromSeconds(2),
-                        
-                                // Add H264Layer. Assign a label that you can use for the output filename.
-                                Layers =
-                                {
-                                    new H264Layer(bitrate: 3600000)
-                                    {
-                                        Width = "1280",
-                                        Height = "720",
-                                        Label = "HD-3600kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H264Layer(bitrate: 1600000)
-                                    {
-                                        Width = "960",
-                                        Height = "540",
-                                        Label = "SD-1600kbps" // This label is used to modify the file name in the output formats
-                                    },
-                                    new H264Layer(bitrate: 600000)
-                                    {
-                                        Width = "640",
-                                        Height = "360",
-                                        Label = "SD-600kbps" // This label is used to modify the file name in the output formats
-                                    }
-                                }
-                            },
-                            // Also generate a set of PNG thumbnails
-                            new PngImage(start: "25%")
-                            {
-                                Start = "25%",
-                                Step = "25%",
-                                Range = "80%",
-                                Layers =
-                                {
-                                    new PngLayer
-                                    {
-                                        Width = "50%",
-                                        Height = "50%"
-                                    }
-                                }
-                            }
-                        },
-                        // Specify the format for the output files - one for video+audio, and another for the thumbnails
-                        formats: new MediaFormatBase[]
-                        {
-                            // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                            // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
-                            // Either {Label} or {Bitrate} should suffice
-                            new Mp4Format(filenamePattern: "Video-{Basename}-{Label}-{Bitrate}{Extension}"),
-                            new PngFormat(filenamePattern: "Thumbnail-{Basename}-{Index}{Extension}")
-                        }
+                    preset: new BuiltInStandardEncoderPreset("saasCopyCodec")
                     )
-                )
                 {
                     OnError = MediaTransformOnErrorType.StopProcessingJob,
                     RelativePriority = MediaJobPriority.Normal
                 }
             },
-            Description = "A simple custom encoding transform with 3 MP4 bitrates"
+            Description = "A custom transform with copy codec"
         });
 
     return transform.Value;
