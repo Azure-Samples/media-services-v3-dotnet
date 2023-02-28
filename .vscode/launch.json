@@ -206,10 +206,10 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/VideoEncoding/Encoding_Builtin_CopyCodec/bin/Debug/net7.0/Encoding_Builtin_CopyCodec.exe",
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_BuiltIn_CopyCodec/bin/Debug/net7.0/Encoding_BuiltIn_CopyCodec.exe",
       "preLaunchTask": "build",
       "args": [],
-      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_Builtin_CopyCodec/bin/Debug/net7.0",
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_BuiltIn_CopyCodec/bin/Debug/net7.0",
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
