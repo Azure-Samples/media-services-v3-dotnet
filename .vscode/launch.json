@@ -328,6 +328,20 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
+      "name": "Launch Encoding Content Aware HEVC Constrained",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware_Constrained/bin/Debug/net7.0/Encoding_HEVC_ContentAware_Constrained.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_HEVC_ContentAware_Constrained/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch Encoding With Sprite",
       "type": "coreclr",
       "request": "launch",
