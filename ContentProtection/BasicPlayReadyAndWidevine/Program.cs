@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using WidevineConfig;
 
 const string CAETransformName = "ContentAwareEncoding";
 const string Issuer = "myIssuer";
@@ -117,10 +118,10 @@ await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
 var smoothPath = await ReturnSmoothStreamingUrlAsync(streamingLocator, streamingEndpoint);
 Console.WriteLine();
 Console.WriteLine("Copy and paste the following URL in your browser to play back the file in the Azure Media Player.");
-Console.WriteLine("Note, the player is set to use the AES token and the Bearer token is specified.");
+Console.WriteLine("Note, the player is set to use the Playready token and the Bearer token is specified.");
 Console.WriteLine("The token is valid 60 minutes and can be used 5 times.");
 Console.WriteLine();
-Console.WriteLine($"https://ampdemo.azureedge.net/?url={smoothPath}&aes=true&aestoken=Bearer%20{token}");
+Console.WriteLine($"https://ampdemo.azureedge.net/?url={smoothPath}&playready=true&playreadytoken=Bearer%20{token}&widevine=true&widevinetoken=Bearer%20{token}");
 Console.WriteLine();
 
 Console.WriteLine("When finished, press ENTER to cleanup.");
@@ -129,6 +130,72 @@ Console.ReadLine();
 
 await CleanUpAsync(transform, job, null, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint, contentKeyPolicy);
 
+/// <summary>
+/// Configures PlayReady license template.
+/// </summary>
+/// <returns></returns>
+static ContentKeyPolicyPlayReadyConfiguration ConfigurePlayReadyLicenseTemplate()
+{
+    ContentKeyPolicyPlayReadyLicense objContentKeyPolicyPlayReadyLicense;
+
+    objContentKeyPolicyPlayReadyLicense = new ContentKeyPolicyPlayReadyLicense(
+        allowTestDevices: true,
+        licenseType: ContentKeyPolicyPlayReadyLicenseType.NonPersistent,
+        contentKeyLocation: new ContentKeyPolicyPlayReadyContentEncryptionKeyFromHeader(),
+        contentType: ContentKeyPolicyPlayReadyContentType.UltraVioletStreaming)
+    {
+        PlayRight = new ContentKeyPolicyPlayReadyPlayRight(
+            hasDigitalVideoOnlyContentRestriction: false,
+            hasImageConstraintForAnalogComponentVideoRestriction: true,
+            hasImageConstraintForAnalogComputerMonitorRestriction: true,
+            allowPassingVideoContentToUnknownOutput: ContentKeyPolicyPlayReadyUnknownOutputPassingOption.Allowed)
+        {
+            ExplicitAnalogTelevisionOutputRestriction = new ContentKeyPolicyPlayReadyExplicitAnalogTelevisionRestriction(true, 2),
+            AllowPassingVideoContentToUnknownOutput = ContentKeyPolicyPlayReadyUnknownOutputPassingOption.Allowed
+        }
+    };
+
+    var objContentKeyPolicyPlayReadyConfiguration = new ContentKeyPolicyPlayReadyConfiguration(new List<ContentKeyPolicyPlayReadyLicense> { objContentKeyPolicyPlayReadyLicense });
+
+    return objContentKeyPolicyPlayReadyConfiguration;
+}
+
+/// <summary>
+/// Configures Widevine license template.
+/// </summary>
+/// <returns></returns>
+static ContentKeyPolicyWidevineConfiguration ConfigureWidevineLicenseTemplate()
+{
+    var template = new WidevineTemplate()
+    {
+        AllowedTrackTypes = "SD_HD",
+        ContentKeySpecs = new ContentKeySpec[]
+        {
+                    new ContentKeySpec()
+                    {
+                        TrackType = "SD",
+                        SecurityLevel = 1,
+                        RequiredOutputProtection = new OutputProtection()
+                        {
+                            HDCP = "HDCP_NONE"
+                            // NOTE: the policy should be set to "HDCP_V1" (or greater) if you need to disable screen capture. The Widevine desktop
+                            // browser CDM module only blocks screen capture when HDCP is enabled and the screen capture application is using
+                            // Chromes screen capture APIs. 
+                        }
+                    }
+        },
+        PolicyOverrides = new PolicyOverrides()
+        {
+            CanPlay = true,
+            CanPersist = false,
+            CanRenew = false,
+            RentalDurationSeconds = 2592000,
+            PlaybackDurationSeconds = 10800,
+            LicenseDurationSeconds = 604800,
+        }
+    };
+    return new ContentKeyPolicyWidevineConfiguration(Newtonsoft.Json.JsonConvert.SerializeObject(template));
+}
 
 /// <summary>
 /// Create the content key policy that configures how the content key is delivered to end clients 
@@ -153,11 +220,22 @@ static async Task<ContentKeyPolicyResource> GetOrCreateContentKeyPolicyAsync(
             Options =
             {
                  new ContentKeyPolicyOption(
-                       configuration: new ContentKeyPolicyClearKeyConfiguration(),
+                       configuration: ConfigurePlayReadyLicenseTemplate(),
                        restriction:  new ContentKeyPolicyTokenRestriction(
                           issuer: Issuer,
                           audience : Audience,
-                          primaryVerificationKey:   ckTokenKey,
+                          primaryVerificationKey: ckTokenKey,
+                          restrictionTokenType: ContentKeyPolicyRestrictionTokenType.Jwt)
+                       {
+                           RequiredClaims = { new ContentKeyPolicyTokenClaim{ ClaimType ="urn:microsoft:azure:mediaservices:contentkeyidentifier" } },
+                       }
+                       ),
+                   new ContentKeyPolicyOption(
+                       configuration: ConfigureWidevineLicenseTemplate(),
+                       restriction:  new ContentKeyPolicyTokenRestriction(
+                          issuer: Issuer,
+                          audience : Audience,
+                          primaryVerificationKey: ckTokenKey,
                           restrictionTokenType: ContentKeyPolicyRestrictionTokenType.Jwt)
                        {
                            RequiredClaims = { new ContentKeyPolicyTokenClaim{ ClaimType ="urn:microsoft:azure:mediaservices:contentkeyidentifier" } },

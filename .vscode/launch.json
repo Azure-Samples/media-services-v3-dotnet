@@ -9,7 +9,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0/CreateAccount.exe",
+      "program": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0/Account_CreateAccount.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/CreateAccount/bin/Debug/net7.0",
@@ -23,7 +23,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0/GetAccounts.exe",
+      "program": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0/Account_GetAccounts.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/GetAccounts/bin/Debug/net7.0",
@@ -37,7 +37,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0/Quotas.exe",
+      "program": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0/Account_Quotas.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Account/Quotas/bin/Debug/net7.0",
@@ -51,7 +51,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0/AssetManagement.exe",
+      "program": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0/Assets_AssetManagement.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Assets/AssetManagement/bin/Debug/net7.0",
@@ -317,7 +317,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0/AssetFilters.exe",
+      "program": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0/Streaming_AssetFilters.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/AssetFilters/bin/Debug/net7.0",
@@ -331,7 +331,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0/StreamHLSAndDASH.exe",
+      "program": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0/Streaming_StreamHLSAndDASH.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/StreamHLSAndDASH/bin/Debug/net7.0",
@@ -345,7 +345,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/StreamExistingMp4.exe",
+      "program": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/Streaming_StreamExistingMp4.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/Streaming/StreamExistingMp4/bin/Debug/net7.0/bin/Debug/net7.0",
@@ -360,7 +360,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0/BasicAESClearKey.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0/Protection_BasicAESClearKey.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicAESClearKey/bin/Debug/net7.0",
@@ -374,7 +374,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0/BasicPlayReady.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0/Protection_BasicPlayReady.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReady/bin/Debug/net7.0",
@@ -388,10 +388,25 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0/BasicWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0/Protection_BasicWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/BasicWidevine/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Launch Basic PlayReady and Widevine DRM",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/ContentProtection/BasicPlayReadyAndWidevine/bin/Debug/net7.0/Protection_BasicPlayReadyAndWidevine.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/ContentProtection/BasicPlayReadyAndWidevine/bin/Debug/net7.0/bin/Debug/net7.0",
+      "externalConsole": true,
       "stopAtEntry": false,
       // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
       "console": "integratedTerminal",
@@ -402,7 +417,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0/OfflineFairPlay.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0/Protection_OfflineFairPlay.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflineFairPlay/bin/Debug/net7.0",
@@ -416,7 +431,7 @@
       "type": "coreclr",
       "request": "launch",
       // If you have changed target frameworks, make sure to update the program path.
-      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0/OfflinePlayreadyAndWidevine.exe",
+      "program": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0/Protection_OfflinePlayreadyAndWidevine.exe",
       "preLaunchTask": "build",
       "args": [],
       "cwd": "${workspaceFolder}/ContentProtection/OfflinePlayreadyAndWidevine/bin/Debug/net7.0",
