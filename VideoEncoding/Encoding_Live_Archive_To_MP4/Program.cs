@@ -1,0 +1,440 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using Azure;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Media;
+using Azure.ResourceManager.Media.Models;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+
+const string OutputFolder = "Output";
+const string CustomTransform = "CopyLiveArchiveToMP4";
+const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
+const string InputArchiveName = "archiveAsset-3009"; // Set this to the name of the Asset used in your LiveOutput. This would be the archived live event Asset name.
+
+// Loading the settings from the appsettings.json file or from the command line parameters
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddCommandLine(args)
+    .Build();
+
+if (!Options.TryGetOptions(configuration, out var options))
+{
+    return;
+}
+
+Console.WriteLine($"Subscription ID:             {options.AZURE_SUBSCRIPTION_ID}");
+Console.WriteLine($"Resource group name:         {options.AZURE_RESOURCE_GROUP}");
+Console.WriteLine($"Media Services account name: {options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME}");
+Console.WriteLine();
+
+var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentifier(
+    subscriptionId: options.AZURE_SUBSCRIPTION_ID.ToString(),
+    resourceGroupName: options.AZURE_RESOURCE_GROUP,
+    accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
+
+var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var armClient = new ArmClient(credential);
+var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
+
+// Creating a unique suffix so that we don't have name collisions if you run the sample
+// multiple times without cleaning up.
+string uniqueness = Guid.NewGuid().ToString()[..13];
+string jobName = $"job-{uniqueness}";
+string locatorName = $"locator-{uniqueness}";
+string outputAssetName = $"output-{uniqueness}";
+bool stopStreamingEndpoint = false;
+
+// Ensure that you have customized encoding Transform. This is a one-time setup operation.
+var transform = await CreateTransformAsync(mediaServicesAccount, CustomTransform);
+
+// Create a job input Asset using top bitrate, with optional time trimming
+var inputAsset = CreateJobInputAssetTopBitrate(InputArchiveName);
+
+// Output from the Job must be written to an Asset, so let's create one.
+var outputAsset = await CreateOutputAssetAsync(mediaServicesAccount, outputAssetName);
+
+var job = await SubmitJobAsync(transform, jobName, inputAsset, outputAsset);
+
+Console.WriteLine("Polling Job status...");
+job = await WaitForJobToFinishAsync(job);
+
+if (job.Data.State == MediaJobState.Error)
+{
+    Console.WriteLine($"ERROR: Job finished with error message: {job.Data.Outputs[0].Error.Message}");
+    Console.WriteLine($"ERROR:                   error details: {job.Data.Outputs[0].Error.Details[0].Message}");
+    await CleanUpAsync(transform, job, null, outputAsset, null, stopStreamingEndpoint, null);
+    return;
+}
+
+Console.WriteLine("Job finished.");
+Directory.CreateDirectory(OutputFolder);
+
+await DownloadResultsAsync(outputAsset, OutputFolder);
+
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName);
+
+var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
+
+if (streamingEndpoint.Data.ResourceState != StreamingEndpointResourceState.Running)
+{
+    Console.WriteLine("Streaming Endpoint is not running, starting now...");
+    await streamingEndpoint.StartAsync(WaitUntil.Completed);
+
+    // Since we started the endpoint, we should stop it in cleanup.
+    stopStreamingEndpoint = true;
+}
+
+Console.WriteLine();
+Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
+await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
+
+Console.WriteLine("To try streaming, copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
+Console.WriteLine("When finished, press ENTER to cleanup.");
+Console.WriteLine();
+Console.ReadLine();
+
+await CleanUpAsync(transform, job, null, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
+
+#region EnsureTransformExists
+/// <summary>
+/// If the specified transform exists, return that transform. If the it does not
+/// exist, creates a new transform with the specified output. In this case, the
+/// output is set to encode a video using a custom preset.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services account.</param>
+/// <param name="transformName">The transform name.</param>
+/// <returns>The transform.</returns>
+static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAccountResource mediaServicesAccount, string transformName)
+{
+    Console.WriteLine("Creating a Transform...");
+
+    // Create the custom Transform with the outputs defined above
+    // Does a Transform already exist with the desired name? This method will just overwrite (Update) the Transform if it exists already. 
+    // In production code, you may want to be cautious about that. It really depends on your scenario.
+    var transform = await mediaServicesAccount.GetMediaTransforms().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        transformName,
+        new MediaTransformData
+        {
+            Outputs =
+            {
+                // Create a new TransformOutput with a custom Standard Encoder Preset using the H.264 (H264Layer) codec
+                // This demonstrates how to create custom codec and layer output settings
+                new MediaTransformOutput(
+                    preset: new StandardEncoderPreset(
+                        codecs: new List<MediaCodecBase>()
+                        {
+                            // Add an Audio layer for the audio copy
+                            new CodecCopyAudio(),                 
+                            // Next, add a Video for the video copy
+                            new CodecCopyVideo(),
+                        },
+                        // Specify the format for the output files - one for video+audio, and another for the sprite
+                        formats: new MediaFormatBase[]
+                        {
+                            // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
+                            new Mp4Format(filenamePattern: "LiveArchive-{Basename}{Extension}"),
+                        }
+                        )
+                    )
+                 {
+                     OnError = MediaTransformOnErrorType.StopProcessingJob,
+                     RelativePriority = MediaJobPriority.Normal
+                 },
+            },
+            Description = "A simple custom encoding transform with CodecCopy"
+        });
+
+    return transform.Value;
+}
+#endregion EnsureTransformExists
+
+/// <summary>
+/// Creates an output Asset. The output from the encoding Job must be written to an Asset.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services account.</param>
+/// <param name="assetName">The output Asset name.</param>
+/// <returns></returns>
+static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName)
+{
+    Console.WriteLine("Creating an output Asset...");
+    var asset = await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        assetName,
+        new MediaAssetData());
+
+    return asset.Value;
+}
+
+/// <summary>
+/// Submits a request to Media Services to apply the specified Transform to a given input video.
+/// </summary>
+/// <param name="transform">The media transform.</param>
+/// <param name="jobName">The (unique) name of the Job.</param>
+/// <param name="inputAsset">The input Asset.</param>
+/// <param name="outputAsset">The output Asset that will store the result of the encoding Job.</param>
+static async Task<MediaJobResource> SubmitJobAsync(
+    MediaTransformResource transform,
+    string jobName,
+    MediaJobInputClip inputAsset,
+    MediaAssetResource outputAsset)
+{
+    // In this example, we are assuming that the Job name is unique.
+    //
+    // If you already have a Job with the desired name, use the Jobs.Get method
+    // to get the existing Job. In Media Services v3, Get methods on entities returns ErrorResponseException 
+    // if the entity doesn't exist (a case-insensitive check on the name).
+    Console.WriteLine("Creating a Job...");
+    var job = await transform.GetMediaJobs().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        jobName,
+        new MediaJobData
+        {
+            Input = inputAsset,
+            Outputs =
+            {
+                new MediaJobOutputAsset(outputAsset.Data.Name)
+            }
+        });
+
+    return job.Value;
+}
+
+/// <summary>
+/// Polls Media Services for the status of the Job.
+/// </summary>
+/// <param name="job">The Job.</param>
+/// <returns>The updated Job.</returns>
+static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job)
+{
+    var sleepInterval = TimeSpan.FromSeconds(30);
+    MediaJobState? state;
+
+    do
+    {
+        job = await job.GetAsync();
+        state = job.Data.State.GetValueOrDefault();
+
+        Console.WriteLine($"Job is '{state}'.");
+        for (int i = 0; i < job.Data.Outputs.Count; i++)
+        {
+            var output = job.Data.Outputs[i];
+            Console.Write($"\tJobOutput[{i}] is '{output.State}'.");
+            if (output.State == MediaJobState.Processing)
+            {
+                Console.Write($"  Progress: '{output.Progress}'.");
+            }
+
+            Console.WriteLine();
+        }
+
+        if (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled)
+        {
+            await Task.Delay(sleepInterval);
+        }
+    }
+    while (state != MediaJobState.Finished && state != MediaJobState.Error && state != MediaJobState.Canceled);
+
+    return job;
+}
+
+/// <summary>
+/// Creates a media job input asset for asset name, using the top bitrate.
+/// </summary>
+/// <param name="assetName">The Asset name.</param>
+/// <returns></returns>
+static MediaJobInputAsset CreateJobInputAssetTopBitrate(string assetName)
+{
+    var videoTrackSelection = new SelectVideoTrackByAttribute(
+        attribute: TrackAttribute.Bitrate,
+        filter: TrackAttributeFilter.Top);
+
+    return new MediaJobInputAsset(assetName)
+    {
+        // Start = new AbsoluteClipTime(TimeSpan.FromSeconds(30)), // Trim the live archive. Be careful, The absolute time can point to a different position depending on whether the media file starts from a timestamp of zero or not.
+        // End = new AbsoluteClipTime(TimeSpan.FromSeconds(330)), // Clip off the end after 5 minutes and 30 seconds.
+        InputDefinitions = {
+            new FromAllInputFile()
+            {
+                IncludedTracks =
+                {
+                    videoTrackSelection
+                }
+            }
+        }
+    };
+}
+
+/// <summary>
+/// Downloads the specified output Asset.
+/// </summary>
+/// <param name="asset">The Asset to download from.</param>
+/// <param name="outputFolderName">The name of the folder into which to download the results.</param>
+/// <returns></returns>
+async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFolderName)
+{
+    // Use Media Service and Storage APIs to download the output files to a local folder
+    var assetContainerSas = asset.GetStorageContainerUrisAsync(new MediaAssetStorageContainerSasContent
+    {
+        Permissions = MediaAssetContainerPermission.Read,
+        ExpireOn = DateTime.UtcNow.AddHours(1)
+    });
+
+    var containerSasUrl = await assetContainerSas.FirstAsync();
+
+    var container = new BlobContainerClient(containerSasUrl);
+
+    string directory = Path.Combine(outputFolderName, asset.Data.Name);
+    Directory.CreateDirectory(directory);
+
+    Console.WriteLine("Downloading results to {0}.", directory);
+
+    await foreach (var blob in container.GetBlobsAsync())
+    {
+        var blobClient = container.GetBlobClient(blob.Name);
+        string filename = Path.Combine(directory, blob.Name);
+        await blobClient.DownloadToAsync(filename);
+    }
+
+    Console.WriteLine("Download complete.");
+}
+
+/// <summary>
+/// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
+/// Once the StreamingLocator is created the output Asset is available to clients for playback.
+/// </summary>
+/// <param name="mediaServicesAccount">The Media Services client.</param>
+/// <param name="assetName">The name of the output Asset.</param>
+/// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
+/// <returns></returns>
+static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
+    MediaServicesAccountResource mediaServicesAccount,
+    string assetName,
+    string locatorName)
+{
+    var locator = await mediaServicesAccount.GetStreamingLocators().CreateOrUpdateAsync(
+        WaitUntil.Completed,
+        locatorName,
+        new StreamingLocatorData
+        {
+            AssetName = assetName,
+            StreamingPolicyName = "Predefined_ClearStreamingOnly"
+        });
+
+    return locator.Value;
+}
+
+/// <summary>
+/// Prints the streaming URLs.
+/// </summary>
+/// <param name="locator">The streaming locator.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+static async Task PrintStreamingUrlsAsync(
+    StreamingLocatorResource locator,
+    StreamingEndpointResource streamingEndpoint)
+{
+    var paths = await locator.GetStreamingPathsAsync();
+
+    foreach (StreamingPath path in paths.Value.StreamingPaths)
+    {
+        Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
+        foreach (string streamingFormatPath in path.Paths)
+        {
+            var uriBuilder = new UriBuilder()
+            {
+                Scheme = "https",
+                Host = streamingEndpoint.Data.HostName,
+                Path = streamingFormatPath
+            };
+            Console.WriteLine($"\t{uriBuilder}");
+        }
+        Console.WriteLine();
+    }
+}
+
+/// <summary>
+/// Delete the resources that were created.
+/// </summary>
+/// <param name="transform">The transform.</param>
+/// <param name="job">The Job.</param>
+/// <param name="inputAsset">The input Asset.</param>
+/// <param name="outputAsset">The output Asset.</param>
+/// <param name="streamingLocator">The streaming locator. </param>
+/// <param name="stopEndpoint">Stop endpoint if true, keep endpoint running if false.</param>
+/// <param name="streamingEndpoint">The streaming endpoint.</param>
+/// <returns>A task.</returns>
+static async Task CleanUpAsync(
+    MediaTransformResource transform,
+    MediaJobResource job,
+    MediaAssetResource? inputAsset,
+    MediaAssetResource outputAsset,
+    StreamingLocatorResource? streamingLocator,
+    bool stopEndpoint,
+    StreamingEndpointResource? streamingEndpoint)
+{
+    await job.DeleteAsync(WaitUntil.Completed);
+    await transform.DeleteAsync(WaitUntil.Completed);
+
+    if (inputAsset != null)
+    {
+        await inputAsset.DeleteAsync(WaitUntil.Completed);
+    }
+
+    await outputAsset.DeleteAsync(WaitUntil.Completed);
+
+    if (streamingLocator != null)
+    {
+        await streamingLocator.DeleteAsync(WaitUntil.Completed);
+    }
+
+    if (streamingEndpoint != null)
+    {
+        if (stopEndpoint)
+        {
+            // Because we started the endpoint, we'll stop it.
+            await streamingEndpoint.StopAsync(WaitUntil.Completed);
+        }
+        else
+        {
+            // We will keep the endpoint running because it was not started by us. There are costs to keep it running.
+            // Please refer https://azure.microsoft.com/en-us/pricing/details/media-services/ for pricing. 
+            Console.WriteLine($"The Streaming Endpoint '{streamingEndpoint.Data.Name}' is running. To stop further billing for the Streaming Endpoint, please stop it using the Azure portal.");
+        }
+    }
+}
+
+/// <summary>
+/// Class to manage the settings which come from appsettings.json or command line parameters.
+/// </summary>
+internal class Options
+{
+    [Required]
+    public Guid? AZURE_SUBSCRIPTION_ID { get; set; }
+
+    [Required]
+    public string? AZURE_RESOURCE_GROUP { get; set; }
+
+    [Required]
+    public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
+    {
+        try
+        {
+            options = configuration.Get<Options>() ?? throw new Exception("No configuration found. Configuration can be set in appsettings.json or using command line options.");
+            Validator.ValidateObject(options, new ValidationContext(options), true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            options = null;
+            Console.WriteLine(ex.Message);
+            return false;
+        }
+    }
+}

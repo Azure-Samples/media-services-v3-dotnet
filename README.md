@@ -53,6 +53,7 @@ When using VS Code, select the project you wish to Launch in the Debugger consol
 | [VideoEncoding/Encoding_SpriteThumbnail](/VideoEncoding/Encoding_SpriteThumbnail)|The sample shows how to submit a job using a custom preset with a thumbnail sprite, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_OverlayImage](/VideoEncoding/Encoding_OverlayImage)|The sample shows how to overlay an image logo or watermark on a video, publish output asset for streaming, and download results for verification.|
 | [VideoEncoding/Encoding_MultiChannelAudio](/VideoEncoding/Encoding_MultiChannelAudio)|The sample demonstrates how to create an encoding Transform that uses channel mapping and audio track selection from the input source to output two new AAC audio tracks.|
+| [VideoEncoding/Encoding_Live_Archive_To_MP4](/VideoEncoding/Encoding_Live_Archive_To_MP4)|The sample demonstrates how to use the archived output from a live event and extract only the top highest bitrate video track to be packaged into an MP4 file for export to social media platforms, or for use with Video Indexer.|
 | **Live Streaming** ||
 | [Live/LiveEventWithDVR](/Live/LiveEventWithDVR)|This sample first shows how to create a LiveEvent with a full archive up to 25 hours and an filter on the asset with 5 minutes DVR window, then it shows how to use the filter to create a locator for streaming.|
 | **VOD Streaming** ||

@@ -312,6 +312,20 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
+    {
+      "name": "Launch Copy live archive to MP4 file",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_Live_Archive_To_MP4/bin/Debug/net7.0/Encoding_Live_Archive_To_MP4.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_Live_Archive_To_MP4/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
       {
       "name": "Launch Live Event With DVR",
       "type": "coreclr",
