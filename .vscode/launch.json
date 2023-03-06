@@ -201,6 +201,20 @@
       "internalConsoleOptions": "neverOpen"
     },
     {
+      "name": "Launch Encoding CopyCodec H264 with proxy and VTT sprite",
+      "type": "coreclr",
+      "request": "launch",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/VideoEncoding/Encoding_Custom_CopyCodecSpriteProxy/bin/Debug/net7.0/Encoding_Custom_CopyCodecSpriteProxy.exe",
+      "preLaunchTask": "build",
+      "args": [],
+      "cwd": "${workspaceFolder}/VideoEncoding/Encoding_Custom_CopyCodecSpriteProxy/bin/Debug/net7.0",
+      "stopAtEntry": false,
+      // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Launch Encoding HEVC",
       "type": "coreclr",
       "request": "launch",
