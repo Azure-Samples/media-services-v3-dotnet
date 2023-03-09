@@ -12,9 +12,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
 const string OutputFolder = "Output";
-const string CustomTransform = "Custom_TwoLayerMp4_SpriteJpg";
-const string InputMP4FileName = "ignite.mp4";
+const string CustomTransform = "CopyLiveArchiveToMP4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
+const string InputArchiveName = "archiveAsset-3009"; // Set this to the name of the Asset used in your LiveOutput. This would be the archived live event Asset name.
 
 // Loading the settings from the appsettings.json file or from the command line parameters
 var configuration = new ConfigurationBuilder()
@@ -46,15 +46,14 @@ var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServic
 string uniqueness = Guid.NewGuid().ToString()[..13];
 string jobName = $"job-{uniqueness}";
 string locatorName = $"locator-{uniqueness}";
-string inputAssetName = $"input-{uniqueness}";
 string outputAssetName = $"output-{uniqueness}";
 bool stopStreamingEndpoint = false;
 
 // Ensure that you have customized encoding Transform. This is a one-time setup operation.
 var transform = await CreateTransformAsync(mediaServicesAccount, CustomTransform);
 
-// Create a new input Asset and upload the specified local video file into it.
-var inputAsset = await CreateInputAssetAsync(mediaServicesAccount, inputAssetName, InputMP4FileName);
+// Create a job input Asset using top bitrate, with optional time trimming
+var inputAsset = CreateJobInputAssetTopBitrate(InputArchiveName);
 
 // Output from the Job must be written to an Asset, so let's create one.
 var outputAsset = await CreateOutputAssetAsync(mediaServicesAccount, outputAssetName);
@@ -68,7 +67,7 @@ if (job.Data.State == MediaJobState.Error)
 {
     Console.WriteLine($"ERROR: Job finished with error message: {job.Data.Outputs[0].Error.Message}");
     Console.WriteLine($"ERROR:                   error details: {job.Data.Outputs[0].Error.Details[0].Message}");
-    await CleanUpAsync(transform, job, inputAsset, outputAsset, null, stopStreamingEndpoint, null);
+    await CleanUpAsync(transform, job, null, outputAsset, null, stopStreamingEndpoint, null);
     return;
 }
 
@@ -99,7 +98,7 @@ Console.WriteLine("When finished, press ENTER to cleanup.");
 Console.WriteLine();
 Console.ReadLine();
 
-await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
+await CleanUpAsync(transform, job, null, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
 
 #region EnsureTransformExists
 /// <summary>
@@ -124,78 +123,31 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
+                // Create a new TransformOutput with a custom Standard Encoder Preset using the H.264 (H264Layer) codec
                 // This demonstrates how to create custom codec and layer output settings
                 new MediaTransformOutput(
                     preset: new StandardEncoderPreset(
-                        codecs: new MediaCodecBase[]
+                        codecs: new List<MediaCodecBase>()
                         {
-                            // Add an AAC Audio layer for the audio encoding
-                            new AacAudio
-                            {
-                                Channels = 2,
-                                SamplingRate = 48000,
-                                Bitrate = 128000,
-                                Profile = AacAudioProfile.AacLc
-                            },
-                            // Next, add a H264Video for the video encoding
-                            new H264Video
-                            {
-                                // Set the GOP interval to 2 seconds for all H264Layers
-                                KeyFrameInterval = TimeSpan.FromSeconds(2),
-                        
-                                // Add H264Layers, one at HD and the other at SD. Assign a label that you can use for the output filename.
-                                Layers =
-                                {
-                                    new H264Layer(bitrate: 1000000)
-                                    {
-                                        Width = "1280",
-                                        Height = "720",
-                                        Label = "HD"
-                                    },
-                                    new H264Layer(bitrate: 600000)
-                                    {
-                                        Width = "640",
-                                        Height = "360",
-                                        Label = "SD"
-                                    }
-                                }
-                            },
-                            // Also generate a set of thumbnails in one JPG file (thumbnail sprite)
-                            new JpgImage(start: "25%")
-                            {
-                                Start = "0%",
-                                Step = "5%",
-                                Range = "100%",
-                                SpriteColumn = 10,
-                                Layers =
-                                {
-                                    new JpgLayer
-                                    {
-                                        Width = "20%",
-                                        Height = "20%",
-                                        Quality = 90
-                                    }
-                                }
-                            }
+                            // Add an Audio layer for the audio copy
+                            new CodecCopyAudio(),                 
+                            // Next, add a Video for the video copy
+                            new CodecCopyVideo(),
                         },
-                        // Specify the format for the output files - one for video+audio, and another for the thumbnails
+                        // Specify the format for the output files - one for video+audio, and another for the sprite
                         formats: new MediaFormatBase[]
                         {
                             // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
-                            // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
-                            // Either {Label} or {Bitrate} should suffice
-                            new Mp4Format(filenamePattern: "Video-{Basename}-{Label}-{Bitrate}{Extension}"),
-                            new JpgFormat(filenamePattern: "Sprite-{Basename}-{Index}{Extension}")
+                            new Mp4Format(filenamePattern: "LiveArchive-{Basename}{Extension}"),
                         }
+                        )
                     )
-                )
-                {
-                    OnError = MediaTransformOnErrorType.StopProcessingJob,
-                    RelativePriority = MediaJobPriority.Normal
-                }
+                 {
+                     OnError = MediaTransformOnErrorType.StopProcessingJob,
+                     RelativePriority = MediaJobPriority.Normal
+                 },
             },
-            Description = "A simple custom encoding transform with 2 MP4 bitrates and thumbnail sprite"
+            Description = "A simple custom encoding transform with CodecCopy"
         });
 
     return transform.Value;
@@ -229,7 +181,7 @@ static async Task<MediaAssetResource> CreateOutputAssetAsync(MediaServicesAccoun
 static async Task<MediaJobResource> SubmitJobAsync(
     MediaTransformResource transform,
     string jobName,
-    MediaAssetResource inputAsset,
+    MediaJobInputClip inputAsset,
     MediaAssetResource outputAsset)
 {
     // In this example, we are assuming that the Job name is unique.
@@ -243,7 +195,7 @@ static async Task<MediaJobResource> SubmitJobAsync(
         jobName,
         new MediaJobData
         {
-            Input = new MediaJobInputAsset(assetName: inputAsset.Data.Name),
+            Input = inputAsset,
             Outputs =
             {
                 new MediaJobOutputAsset(outputAsset.Data.Name)
@@ -292,57 +244,30 @@ static async Task<MediaJobResource> WaitForJobToFinishAsync(MediaJobResource job
 }
 
 /// <summary>
-/// Creates a new input Asset and uploads the specified local video file into it.
+/// Creates a media job input asset for asset name, using the top bitrate.
 /// </summary>
-/// <param name="mediaServicesAccount">The Media Services client.</param>
 /// <param name="assetName">The Asset name.</param>
-/// <param name="fileToUpload">The file you want to upload into the Asset.</param>
 /// <returns></returns>
-static async Task<MediaAssetResource> CreateInputAssetAsync(MediaServicesAccountResource mediaServicesAccount, string assetName, string fileToUpload)
+static MediaJobInputAsset CreateJobInputAssetTopBitrate(string assetName)
 {
-    // In this example, we are assuming that the Asset name is unique.
-    MediaAssetResource asset;
+    var videoTrackSelection = new SelectVideoTrackByAttribute(
+        attribute: TrackAttribute.Bitrate,
+        filter: TrackAttributeFilter.Top);
 
-    try
+    return new MediaJobInputAsset(assetName)
     {
-        asset = await mediaServicesAccount.GetMediaAssets().GetAsync(assetName);
-
-        // The Asset already exists and we are going to overwrite it. In your application, if you don't want to overwrite
-        // an existing Asset, use an unique name.
-        Console.WriteLine($"Warning: The Asset named {assetName} already exists. It will be overwritten.");
-    }
-    catch (RequestFailedException)
-    {
-        // Call Media Services API to create an Asset.
-        // This method creates a container in storage for the Asset.
-        // The files (blobs) associated with the Asset will be stored in this container.
-        Console.WriteLine("Creating an input Asset...");
-        asset = (await mediaServicesAccount.GetMediaAssets().CreateOrUpdateAsync(WaitUntil.Completed, assetName, new MediaAssetData())).Value;
-    }
-
-    // Use Media Services API to get back a response that contains
-    // SAS URL for the Asset container into which to upload blobs.
-    // That is where you would specify read-write permissions 
-    // and the expiration time for the SAS URL.
-    var sasUriCollection = asset.GetStorageContainerUrisAsync(
-        new MediaAssetStorageContainerSasContent
-        {
-            Permissions = MediaAssetContainerPermission.ReadWrite,
-            ExpireOn = DateTime.UtcNow.AddHours(1)
-        });
-
-    var sasUri = await sasUriCollection.FirstOrDefaultAsync();
-
-    // Use Storage API to get a reference to the Asset container
-    // that was created by calling Asset's CreateOrUpdate method.
-    var container = new BlobContainerClient(sasUri);
-    BlobClient blob = container.GetBlobClient(Path.GetFileName(fileToUpload));
-
-    // Use Storage API to upload the file into the container in storage.
-    Console.WriteLine("Uploading a media file to the Asset...");
-    await blob.UploadAsync(fileToUpload);
-
-    return asset;
+        // Start = new AbsoluteClipTime(TimeSpan.FromSeconds(30)), // Trim the live archive. Be careful, The absolute time can point to a different position depending on whether the media file starts from a timestamp of zero or not.
+        // End = new AbsoluteClipTime(TimeSpan.FromSeconds(330)), // Clip off the end after 5 minutes and 30 seconds.
+        InputDefinitions = {
+            new FromAllInputFile()
+            {
+                IncludedTracks =
+                {
+                    videoTrackSelection
+                }
+            }
+        }
+    };
 }
 
 /// <summary>

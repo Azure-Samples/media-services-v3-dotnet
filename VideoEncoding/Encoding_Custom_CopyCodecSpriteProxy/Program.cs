@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
 const string OutputFolder = "Output";
-const string CustomTransform = "Custom_TwoLayerMp4_SpriteJpg";
+const string CustomTransform = "Custom_CopyCodecWithSpriteAndProxy";
 const string InputMP4FileName = "ignite.mp4";
 const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
@@ -124,43 +124,32 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
         {
             Outputs =
             {
-                // Create a new TransformOutput with a custom Standard Encoder Preset using the HEVC (H265Layer) codec
-                // This demonstrates how to create custom codec and layer output settings
+                // uses the built in SaaS Source Aligned preset, which copies the codecs from the source and also generate a 360p proxy file.
                 new MediaTransformOutput(
+                    preset: new BuiltInStandardEncoderPreset("SaasSourceAligned360pOnly")
+                    // There are some undocumented magical presets in our toolbox that do fun stuff - this one is going to copy the codecs from the source and also generate a 360p proxy file.
+                
+                    // Other magical presets to play around with, that might (or might not) work for your source video content...
+                    // "SaasCopyCodec" - this just copies the source video and audio into an MP4 ready for streaming.  The source has to be H264 and AAC with CBR encoding and no B frames typically. 
+                    // "SaasProxyCopyCodec" - this copies the source video and audio into an MP4 ready for streaming and generates a proxy file.   The source has to be H264 and AAC with CBR encoding and no B frames typically. 
+                    // "SaasSourceAligned360pOnly" - same as above, but generates a single 360P proxy layer that is aligned in GOP to the source file. Useful for "back filling" a proxy on a pre-encoded file uploaded.  
+                    // "SaasSourceAligned540pOnly"-  generates a single 540P proxy layer that is aligned in GOP to the source file. Useful for "back filling" a proxy on a pre-encoded file uploaded. 
+                    // "SaasSourceAligned540p" - generates an adaptive set of 540P and 360P that is aligned to the source file. used for "back filling" a pre-encoded or uploaded source file in an output asset for better streaming. 
+                    // "SaasSourceAligned360p" - generates an adaptive set of 360P and 180P that is aligned to the source file. used for "back filling" a pre-encoded or uploaded source file in an output asset for better streaming. 
+                    )
+                {
+                    OnError = MediaTransformOnErrorType.StopProcessingJob,
+                    RelativePriority = MediaJobPriority.Normal
+                },
+
+                 new MediaTransformOutput(
                     preset: new StandardEncoderPreset(
-                        codecs: new MediaCodecBase[]
+                        codecs: new List<MediaCodecBase>()
                         {
-                            // Add an AAC Audio layer for the audio encoding
-                            new AacAudio
-                            {
-                                Channels = 2,
-                                SamplingRate = 48000,
-                                Bitrate = 128000,
-                                Profile = AacAudioProfile.AacLc
-                            },
-                            // Next, add a H264Video for the video encoding
-                            new H264Video
-                            {
-                                // Set the GOP interval to 2 seconds for all H264Layers
-                                KeyFrameInterval = TimeSpan.FromSeconds(2),
-                        
-                                // Add H264Layers, one at HD and the other at SD. Assign a label that you can use for the output filename.
-                                Layers =
-                                {
-                                    new H264Layer(bitrate: 1000000)
-                                    {
-                                        Width = "1280",
-                                        Height = "720",
-                                        Label = "HD"
-                                    },
-                                    new H264Layer(bitrate: 600000)
-                                    {
-                                        Width = "640",
-                                        Height = "360",
-                                        Label = "SD"
-                                    }
-                                }
-                            },
+                            // Add an Audio layer for the audio copy
+                            new CodecCopyAudio(),                 
+                            // Next, add a Video for the video copy
+                            new CodecCopyVideo(),
                             // Also generate a set of thumbnails in one JPG file (thumbnail sprite)
                             new JpgImage(start: "25%")
                             {
@@ -174,28 +163,28 @@ static async Task<MediaTransformResource> CreateTransformAsync(MediaServicesAcco
                                     {
                                         Width = "20%",
                                         Height = "20%",
-                                        Quality = 90
+                                        Quality = 85
                                     }
                                 }
                             }
                         },
-                        // Specify the format for the output files - one for video+audio, and another for the thumbnails
+                        // Specify the format for the output files - one for video+audio, and another for the sprite
                         formats: new MediaFormatBase[]
                         {
                             // Mux the H.264 video and AAC audio into MP4 files, using basename, label, bitrate and extension macros
                             // Note that since you have multiple H264Layers defined above, you have to use a macro that produces unique names per H264Layer
                             // Either {Label} or {Bitrate} should suffice
-                            new Mp4Format(filenamePattern: "Video-{Basename}-{Label}-{Bitrate}{Extension}"),
+                            new Mp4Format(filenamePattern: "CopyCodec-{Basename}{Extension}"),
                             new JpgFormat(filenamePattern: "Sprite-{Basename}-{Index}{Extension}")
                         }
+                        )
                     )
-                )
-                {
-                    OnError = MediaTransformOnErrorType.StopProcessingJob,
-                    RelativePriority = MediaJobPriority.Normal
-                }
+                 {
+                     OnError = MediaTransformOnErrorType.StopProcessingJob,
+                     RelativePriority = MediaJobPriority.Normal
+                 },
             },
-            Description = "A simple custom encoding transform with 2 MP4 bitrates and thumbnail sprite"
+            Description = "A custom transform with Saas copy codec, a sprite and a 360p proxy"
         });
 
     return transform.Value;
@@ -244,8 +233,11 @@ static async Task<MediaJobResource> SubmitJobAsync(
         new MediaJobData
         {
             Input = new MediaJobInputAsset(assetName: inputAsset.Data.Name),
+            // Since the transform generates two Transform outputs, we need to define two Job output assets to push that content into. 
+            // In this case, we want both Transform outputs to go back into the same output asset container. 
             Outputs =
             {
+                new MediaJobOutputAsset(outputAsset.Data.Name),
                 new MediaJobOutputAsset(outputAsset.Data.Name)
             }
         });

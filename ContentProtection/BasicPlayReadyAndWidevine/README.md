@@ -1,14 +1,14 @@
-# Dynamically encrypt your content with AES-128
+# Dynamically encrypt your content with PlayReady and Widevine DRM
 
-This sample demonstrates how to dynamically encrypt your content with AES-128. It shows how to perform the following tasks:
+This sample demonstrates how to dynamically encrypt your content with PlayReady and Widevine DRM (CENC). It shows how to perform the following tasks:
 
-1. Creates a transform with built-in content aware encoding preset
+1. Creates a transform with built-in Content Aware Encoding preset
 1. Submits a job
-1. Creates a ContentKeyPolicy using a secret key
+1. Creates a ContentKeyPolicy with PlayReady and Widevine configurations using a secret key
 1. Associates the ContentKeyPolicy with StreamingLocator
 1. Gets a token and print a url for playback
 
-When a stream is requested by a player, Media Services uses the specified key to dynamically encrypt your content with AES-128 and Azure Media Player uses the token to decrypt.
+When a user requests PlayReady-protected content (on Microsoft Edge) or Widevine-protected content (on Google Chrome), the player application requests a license from the Media Services license service. If the player application is authorized, the Media Services license service issues a license to the player. The license contains the decryption key that can be used by the client player to decrypt and stream the content.
 
 ## Prerequisites
 
@@ -18,6 +18,7 @@ Required Assemblies:
 * Azure.ResourceManager.Media
 * Microsoft.Extensions.Hosting
 * Microsoft.IdentityModel.Tokens
+* Newtonsoft.Json
 * System.IdentityModel.Tokens.Jwt
 * System.Security.Claims
 
