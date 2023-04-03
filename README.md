@@ -79,6 +79,7 @@ When using VS Code, select the project you wish to Launch in the Debugger consol
 - Clone or download this sample repository.
 - Open the solution file media-services-v3-dotnet.sln in Visual Studio 2022, or open the folder in Visual Studio Code.
 - Update the settings in **appsettings.json** in the root folder of the repository to match your Azure subscription, resource group and Media Services account.
+- To ignore changes on `appsettings.json` and avoid pushing custom data back to your repository, you may run the following git command: `git update-index --assume-unchanged  appsettings.json`
 - Read sample's README.md to see what key concepts to review and how to set up and run the sample.
 - Select the project to Run in the Debugger (ctrl-shift-D in VS Code on Window) and press F5 to launch
 
