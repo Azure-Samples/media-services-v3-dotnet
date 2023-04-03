@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Web;
 
 //////////////////////////////////////////////////////////////////////////////////////
 //// Azure Media Services Live streaming sample
@@ -298,7 +299,7 @@ static void PrintIngestUrls(MediaLiveEventResource liveEvent)
     Console.WriteLine(previewEndpoint);
     Console.WriteLine();
     Console.WriteLine($"Open the live preview in your browser and use the Azure Media Player to monitor the preview playback:");
-    Console.WriteLine($"https://ampdemo.azureedge.net/?url={previewEndpoint}&heuristicprofile=lowlatency");
+    Console.WriteLine($"https://ampdemo.azureedge.net/?url={HttpUtility.UrlEncode(previewEndpoint)}&heuristicprofile=lowlatency");
     Console.WriteLine();
     Console.WriteLine("Start the live stream now, sending the input to the ingest URL and verify");
     Console.WriteLine("that it is arriving with the preview URL.");
@@ -376,7 +377,7 @@ static async Task<StreamingLocatorResource> DemoStreamingAsync(
     Console.WriteLine();
     Console.WriteLine($"The DASH manifest for the Live stream is: {paths[1]}");
     Console.WriteLine("Open the following URL to playback the live stream from the LiveOutput in the Azure Media Player");
-    Console.WriteLine($"https://ampdemo.azureedge.net/?url={paths[1]}&heuristicprofile=lowlatency");
+    Console.WriteLine($"https://ampdemo.azureedge.net/?url={HttpUtility.UrlEncode(paths[1])}&heuristicprofile=lowlatency");
     Console.WriteLine();
     Console.WriteLine("Continue experimenting with the stream until you are ready to finish.");
     Console.WriteLine("Press enter to stop the Live Output...");

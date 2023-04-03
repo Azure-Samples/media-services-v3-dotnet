@@ -14,6 +14,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using OfflinePlayReadyAndWidevine;
+using System.Web;
 
 const string AdaptiveStreamingTransformName = "MyTransformWithAdaptiveStreamingPreset";
 const string Issuer = "myIssuer";
@@ -121,7 +122,7 @@ Console.WriteLine("Copy and paste the following URL in your browser to play back
 Console.WriteLine("Note, the player is set to use the DRM token and the Bearer token is specified.");
 Console.WriteLine("The token is valid 60 minutes and can be used 5 times.");
 Console.WriteLine();
-Console.WriteLine($"https://ampdemo.azureedge.net/?url={smoothPath}&playready=true&playreadytoken=Bearer%20{token}&widevine=true&widevinetoken=Bearer%20{token}");
+Console.WriteLine($"https://ampdemo.azureedge.net/?url={HttpUtility.UrlEncode(smoothPath.ToString())}&playready=true&playreadytoken=Bearer%20{token}&widevine=true&widevinetoken=Bearer%20{token}");
 Console.WriteLine();
 
 Console.WriteLine("When finished, press ENTER to cleanup.");
