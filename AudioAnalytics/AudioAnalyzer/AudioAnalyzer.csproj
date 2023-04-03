@@ -9,8 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.8.2" />
-    <PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.15.0" />
+    <PackageReference Include="Azure.ResourceManager.Media" Version="1.2.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.15.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>

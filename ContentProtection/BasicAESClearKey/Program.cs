@@ -89,7 +89,7 @@ var ckTokenSigningKey = new ContentKeyPolicySymmetricTokenKey(TokenSigningKey);
 // via the Key Delivery component of Azure Media Services.
 var contentKeyPolicy = await GetOrCreateContentKeyPolicyAsync(mediaServicesAccount, contentKeyPolicyName, ckTokenSigningKey);
 
-var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, contentKeyPolicy.Data.Name, "Predefined_MultiDrmCencStreaming");
+var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset, locatorName, contentKeyPolicy.Data.Name, "Predefined_ClearKey");
 
 // We are using the ContentKeyIdentifierClaim in the ContentKeyPolicy which means that the token presented
 // to the Key Delivery Component must have the identifier of the content key in it.  Since we didn't specify

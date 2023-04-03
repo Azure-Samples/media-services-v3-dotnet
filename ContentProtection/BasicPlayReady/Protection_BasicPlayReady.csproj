@@ -8,13 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.8.2" />
-    <PackageReference Include="Azure.ResourceManager.Media" Version="1.1.0" />
+    <PackageReference Include="Azure.ResourceManager.Media" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="7.0.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.27.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.28.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt " Version="6.8.0" />
     <PackageReference Include="System.Security.Claims" Version="4.3.0" />
-    <PackageReference Update="System.IdentityModel.Tokens.Jwt" Version="6.27.0" />
+    <PackageReference Update="System.IdentityModel.Tokens.Jwt" Version="6.28.0" />
   </ItemGroup>
 
   <ItemGroup>
