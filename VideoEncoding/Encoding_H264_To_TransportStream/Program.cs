@@ -14,7 +14,6 @@ using System.Diagnostics.CodeAnalysis;
 const string OutputFolder = "Output";
 const string CustomTransform = "Custom_H264_TransportStream";
 const string InputMP4FileName = "ignite.mp4";
-const string DefaultStreamingEndpointName = "default";   // Change this to your Streaming Endpoint name
 
 // Loading the settings from the appsettings.json file or from the command line parameters
 var configuration = new ConfigurationBuilder()
@@ -37,7 +36,12 @@ var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentif
     resourceGroupName: options.AZURE_RESOURCE_GROUP,
     accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
-var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var credential = new DefaultAzureCredential(
+    new DefaultAzureCredentialOptions()
+    {
+        TenantId = options.AZURE_TENANT_ID?.ToString(),
+        ExcludeInteractiveBrowserCredential = false
+    });
 var armClient = new ArmClient(credential);
 var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
 
@@ -45,7 +49,6 @@ var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServic
 // multiple times without cleaning up.
 string uniqueness = Guid.NewGuid().ToString()[..13];
 string jobName = $"job-{uniqueness}";
-string locatorName = $"locator-{uniqueness}";
 string inputAssetName = $"input-{uniqueness}";
 string outputAssetName = $"output-{uniqueness}";
 bool stopStreamingEndpoint = false;
@@ -77,29 +80,11 @@ Directory.CreateDirectory(OutputFolder);
 
 await DownloadResultsAsync(outputAsset, OutputFolder);
 
-var streamingLocator = await CreateStreamingLocatorAsync(mediaServicesAccount, outputAsset.Data.Name, locatorName);
-
-var streamingEndpoint = (await mediaServicesAccount.GetStreamingEndpoints().GetAsync(DefaultStreamingEndpointName)).Value;
-
-if (streamingEndpoint.Data.ResourceState != StreamingEndpointResourceState.Running)
-{
-    Console.WriteLine("Streaming Endpoint is not running, starting now...");
-    await streamingEndpoint.StartAsync(WaitUntil.Completed);
-
-    // Since we started the endpoint, we should stop it in cleanup.
-    stopStreamingEndpoint = true;
-}
-
-Console.WriteLine();
-Console.WriteLine("Getting the streaming manifest URLs for HLS and DASH:");
-await PrintStreamingUrlsAsync(streamingLocator, streamingEndpoint);
-
-Console.WriteLine("To try streaming, copy and paste the streaming URL into the Azure Media Player at 'http://aka.ms/azuremediaplayer'.");
 Console.WriteLine("When finished, press ENTER to cleanup.");
 Console.WriteLine();
 Console.ReadLine();
 
-await CleanUpAsync(transform, job, inputAsset, outputAsset, streamingLocator, stopStreamingEndpoint, streamingEndpoint);
+await CleanUpAsync(transform, job, inputAsset, outputAsset, null, stopStreamingEndpoint, null);
 
 #region EnsureTransformExists
 /// <summary>
@@ -372,59 +357,6 @@ async static Task DownloadResultsAsync(MediaAssetResource asset, string outputFo
 }
 
 /// <summary>
-/// Creates a StreamingLocator for the specified Asset and with the specified streaming policy name.
-/// Once the StreamingLocator is created the output Asset is available to clients for playback.
-/// </summary>
-/// <param name="mediaServicesAccount">The Media Services client.</param>
-/// <param name="assetName">The name of the output Asset.</param>
-/// <param name="locatorName">The StreamingLocator name (unique in this case).</param>
-/// <returns></returns>
-static async Task<StreamingLocatorResource> CreateStreamingLocatorAsync(
-    MediaServicesAccountResource mediaServicesAccount,
-    string assetName,
-    string locatorName)
-{
-    var locator = await mediaServicesAccount.GetStreamingLocators().CreateOrUpdateAsync(
-        WaitUntil.Completed,
-        locatorName,
-        new StreamingLocatorData
-        {
-            AssetName = assetName,
-            StreamingPolicyName = "Predefined_ClearStreamingOnly"
-        });
-
-    return locator.Value;
-}
-
-/// <summary>
-/// Prints the streaming URLs.
-/// </summary>
-/// <param name="locator">The streaming locator.</param>
-/// <param name="streamingEndpoint">The streaming endpoint.</param>
-static async Task PrintStreamingUrlsAsync(
-    StreamingLocatorResource locator,
-    StreamingEndpointResource streamingEndpoint)
-{
-    var paths = await locator.GetStreamingPathsAsync();
-
-    foreach (StreamingPath path in paths.Value.StreamingPaths)
-    {
-        Console.WriteLine($"The following formats are available for {path.StreamingProtocol.ToString().ToUpper()}:");
-        foreach (string streamingFormatPath in path.Paths)
-        {
-            var uriBuilder = new UriBuilder()
-            {
-                Scheme = "https",
-                Host = streamingEndpoint.Data.HostName,
-                Path = streamingFormatPath
-            };
-            Console.WriteLine($"\t{uriBuilder}");
-        }
-        Console.WriteLine();
-    }
-}
-
-/// <summary>
 /// Delete the resources that were created.
 /// </summary>
 /// <param name="transform">The transform.</param>
@@ -488,6 +420,8 @@ internal class Options
 
     [Required]
     public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    public Guid? AZURE_TENANT_ID { get; set; }
 
     static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {

@@ -37,7 +37,12 @@ var mediaServicesResourceId = MediaServicesAccountResource.CreateResourceIdentif
     resourceGroupName: options.AZURE_RESOURCE_GROUP,
     accountName: options.AZURE_MEDIA_SERVICES_ACCOUNT_NAME);
 
-var credential = new DefaultAzureCredential(includeInteractiveCredentials: true);
+var credential = new DefaultAzureCredential(
+    new DefaultAzureCredentialOptions()
+    {
+        TenantId = options.AZURE_TENANT_ID?.ToString(),
+        ExcludeInteractiveBrowserCredential = false
+    });
 var armClient = new ArmClient(credential);
 var mediaServicesAccount = armClient.GetMediaServicesAccountResource(mediaServicesResourceId);
 
@@ -496,6 +501,8 @@ internal class Options
 
     [Required]
     public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
+
+    public Guid? AZURE_TENANT_ID { get; set; }
 
     static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {

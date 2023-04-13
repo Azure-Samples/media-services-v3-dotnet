@@ -65,6 +65,8 @@ internal class Options
     [Required]
     public string? AZURE_MEDIA_SERVICES_ACCOUNT_NAME { get; set; }
 
+    public Guid? AZURE_TENANT_ID { get; set; }
+
     static public bool TryGetOptions(IConfiguration configuration, [NotNullWhen(returnValue: true)] out Options? options)
     {
         try

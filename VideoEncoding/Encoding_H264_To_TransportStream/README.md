@@ -6,7 +6,6 @@ This sample shows how to create a custom encoding Transform using custom H.264 e
 1. Creates an input asset and upload a media file into it.
 1. Submits a job and monitoring the job using polling method.
 1. Downloads the output asset.
-1. Prints URLs for streaming.
 
 ## Prerequisites
 
