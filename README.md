@@ -7,6 +7,8 @@ products:
   - azure-media-services
 description: "The samples in this repo show how to encode, package, and protect with Azure Media Services v3 using .NET 7.0 SDK. You also learn how to perform live ingest in order to broadcast your events."  
 ---
+
+**IMPORTANT NOTE : Azure Media Service has been retired on June 30, 2024. Please see the [retirement guide](https://learn.microsoft.com/en-us/azure/media-services/latest/azure-media-services-retirement).**
  
 # Azure Media Services v3 samples using .NET 7.0
 
